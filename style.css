@@ -47,12 +47,12 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .toast.erro { border-left: 5px solid var(--error); }
 .toast.info { border-left: 5px solid var(--secondary); }
 
-/* --- ADMIN LAYOUT (MENU NO TOPO) --- */
+/* --- ADMIN MENU TOPO --- */
 #admin-dashboard { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f4f4f9; z-index: 3000; display: flex; flex-direction: column; }
 .admin-sidebar { background: white; padding: 10px 15px; display: flex; flex-direction: row; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; white-space: nowrap; align-items: center; }
 .admin-sidebar::-webkit-scrollbar { height: 5px; } .admin-sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
 .btn-sair { background: #ff4d4d; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%;}
-.admin-content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 120px; /* Resolve o corte no final */ }
+.admin-content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 120px; }
 .admin-tab-btn { background: none; border: none; text-align: center; padding: 10px 15px; font-size: 1rem; cursor: pointer; border-radius: 8px; color: #555; flex: 0 0 auto; }
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -61,3 +61,5 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .status-pendente { background: #f39c12; }
 .status-aprovado { background: var(--success); }
 .tab-btn.ativa { color: var(--primary) !important; border-bottom: 3px solid var(--primary) !important; margin-bottom: -2px; }
+.admin-card-mini { display:flex; align-items:center; gap:15px; padding:10px; border-bottom:1px solid #eee; }
+.admin-card-mini img { width:50px; height:50px; border-radius:8px; object-fit:cover; }
