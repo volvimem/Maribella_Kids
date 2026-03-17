@@ -7,7 +7,6 @@
     --error: #e74c3c;
 }
 
-/* Otimizações Mobile */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text); overscroll-behavior-y: none; }
 
@@ -18,17 +17,12 @@ header { background-color: var(--primary); padding: 15px 20px; display: flex; ju
 .btn-icon, #cart-btn { background: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.9rem; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
 .btn-icon:active, #cart-btn:active { transform: scale(0.95); }
 
-main { padding: 20px; max-width: 1200px; margin: 0 auto; padding-bottom: 80px; }
+main { padding: 20px; max-width: 1200px; margin: 0 auto; min-height: 70vh; }
 .colecao-titulo { text-align: center; margin-bottom: 20px; color: #ff8ca3; font-size: 2rem; font-weight: 800;}
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
 
-/* Fotos em Alta Qualidade */
 .card { background: white; border-radius: 15px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); text-align: center; display: flex; flex-direction: column; justify-content: space-between;}
-.card img { 
-    width: 100%; border-radius: 10px; height: 220px; object-fit: cover; 
-    image-rendering: -webkit-optimize-contrast; /* Força alta qualidade no Safari/iOS */
-    image-rendering: crisp-edges;
-}
+.card img { width: 100%; border-radius: 10px; height: 220px; object-fit: cover; image-rendering: crisp-edges; }
 .card h3 { margin: 10px 0 5px 0; color: #333; font-size: 1.1rem;}
 .card p { font-size: 0.85rem; margin-bottom: 5px; color: #777; }
 .card .preco { font-size: 1.3rem; font-weight: bold; color: var(--secondary); margin: 10px 0; }
@@ -36,7 +30,6 @@ main { padding: 20px; max-width: 1200px; margin: 0 auto; padding-bottom: 80px; }
 .btn-add { background: var(--secondary); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.3s;}
 .btn-whatsapp { background: #25D366; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s;}
 
-/* Modal Redesenhado para Celular */
 .modal { display: flex; align-items: flex-end; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; backdrop-filter: blur(3px);}
 .hidden { display: none !important; }
 .modal-content { background: white; width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 25px 25px 0 0; max-height: 90vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease-out;}
@@ -50,24 +43,25 @@ form { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
 input, textarea { padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; background: #fafafa;}
 input:focus, textarea:focus { border-color: var(--primary); background: white;}
 textarea { resize: vertical; height: 80px; }
+
+/* Estilo do botão de Upload de Foto */
+input[type="file"] { padding: 10px; border: 2px dashed var(--primary); border-radius: 10px; cursor: pointer; background: #fffaf0; }
+input[type="file"]::file-selector-button { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 15px; }
+
 .pagamento-info { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; border: 2px dashed #ffb6c1; margin-top: 10px;}
 .btn-pix { background: #e0e0e0; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold;}
 input.cpf-valido { border: 2px solid var(--success) !important; background-color: #f0fff4; }
 
-/* NOTIFICAÇÕES TOAST (LINDAS) */
-.toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-    background: white; color: #333; padding: 15px 25px; border-radius: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15); font-weight: bold; z-index: 9999;
-    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    display: flex; align-items: center; gap: 10px; width: 90%; max-width: 400px; text-align: center; justify-content: center;
-}
+/* Modal Login Admin */
+#admin-login-modal .modal-content { border-top: 5px solid var(--primary); border-radius: 20px; margin: auto; max-width: 350px;}
+
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: white; color: #333; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); font-weight: bold; z-index: 9999; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; gap: 10px; width: 90%; max-width: 400px; text-align: center; justify-content: center; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.sucesso { border-left: 5px solid var(--success); }
 .toast.erro { border-left: 5px solid var(--error); }
 .toast.info { border-left: 5px solid var(--secondary); }
 
-/* PAINEL DO ADMIN (Mobile Friendly) */
+/* PAINEL DO ADMIN */
 #admin-dashboard { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f4f4f9; z-index: 300; display: flex; flex-direction: column; }
 @media (min-width: 768px) { #admin-dashboard { flex-direction: row; } }
 .admin-sidebar { background: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); overflow-y: auto;}
@@ -78,3 +72,6 @@ input.cpf-valido { border: 2px solid var(--success) !important; background-color
 .admin-tab-btn { background: none; border: none; text-align: left; padding: 15px; font-size: 1.1rem; cursor: pointer; border-radius: 8px; color: #555; transition: 0.2s;}
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+/* Ocultar Admin */
+footer:hover { color: #ffb6c1 !important; }
