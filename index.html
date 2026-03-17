@@ -39,9 +39,6 @@
             <form id="form-login-cliente">
                 <input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="mascaraCPF(this)">
                 <input type="password" id="login-senha-cliente" placeholder="Sua Senha" required>
-                <div style="display:flex; align-items:center; gap:5px; margin-top:5px; justify-content:center;">
-                    <input type="checkbox" id="lembrar-senha" style="width: auto;"> <label for="lembrar-senha" style="font-size:0.9rem; color:#555;">Manter conectado</label>
-                </div>
                 <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Entrar na Minha Conta</button>
             </form>
             <p style="margin-top: 15px; font-size: 0.9rem;"><a href="#" onclick="abrirRecuperacaoSenha()" style="color: var(--secondary); text-decoration: underline;">Esqueci minha senha</a></p>
@@ -52,10 +49,9 @@
         <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
             <span class="close" onclick="fecharRecuperacao()">&times;</span>
             <h2 style="color: var(--primary); margin-bottom: 10px;">🔄 Nova Senha</h2>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Confirme seus dados para criar uma nova senha.</p>
             <form id="form-recuperacao">
                 <input type="text" id="rec-cpf" placeholder="Seu CPF cadastrado" maxlength="14" required oninput="mascaraCPF(this)">
-                <input type="tel" id="rec-tel" placeholder="Seu Telefone (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this)">
+                <input type="tel" id="rec-tel" placeholder="Telefone (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this)">
                 <input type="password" id="rec-senha" placeholder="Digite a nova senha" required>
                 <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Salvar Nova Senha</button>
             </form>
@@ -63,17 +59,16 @@
     </div>
 
     <div id="perfil-cliente-modal" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content" style="display:flex; flex-direction:column;">
             <span class="close" onclick="fecharPerfil()">&times;</span>
             <h2 style="color: var(--secondary); margin-bottom: 5px;" id="titulo-painel-cliente">👤 Meu Painel</h2>
-            <p style="font-size:0.85rem; color:#888; margin-bottom:15px;">Acompanhe ou cancele seus pedidos pendentes.</p>
             
-            <div class="tabs" style="display:flex; border-bottom:2px solid #eee;">
+            <div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;">
                 <button onclick="mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button>
                 <button onclick="mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button>
             </div>
 
-            <div id="aba-historico" style="margin-top: 15px; max-height: 400px; overflow-y: auto;">
+            <div id="aba-historico" style="margin-top: 15px; max-height: 50vh; overflow-y: auto;">
                 <div id="lista-meus-pedidos"></div>
             </div>
 
@@ -94,6 +89,19 @@
                     <button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button>
                 </form>
             </div>
+            
+            <button onclick="sairCliente()" class="btn-sair" style="margin-top: 20px;">Sair da Conta</button>
+        </div>
+    </div>
+
+    <div id="modal-editar-pedido" class="modal hidden" style="z-index: 3000;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharEdicaoPedido()">&times;</span>
+            <h2 style="color: var(--secondary);">✏️ Editar Carrinho</h2>
+            <p style="font-size:0.85rem; color:#666;">Altere as quantidades ou remova peças do seu pedido.</p>
+            <div id="lista-editar-itens" style="margin-top:15px; max-height:40vh; overflow-y:auto;"></div>
+            <div class="cart-total">Novo Total: R$ <span id="novo-total-edicao">0.00</span></div>
+            <button onclick="salvarEdicaoPedido()" class="btn-whatsapp" style="width:100%; margin-top:15px;">💾 Salvar Alterações</button>
         </div>
     </div>
 
@@ -127,7 +135,7 @@
                         <input type="password" id="cliente-senha" placeholder="Senha" required>
                     </div>
 
-                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()">
+                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()">
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()">
                         <input type="text" id="cliente-estado" placeholder="UF" style="width: 80px;" required oninput="salvarFormulario()">
@@ -166,30 +174,22 @@
         </div>
     </div>
 
-    <div id="admin-historico-cliente-modal" class="modal hidden" style="z-index: 4000;">
-        <div class="modal-content">
-            <span class="close" onclick="fecharHistoricoClienteAdmin()">&times;</span>
-            <h2 style="color: var(--secondary);" id="nome-historico-admin">Histórico</h2>
-            <div id="lista-historico-cliente-admin" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
-        </div>
-    </div>
-
     <div id="admin-dashboard" class="hidden">
         <div class="admin-sidebar">
-            <h2>⚙️ Gestão</h2>
+            <h2 style="margin-right: 15px; color:var(--primary);">⚙️ Gestão</h2>
             <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn ativa" id="tab-admin-pedidos">🛍️ Pedidos</button>
             <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn" id="tab-admin-produtos">📦 Produtos</button>
             <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
             <button onclick="mudarAbaAdmin('admin-ranking')" class="admin-tab-btn" id="tab-admin-ranking">🏆 Rankings</button>
-            <button onclick="mudarAbaAdmin('admin-config')" class="admin-tab-btn" id="tab-admin-config">🔧 Ajustes (PIX)</button>
-            <button onclick="sairDoAdmin()" class="btn-sair" style="margin-top: auto;">❌ Sair</button>
+            <button onclick="mudarAbaAdmin('admin-config')" class="admin-tab-btn" id="tab-admin-config">🔧 Ajustes</button>
+            <button onclick="sairDoAdmin()" class="btn-icon" style="background:#ff4d4d; color:white; margin-left:auto;">❌ Sair</button>
         </div>
         
         <div class="admin-content">
             <div id="admin-pedidos" class="admin-aba">
                 <h3>Gerenciar Vendas</h3>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente ou CPF..." oninput="filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente, CPF ou Cidade..." oninput="filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
                     <select id="filtro-status" onchange="filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
                         <option value="Todos">Todos</option>
                         <option value="Pendente">Pendentes</option>
@@ -227,10 +227,7 @@
                 <h3>🏆 Ranking de Vendas</h3>
                 <div style="display:flex; gap:10px; margin-bottom:20px;">
                     <select id="rank-mes" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;">
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
-                        <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
-                        <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
-                        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
                     <select id="rank-ano" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;"><option value="2026">2026</option><option value="2027">2027</option></select>
                 </div>
