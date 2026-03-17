@@ -2,13 +2,20 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Maribella Kids | Coleção Semanal</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
+    <meta name="theme-color" content="#ffb6c1">
+    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffb6c1">
 </head>
 <body>
+
+    <div id="toast-notificacao" class="toast hidden"></div>
 
     <header id="main-header">
         <div class="logo">
@@ -16,7 +23,7 @@
             <span>Maribella Kids</span>
         </div>
         <div class="menu-botoes">
-            <button class="btn-icon" onclick="abrirAdmin()" title="Área do Administrador">⚙️ Admin</button>
+            <button class="btn-icon" onclick="abrirAdmin()" title="Administrador">⚙️ Admin</button>
             <button id="cart-btn" onclick="toggleCart()">🛒 Carrinho (<span id="cart-count">0</span>)</button>
         </div>
     </header>
@@ -24,7 +31,7 @@
     <main id="loja-main">
         <h2 class="colecao-titulo">Coleção da Semana ✨</h2>
         <div id="product-grid" class="grid">
-            <p style="text-align: center; width: 100%;">Carregando produtos...</p>
+            <p style="text-align: center; width: 100%; color: #aaa;">⏳ Carregando novidades lindas para você...</p>
         </div>
     </main>
 
@@ -34,18 +41,23 @@
             <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn ativa" id="tab-admin-produtos">📦 Produtos</button>
             <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn" id="tab-admin-pedidos">🛍️ Pedidos</button>
             <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
-            <button onclick="fecharAdmin()" class="btn-sair" style="margin-top: auto; background: #ff4d4d; color: white;">Sair do Painel</button>
+            
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="gerarDadosFicticios()" class="btn-icon" style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba;">🪄 Gerar Dados de Exemplo</button>
+                <button onclick="fecharAdmin()" class="btn-sair">❌ Sair do Painel</button>
+            </div>
         </div>
         
         <div class="admin-content">
             <div id="admin-produtos" class="admin-aba">
-                <h3>Adicionar Novo Produto</h3>
+                <h3>Adicionar Novo Produto (Alta Qualidade)</h3>
+                <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">Cole o link de uma foto com ótima resolução. O sistema cuidará de exibir com brilho máximo.</p>
                 <form id="form-add-produto" class="admin-form">
-                    <input type="text" id="add-nome" placeholder="Nome da Peça" required>
-                    <input type="number" id="add-preco" placeholder="Preço (Ex: 55.90)" step="0.01" required>
-                    <input type="text" id="add-tamanho" placeholder="Tamanhos (Ex: 2, 4, 6 anos)" required>
-                    <input type="text" id="add-material" placeholder="Material (Ex: Algodão)" required>
-                    <input type="url" id="add-imagem" placeholder="Link da Imagem (URL)" required>
+                    <input type="text" id="add-nome" placeholder="Nome do Modelo (Ex: Vestido Princesa)" required>
+                    <input type="number" id="add-preco" placeholder="Preço (Ex: 89.90)" step="0.01" required>
+                    <input type="text" id="add-tamanho" placeholder="Tamanhos Disponíveis (Ex: 2, 4, 6 anos)" required>
+                    <input type="text" id="add-material" placeholder="Tipo do Material (Ex: 100% Algodão Premium)" required>
+                    <input type="url" id="add-imagem" placeholder="Link da Foto do Produto (URL)" required>
                     <button type="submit" class="btn-whatsapp">➕ Salvar Produto no Sistema</button>
                 </form>
             </div>
@@ -75,12 +87,11 @@
 
             <div id="etapa-cadastro" class="hidden">
                 <h2>Finalizar Pedido</h2>
-                <p>Preencha seus dados para entrega.</p>
+                <p>Preencha seus dados para envio.</p>
                 <form id="checkout-form">
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
                     <input type="text" id="cliente-cpf" placeholder="CPF (Apenas números)" maxlength="11" required>
                     <span id="cpf-msg" style="font-size: 0.8rem; color: red; margin-top:-5px; display:none;">CPF Inválido!</span>
-                    
                     <input type="tel" id="cliente-telefone" placeholder="Telefone / WhatsApp" required>
                     
                     <div style="display: flex; gap: 10px;">
@@ -89,7 +100,6 @@
                     </div>
                     
                     <input type="text" id="cliente-rua" placeholder="Rua / Avenida" required>
-                    
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="cliente-numero" placeholder="Número" style="width: 100px;" required>
                         <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex: 1;" required>
@@ -108,7 +118,6 @@
                     <button type="submit" class="btn-whatsapp" id="btn-finalizar" disabled style="opacity: 0.5;">📲 Confirmar e Enviar WhatsApp</button>
                 </form>
             </div>
-
         </div>
     </div>
 
