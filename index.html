@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="toast-notificacao" class="toast hidden"></div>
@@ -15,7 +16,7 @@
         <div class="header-top">
             <div class="logo"><img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Logo" class="logo-gif"><span>Maribella Kids</span></div>
             <div class="menu-botoes">
-                <button class="btn-icon" onclick="verificarLoginCliente()">📦 Pedidos</button>
+                <button class="btn-icon" id="btn-header-pedidos" onclick="verificarLoginCliente()">📦 Entrar</button>
                 <button id="cart-btn" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</button>
             </div>
         </div>
@@ -43,18 +44,31 @@
                 </div>
                 <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Entrar na Minha Conta</button>
             </form>
+            <p style="margin-top: 15px; font-size: 0.9rem;"><a href="#" onclick="abrirRecuperacaoSenha()" style="color: var(--secondary); text-decoration: underline;">Esqueci minha senha</a></p>
+        </div>
+    </div>
+
+    <div id="recuperacao-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
+            <span class="close" onclick="fecharRecuperacao()">&times;</span>
+            <h2 style="color: var(--primary); margin-bottom: 10px;">🔄 Nova Senha</h2>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Confirme seus dados para criar uma nova senha.</p>
+            <form id="form-recuperacao">
+                <input type="text" id="rec-cpf" placeholder="Seu CPF cadastrado" maxlength="14" required oninput="mascaraCPF(this)">
+                <input type="tel" id="rec-tel" placeholder="Seu Telefone (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this)">
+                <input type="password" id="rec-senha" placeholder="Digite a nova senha" required>
+                <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Salvar Nova Senha</button>
+            </form>
         </div>
     </div>
 
     <div id="perfil-cliente-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="fecharPerfil()">&times;</span>
-            <h2 style="color: var(--secondary); display:flex; justify-content:space-between; align-items:center;">
-                👤 Meu Painel 
-                <button onclick="sairCliente()" class="btn-icon" style="background:#ff4d4d; color:white; font-size:0.8rem;">Sair</button>
-            </h2>
+            <h2 style="color: var(--secondary); margin-bottom: 5px;" id="titulo-painel-cliente">👤 Meu Painel</h2>
+            <p style="font-size:0.85rem; color:#888; margin-bottom:15px;">Acompanhe ou cancele seus pedidos pendentes.</p>
             
-            <div class="tabs" style="display:flex; margin-top:15px; border-bottom:2px solid #eee;">
+            <div class="tabs" style="display:flex; border-bottom:2px solid #eee;">
                 <button onclick="mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button>
                 <button onclick="mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button>
             </div>
@@ -67,7 +81,7 @@
                 <form id="form-atualizar-perfil">
                     <input type="hidden" id="perfil-cpf">
                     <input type="text" id="perfil-nome" placeholder="Nome Completo" required>
-                    <input type="tel" id="perfil-telefone" placeholder="WhatsApp" required>
+                    <input type="tel" id="perfil-telefone" placeholder="WhatsApp" maxlength="15" required oninput="mascaraTelefone(this)">
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'perfil')">
                         <input type="text" id="perfil-estado" placeholder="UF" style="width: 80px;" required>
@@ -94,14 +108,26 @@
             </div>
             <div id="etapa-cadastro" class="hidden">
                 <h2>Dados de Envio</h2>
+                
+                <div id="checkout-login-box" style="background: #eef2f5; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 20px;">
+                    <h4 style="color: #333; margin-bottom: 10px;">Já tem cadastro? Entre aqui:</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="mascaraCPF(this)" style="flex:1; padding: 10px;">
+                        <input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width: 100px; padding: 10px;">
+                    </div>
+                    <button type="button" onclick="loginRapidoCheckout()" style="background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor:pointer;">Entrar e Preencher Automático</button>
+                </div>
+
                 <form id="checkout-form">
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()">
                     <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()">
-                    <div style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
-                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Sua senha (crie uma ou digite a atual):</label>
+                    
+                    <div id="area-senha-nova" style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acessar seus pedidos depois:</label>
                         <input type="password" id="cliente-senha" placeholder="Senha" required>
                     </div>
-                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp" required oninput="salvarFormulario()">
+
+                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()">
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()">
                         <input type="text" id="cliente-estado" placeholder="UF" style="width: 80px;" required oninput="salvarFormulario()">
@@ -116,12 +142,12 @@
                     <div class="pagamento-info">
                         <h4>Pagamento via PIX</h4>
                         <p>Chave: <strong id="pix-display">Carregando...</strong></p>
-                        <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave</button>
+                        <button type="button" class="btn-pix" onclick="tentarCopiarPix()">📋 Copiar Chave PIX</button>
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
                         <button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background: #ccc; color: #333; flex: 1;">Voltar</button>
-                        <button type="submit" class="btn-whatsapp" id="btn-finalizar-checkout" style="flex: 2; margin-top:0;">💾 Salvar e Enviar Pedido</button>
+                        <button type="submit" class="btn-whatsapp" id="btn-finalizar-checkout" style="flex: 2; margin-top:0;" onclick="tentarFinalizar(event)">💾 Enviar Pedido</button>
                     </div>
                 </form>
             </div>
@@ -137,6 +163,14 @@
                 <input type="password" id="admin-senha" placeholder="Senha" required>
                 <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar</button>
             </form>
+        </div>
+    </div>
+
+    <div id="admin-historico-cliente-modal" class="modal hidden" style="z-index: 4000;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharHistoricoClienteAdmin()">&times;</span>
+            <h2 style="color: var(--secondary);" id="nome-historico-admin">Histórico</h2>
+            <div id="lista-historico-cliente-admin" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -178,9 +212,8 @@
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
                     <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Cancelar Edição</button>
                 </form>
-                
                 <h3 style="margin-top: 30px;">Catálogo</h3>
-                <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto para editar..." oninput="filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
+                <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto..." oninput="filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px;"></div>
             </div>
 
@@ -199,19 +232,11 @@
                         <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                         <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
-                    <select id="rank-ano" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;">
-                        <option value="2026">2026</option><option value="2027">2027</option>
-                    </select>
+                    <select id="rank-ano" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;"><option value="2026">2026</option><option value="2027">2027</option></select>
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:20px;">
-                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                        <h4 style="color:var(--primary); margin-bottom:10px;">🥇 Produtos Mais Vendidos</h4>
-                        <div id="rank-produtos-lista"></div>
-                    </div>
-                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                        <h4 style="color:var(--success); margin-bottom:10px;">💎 Melhores Clientes</h4>
-                        <div id="rank-clientes-lista"></div>
-                    </div>
+                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);"><h4 style="color:var(--primary); margin-bottom:10px;">🥇 Mais Vendidos</h4><div id="rank-produtos-lista"></div></div>
+                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);"><h4 style="color:var(--success); margin-bottom:10px;">💎 Melhores Clientes</h4><div id="rank-clientes-lista"></div></div>
                 </div>
             </div>
 
@@ -221,7 +246,7 @@
                     <label style="font-weight:bold;">Chave PIX:</label>
                     <input type="text" id="config-pix" required>
                     <label style="font-weight:bold; margin-top:10px;">Telefone da Vendedora (Com DDD):</label>
-                    <input type="text" id="config-telefone" placeholder="Ex: 81999999999" required>
+                    <input type="text" id="config-telefone" placeholder="Ex: 81 999999999" maxlength="15" required oninput="mascaraTelefone(this)">
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
                 </form>
             </div>
