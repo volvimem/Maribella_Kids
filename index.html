@@ -10,77 +10,108 @@
 </head>
 <body>
 
-    <header>
+    <header id="main-header">
         <div class="logo">
             <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Criança Modelo" class="logo-gif">
             <span>Maribella Kids</span>
         </div>
         <div class="menu-botoes">
-            <button class="btn-icon" onclick="abrirAdmin()" title="Área do Administrador">⚙️</button>
-            <button class="btn-icon" onclick="togglePerfil()">👤 Perfil</button>
-            <button id="cart-btn" onclick="toggleCart()">
-                🛒 Carrinho (<span id="cart-count">0</span>)
-            </button>
+            <button class="btn-icon" onclick="abrirAdmin()" title="Área do Administrador">⚙️ Admin</button>
+            <button id="cart-btn" onclick="toggleCart()">🛒 Carrinho (<span id="cart-count">0</span>)</button>
         </div>
     </header>
 
-    <main>
+    <main id="loja-main">
         <h2 class="colecao-titulo">Coleção da Semana ✨</h2>
         <div id="product-grid" class="grid">
-            </div>
+            <p style="text-align: center; width: 100%;">Carregando produtos...</p>
+        </div>
     </main>
+
+    <div id="admin-dashboard" class="hidden">
+        <div class="admin-sidebar">
+            <h2>⚙️ Painel Maribella</h2>
+            <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn ativa" id="tab-admin-produtos">📦 Produtos</button>
+            <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn" id="tab-admin-pedidos">🛍️ Pedidos</button>
+            <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
+            <button onclick="fecharAdmin()" class="btn-sair" style="margin-top: auto; background: #ff4d4d; color: white;">Sair do Painel</button>
+        </div>
+        
+        <div class="admin-content">
+            <div id="admin-produtos" class="admin-aba">
+                <h3>Adicionar Novo Produto</h3>
+                <form id="form-add-produto" class="admin-form">
+                    <input type="text" id="add-nome" placeholder="Nome da Peça" required>
+                    <input type="number" id="add-preco" placeholder="Preço (Ex: 55.90)" step="0.01" required>
+                    <input type="text" id="add-tamanho" placeholder="Tamanhos (Ex: 2, 4, 6 anos)" required>
+                    <input type="text" id="add-material" placeholder="Material (Ex: Algodão)" required>
+                    <input type="url" id="add-imagem" placeholder="Link da Imagem (URL)" required>
+                    <button type="submit" class="btn-whatsapp">➕ Salvar Produto no Sistema</button>
+                </form>
+            </div>
+
+            <div id="admin-pedidos" class="admin-aba hidden">
+                <h3>Histórico de Vendas</h3>
+                <div id="lista-admin-pedidos"></div>
+            </div>
+
+            <div id="admin-clientes" class="admin-aba hidden">
+                <h3>Cadastro de Clientes</h3>
+                <div id="lista-admin-clientes"></div>
+            </div>
+        </div>
+    </div>
 
     <div id="cart-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="toggleCart()">&times;</span>
-            <h2>Seu Carrinho</h2>
-            <div id="cart-items"></div>
-            <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
-            <hr>
-            <h3>Dados para Envio</h3>
-            <form id="checkout-form">
-                <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
-                <input type="text" id="cliente-endereco" placeholder="Endereço Completo (Rua, Nº, Bairro, CEP)" required>
-                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho...)"></textarea>
-                <div class="pagamento-info">
-                    <h4>Pagamento via PIX</h4>
-                    <p>Chave PIX: <strong>81999999999</strong></p>
-                    <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
-                </div>
-                <button type="submit" class="btn-whatsapp">📲 Enviar Pedido no WhatsApp</button>
-            </form>
+            
+            <div id="etapa-carrinho">
+                <h2>Seu Carrinho</h2>
+                <div id="cart-items"></div>
+                <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
+                <button class="btn-whatsapp" onclick="irParaCadastro()" style="width: 100%; margin-top: 20px;">Fazer Meu Pedido</button>
+            </div>
+
+            <div id="etapa-cadastro" class="hidden">
+                <h2>Finalizar Pedido</h2>
+                <p>Preencha seus dados para entrega.</p>
+                <form id="checkout-form">
+                    <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
+                    <input type="text" id="cliente-cpf" placeholder="CPF (Apenas números)" maxlength="11" required>
+                    <span id="cpf-msg" style="font-size: 0.8rem; color: red; margin-top:-5px; display:none;">CPF Inválido!</span>
+                    
+                    <input type="tel" id="cliente-telefone" placeholder="Telefone / WhatsApp" required>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required>
+                        <input type="text" id="cliente-estado" placeholder="Estado (UF)" style="width: 80px;" required>
+                    </div>
+                    
+                    <input type="text" id="cliente-rua" placeholder="Rua / Avenida" required>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cliente-numero" placeholder="Número" style="width: 100px;" required>
+                        <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex: 1;" required>
+                    </div>
+                    
+                    <input type="text" id="cliente-ref" placeholder="Ponto de Referência">
+                    <textarea id="cliente-obs" placeholder="Observações do Pedido (Opcional)"></textarea>
+                    
+                    <div class="pagamento-info">
+                        <h4>Pagamento via PIX</h4>
+                        <p>Chave PIX: <strong>81999999999</strong></p>
+                        <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+                    </div>
+
+                    <button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background: #ccc; color: #333;">Voltar</button>
+                    <button type="submit" class="btn-whatsapp" id="btn-finalizar" disabled style="opacity: 0.5;">📲 Confirmar e Enviar WhatsApp</button>
+                </form>
+            </div>
+
         </div>
     </div>
 
-    <div id="perfil-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close" onclick="togglePerfil()">&times;</span>
-            <h2>👤 Meu Perfil</h2>
-            <div class="tabs">
-                <button onclick="mostrarAba('pedidos')" class="tab-btn ativa" id="tab-pedidos">Meus Pedidos</button>
-                <button onclick="mostrarAba('enderecos')" class="tab-btn" id="tab-enderecos">Meus Endereços</button>
-            </div>
-            <div id="conteudo-pedidos" class="tab-conteudo">
-                <p>Aqui ficam os seus pedidos anteriores.</p>
-                <div id="lista-meus-pedidos"></div>
-            </div>
-            <div id="conteudo-enderecos" class="tab-conteudo hidden">
-                <p>Seus endereços salvos:</p>
-                <div id="lista-meus-enderecos"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close" onclick="fecharAdmin()">&times;</span>
-            <h2 style="color: red;">⚙️ Painel do Administrador</h2>
-            <p>Histórico de TODOS os pedidos (Banco de Dados):</p>
-            <div id="lista-admin-pedidos"></div>
-        </div>
-    </div>
-
-    <script src="produtos.js"></script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
