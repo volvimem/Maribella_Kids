@@ -9,47 +9,39 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="toast-notificacao" class="toast hidden"></div>
 
     <header id="main-header">
         <div class="header-top">
-            <div class="logo">
-                <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Logo" class="logo-gif">
-                <span>Maribella Kids</span>
-            </div>
+            <div class="logo"><img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Logo" class="logo-gif"><span>Maribella Kids</span></div>
             <div class="menu-botoes">
-                <button class="btn-icon" onclick="abrirLoginCliente()">👤 Entrar</button>
+                <button class="btn-icon" onclick="verificarLoginCliente()">📦 Pedidos</button>
                 <button id="cart-btn" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</button>
             </div>
         </div>
-        <div class="search-bar">
-            <input type="text" id="busca-input" placeholder="🔍 Buscar modelo, cor ou tecido..." oninput="filtrarProdutos()">
-        </div>
+        <div class="search-bar"><input type="text" id="busca-input" placeholder="🔍 Buscar modelo, cor ou tecido..." oninput="filtrarProdutos()"></div>
     </header>
 
-    <main id="loja-main">
-        <div id="product-grid" class="feed-grid">
-            <p style="text-align: center; width: 100%; color: #aaa; margin-top: 50px;">⏳ Carregando coleção...</p>
-        </div>
-    </main>
+    <main id="loja-main"><div id="product-grid" class="feed-grid"><p style="text-align: center; color: #aaa; margin-top: 50px;">⏳ Carregando coleção...</p></div></main>
 
     <button onclick="abrirLoginAdmin()" class="btn-admin-flutuante" title="Acesso da Gestora">⚙️</button>
 
     <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow: auto;">
         <span class="close" onclick="fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed;">&times;</span>
-        <img id="lightbox-img" src="" onclick="toggleZoom()" alt="Zoom Produto">
+        <img id="lightbox-img" src="" onclick="toggleZoom()" alt="Zoom">
     </div>
 
     <div id="cliente-login-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
             <span class="close" onclick="fecharLoginCliente()">&times;</span>
-            <h2 style="color: var(--secondary); margin-bottom: 10px;">👤 Meus Pedidos</h2>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">Acompanhe suas compras.</p>
+            <h2 style="color: var(--secondary); margin-bottom: 10px;">📦 Meus Pedidos</h2>
             <form id="form-login-cliente">
                 <input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="mascaraCPF(this)">
                 <input type="password" id="login-senha-cliente" placeholder="Sua Senha" required>
-                <button type="submit" class="btn-whatsapp" style="width: 100%;">Entrar na Minha Conta</button>
+                <div style="display:flex; align-items:center; gap:5px; margin-top:5px; justify-content:center;">
+                    <input type="checkbox" id="lembrar-senha" style="width: auto;"> <label for="lembrar-senha" style="font-size:0.9rem; color:#555;">Manter conectado</label>
+                </div>
+                <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Entrar na Minha Conta</button>
             </form>
         </div>
     </div>
@@ -57,64 +49,58 @@
     <div id="perfil-cliente-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="fecharPerfil()">&times;</span>
-            <h2 style="color: var(--secondary);">👤 Meu Painel</h2>
-            <button onclick="sairCliente()" class="btn-icon" style="background:#eee; color:#333; margin-bottom: 15px;">Sair da Conta</button>
+            <h2 style="color: var(--secondary); display:flex; justify-content:space-between; align-items:center;">
+                👤 Meu Painel 
+                <button onclick="sairCliente()" class="btn-icon" style="background:#ff4d4d; color:white; font-size:0.8rem;">Sair</button>
+            </h2>
             
-            <h3>Meus Pedidos</h3>
-            <div id="lista-meus-pedidos" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <div class="tabs" style="display:flex; margin-top:15px; border-bottom:2px solid #eee;">
+                <button onclick="mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button>
+                <button onclick="mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button>
+            </div>
 
-            <h3>Meu Endereço Padrão</h3>
-            <form id="form-atualizar-perfil">
-                <input type="hidden" id="perfil-cpf">
-                <input type="text" id="perfil-nome" placeholder="Nome Completo" required>
-                <input type="tel" id="perfil-telefone" placeholder="WhatsApp" required>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'perfil')">
-                    <input type="text" id="perfil-estado" placeholder="UF" style="width: 80px;" required>
-                </div>
-                <input type="text" id="perfil-rua" placeholder="Rua / Avenida" required>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="perfil-numero" placeholder="Nº" style="width: 100px;" required>
-                    <input type="text" id="perfil-bairro" placeholder="Bairro" style="flex: 1;" required>
-                </div>
-                <button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button>
-            </form>
+            <div id="aba-historico" style="margin-top: 15px; max-height: 400px; overflow-y: auto;">
+                <div id="lista-meus-pedidos"></div>
+            </div>
+
+            <div id="aba-dados" class="hidden" style="margin-top: 15px;">
+                <form id="form-atualizar-perfil">
+                    <input type="hidden" id="perfil-cpf">
+                    <input type="text" id="perfil-nome" placeholder="Nome Completo" required>
+                    <input type="tel" id="perfil-telefone" placeholder="WhatsApp" required>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'perfil')">
+                        <input type="text" id="perfil-estado" placeholder="UF" style="width: 80px;" required>
+                    </div>
+                    <input type="text" id="perfil-rua" placeholder="Rua / Avenida" required>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="perfil-numero" placeholder="Nº" style="width: 100px;" required>
+                        <input type="text" id="perfil-bairro" placeholder="Bairro" style="flex: 1;" required>
+                    </div>
+                    <button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <div id="cart-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="toggleCart()">&times;</span>
-            
             <div id="etapa-carrinho">
                 <h2>🛒 Seu Carrinho</h2>
                 <div id="cart-items"></div>
                 <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
                 <button class="btn-whatsapp" onclick="irParaCadastro()" style="width: 100%; margin-top: 20px;">Finalizar Compra</button>
             </div>
-
             <div id="etapa-cadastro" class="hidden">
                 <h2>Dados de Envio</h2>
-                
-                <div id="checkout-login-box" style="background: #eef2f5; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 20px;">
-                    <h4 style="color: #333; margin-bottom: 10px;">Já comprou com a gente?</h4>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="mascaraCPF(this)" style="flex:1; padding: 10px;">
-                        <input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width: 100px; padding: 10px;">
-                    </div>
-                    <button type="button" onclick="loginRapidoCheckout()" style="background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor:pointer;">Puxar Meus Dados</button>
-                </div>
-
                 <form id="checkout-form">
-                    <h4 style="margin-bottom: 10px; color: #555;">📋 Preencha ou confirme seus dados:</h4>
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()">
                     <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()">
-                    
                     <div style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
-                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acessar seus pedidos depois:</label>
-                        <input type="password" id="cliente-senha" placeholder="Crie sua senha" required>
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Sua senha (crie uma ou digite a atual):</label>
+                        <input type="password" id="cliente-senha" placeholder="Senha" required>
                     </div>
-
                     <input type="tel" id="cliente-telefone" placeholder="WhatsApp" required oninput="salvarFormulario()">
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()">
@@ -126,11 +112,10 @@
                         <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex: 1;" required oninput="salvarFormulario()">
                     </div>
                     <input type="text" id="cliente-ref" placeholder="Ponto de Referência" oninput="salvarFormulario()">
-                    <textarea id="cliente-obs" placeholder="Observações do Pedido" oninput="salvarFormulario()"></textarea>
                     
                     <div class="pagamento-info">
                         <h4>Pagamento via PIX</h4>
-                        <p>Chave PIX: <strong>81999999999</strong></p>
+                        <p>Chave: <strong id="pix-display">Carregando...</strong></p>
                         <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave</button>
                     </div>
 
@@ -146,11 +131,11 @@
     <div id="admin-login-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
             <span class="close" onclick="fecharLoginAdmin()">&times;</span>
-            <h2 style="color: var(--primary); margin-bottom: 10px;">🔐 Acesso Restrito</h2>
+            <h2 style="color: var(--primary); margin-bottom: 10px;">🔐 Admin</h2>
             <form id="form-login-admin">
                 <input type="email" id="admin-email" placeholder="E-mail Administrativo" required>
                 <input type="password" id="admin-senha" placeholder="Senha" required>
-                <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar no Sistema</button>
+                <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar</button>
             </form>
         </div>
     </div>
@@ -158,13 +143,29 @@
     <div id="admin-dashboard" class="hidden">
         <div class="admin-sidebar">
             <h2>⚙️ Gestão</h2>
-            <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn ativa" id="tab-admin-produtos">📦 Produtos</button>
-            <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn" id="tab-admin-pedidos">🛍️ Pedidos</button>
+            <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn ativa" id="tab-admin-pedidos">🛍️ Pedidos</button>
+            <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn" id="tab-admin-produtos">📦 Produtos</button>
             <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
+            <button onclick="mudarAbaAdmin('admin-ranking')" class="admin-tab-btn" id="tab-admin-ranking">🏆 Rankings</button>
+            <button onclick="mudarAbaAdmin('admin-config')" class="admin-tab-btn" id="tab-admin-config">🔧 Ajustes (PIX)</button>
             <button onclick="sairDoAdmin()" class="btn-sair" style="margin-top: auto;">❌ Sair</button>
         </div>
+        
         <div class="admin-content">
-            <div id="admin-produtos" class="admin-aba">
+            <div id="admin-pedidos" class="admin-aba">
+                <h3>Gerenciar Vendas</h3>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <input type="text" id="busca-pedido" placeholder="Buscar Cliente ou Cidade..." oninput="filtrarPedidosAdmin()" style="flex:2;">
+                    <select id="filtro-status" onchange="filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
+                        <option value="Todos">Todos</option>
+                        <option value="Aprovado">Aprovados</option>
+                        <option value="Pendente">Pendentes</option>
+                    </select>
+                </div>
+                <div id="lista-admin-pedidos"></div>
+            </div>
+
+            <div id="admin-produtos" class="admin-aba hidden">
                 <h3>Adicionar / Editar Produto</h3>
                 <form id="form-add-produto" class="admin-form">
                     <input type="hidden" id="edit-produto-id">
@@ -175,19 +176,56 @@
                     <label style="font-size: 0.9rem; margin-top: 10px;">Foto Oficial:</label>
                     <input type="file" id="add-imagem-file" accept="image/*" style="background: white;">
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
-                    <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Limpar / Cancelar Edição</button>
+                    <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Cancelar Edição</button>
                 </form>
                 <h3 style="margin-top: 30px;">Catálogo</h3>
-                <div id="lista-admin-produtos-cadastrados" style="display: grid; gap: 10px; margin-top: 15px;"></div>
+                <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px; margin-top: 15px;"></div>
             </div>
-            <div id="admin-pedidos" class="admin-aba hidden">
-                <h3>Gerenciar Vendas</h3>
-                <div id="lista-admin-pedidos"></div>
-            </div>
+
             <div id="admin-clientes" class="admin-aba hidden">
                 <h3>Clientes & Transmissão</h3>
-                <button onclick="gerarListaTransmissao()" class="btn-add" style="margin-bottom: 15px; background: #2ecc71;">📢 Copiar Números (Transmissão)</button>
+                <p style="font-size:0.85rem; color:#666; margin-bottom:10px;">Selecione os clientes e copie os números para colar em sua lista de transmissão.</p>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <button onclick="selecionarTodosClientes()" class="btn-icon" style="background:#ddd;">Marcar Todos</button>
+                    <button onclick="gerarListaTransmissao()" class="btn-add" style="background: #2ecc71; margin-top:0;">📢 Copiar Selecionados</button>
+                </div>
                 <div id="lista-admin-clientes"></div>
+            </div>
+
+            <div id="admin-ranking" class="admin-aba hidden">
+                <h3>🏆 Ranking de Vendas</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <select id="rank-mes" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;">
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+                        <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+                        <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
+                        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                    </select>
+                    <select id="rank-ano" onchange="gerarRankings()" style="padding:10px; border-radius:10px; flex:1;">
+                        <option value="2026">2026</option><option value="2027">2027</option>
+                    </select>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:20px;">
+                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                        <h4 style="color:var(--primary); margin-bottom:10px;">🥇 Produtos Mais Vendidos</h4>
+                        <div id="rank-produtos-lista"></div>
+                    </div>
+                    <div style="flex:1; min-width:250px; background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                        <h4 style="color:var(--success); margin-bottom:10px;">💎 Melhores Clientes</h4>
+                        <div id="rank-clientes-lista"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-config" class="admin-aba hidden">
+                <h3>🔧 Ajustes da Loja</h3>
+                <form id="form-config-loja" class="admin-form">
+                    <label style="font-weight:bold;">Chave PIX:</label>
+                    <input type="text" id="config-pix" required>
+                    <label style="font-weight:bold; margin-top:10px;">Telefone da Vendedora (Com DDD):</label>
+                    <input type="text" id="config-telefone" placeholder="Ex: 81999999999" required>
+                    <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
+                </form>
             </div>
         </div>
     </div>
