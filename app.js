@@ -1,7 +1,5 @@
-// app.js
 let carrinho = [];
 
-// Carrega os produtos na tela automaticamente
 function renderizarProdutos() {
     const grid = document.getElementById('product-grid');
     grid.innerHTML = '';
@@ -56,14 +54,13 @@ function toggleCart() {
 }
 
 function copiarPix() {
-    // COLOQUE SUA CHAVE PIX AQUI PARA O CLIENTE COPIAR
+    // SUA CHAVE PIX AQUI
     const chavePix = "81999999999"; 
     navigator.clipboard.writeText(chavePix).then(() => {
         alert("Chave PIX copiada! Abra seu banco para pagar.");
     });
 }
 
-// Fechar pedido e enviar para o WhatsApp
 document.getElementById('checkout-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -77,7 +74,8 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     const obs = document.getElementById('cliente-obs').value;
     const total = document.getElementById('total-price').innerText;
 
-    let mensagem = `Olá! Meu nome é ${nome} e gostaria de finalizar meu pedido da Boutique Kids:\n\n`;
+    // NOME ATUALIZADO AQUI
+    let mensagem = `Olá! Meu nome é ${nome} e gostaria de finalizar meu pedido da Maribella Kids:\n\n`;
     mensagem += `🛍️ *MEUS PRODUTOS:*\n`;
     
     carrinho.forEach(item => {
@@ -89,23 +87,20 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     if (obs) mensagem += `📌 *OBS:* ${obs}\n\n`;
     mensagem += `O pagamento foi feito via PIX e estou enviando o comprovante nesta conversa!`;
 
-    // COLOQUE O SEU NÚMERO DE WHATSAPP AQUI (Com 55, DDD e número. Ex: 5581999999999)
+    // SEU WHATSAPP AQUI (Ex: 5581999999999)
     const telefoneVendedora = "5581999999999";
     const url = `https://wa.me/${telefoneVendedora}?text=${encodeURIComponent(mensagem)}`;
     
     window.open(url, '_blank');
     
-    // Limpar carrinho após envio
     carrinho = [];
     atualizarCarrinho();
     toggleCart();
     this.reset();
 });
 
-// Inicializar
 renderizarProdutos();
 
-// Registrar Service Worker (Para transformar em PWA)
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('./sw.js');
 }
