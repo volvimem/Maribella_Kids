@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boutique Kids | Coleção Semanal</title>
+    <title>Maribella Kids | Coleção Semanal</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffb6c1">
@@ -11,7 +11,7 @@
 <body>
 
     <header>
-        <div class="logo">🧸 Boutique Kids</div>
+        <div class="logo">🧸 Maribella Kids</div>
         <button id="cart-btn" onclick="toggleCart()">
             🛒 Carrinho (<span id="cart-count">0</span>)
         </button>
@@ -36,7 +36,7 @@
             <form id="checkout-form">
                 <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
                 <input type="text" id="cliente-endereco" placeholder="Endereço Completo (Rua, Nº, Bairro, CEP)" required>
-                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho, tamanho específico da peça...)"></textarea>
+                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho, tamanho específico...)"></textarea>
                 
                 <div class="pagamento-info">
                     <h4>Pagamento via PIX</h4>
@@ -44,7 +44,7 @@
                     <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
                 </div>
 
-                <button type="submit" class="btn-whatsapp">📲 Enviar Pedido e Comprovante no WhatsApp</button>
+                <button type="submit" class="btn-whatsapp">📲 Enviar Pedido no WhatsApp</button>
             </form>
         </div>
     </div>
