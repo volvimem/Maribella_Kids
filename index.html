@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boutique Kids | Coleção Semanal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffb6c1">
+</head>
+<body>
+
+    <header>
+        <div class="logo">🧸 Boutique Kids</div>
+        <button id="cart-btn" onclick="toggleCart()">
+            🛒 Carrinho (<span id="cart-count">0</span>)
+        </button>
+    </header>
+
+    <main>
+        <h2 class="colecao-titulo">Coleção da Semana ✨</h2>
+        <div id="product-grid" class="grid">
+            </div>
+    </main>
+
+    <div id="cart-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="toggleCart()">&times;</span>
+            <h2>Seu Carrinho</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
+
+            <hr>
+
+            <h3>Dados para Envio</h3>
+            <form id="checkout-form">
+                <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
+                <input type="text" id="cliente-endereco" placeholder="Endereço Completo (Rua, Nº, Bairro, CEP)" required>
+                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho, tamanho específico da peça...)"></textarea>
+                
+                <div class="pagamento-info">
+                    <h4>Pagamento via PIX</h4>
+                    <p>Chave PIX (Celular): <strong>81999999999</strong></p>
+                    <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+                </div>
+
+                <button type="submit" class="btn-whatsapp">📲 Enviar Pedido e Comprovante no WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="produtos.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
