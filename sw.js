@@ -1,5 +1,4 @@
-// sw.js
-const CACHE_NAME = "boutique-kids-v1";
+const CACHE_NAME = "maribella-kids-v1";
 
 self.addEventListener('install', (e) => {
     e.waitUntil(
