@@ -1,4 +1,53 @@
+// Importações obrigatórias do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// --- CONFIGURAÇÃO REAL DO FIREBASE DA MARIBELLA KIDS ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBSSDixkWzEaP3pbncJ5NhTf_0ZDNgzUtA",
+  authDomain: "maribella-kids.firebaseapp.com",
+  databaseURL: "https://maribella-kids-default-rtdb.firebaseio.com",
+  projectId: "maribella-kids",
+  storageBucket: "maribella-kids.firebasestorage.app",
+  messagingSenderId: "874601019258",
+  appId: "1:874601019258:web:ec1a308aa526de5a1088c3"
+};
+
+// Inicializando o Banco de Dados
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 let carrinho = [];
+
+// Funções amarradas ao 'window' para o HTML conseguir enxergar
+window.adicionarAoCarrinho = function(id) {
+    const produto = produtos.find(p => p.id === id);
+    carrinho.push(produto);
+    atualizarCarrinho();
+    alert(`${produto.nome} adicionado ao carrinho!`);
+};
+
+window.removerDoCarrinho = function(index) {
+    carrinho.splice(index, 1);
+    atualizarCarrinho();
+};
+
+window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
+window.togglePerfil = () => { document.getElementById('perfil-modal').classList.toggle('hidden'); carregarPerfil(); };
+window.fecharAdmin = () => document.getElementById('admin-modal').classList.add('hidden');
+window.copiarPix = () => {
+    // COLOQUE SUA CHAVE PIX REAL AQUI
+    navigator.clipboard.writeText("81999999999").then(() => alert("Chave PIX copiada!"));
+};
+
+window.mostrarAba = function(aba) {
+    document.getElementById('conteudo-pedidos').classList.add('hidden');
+    document.getElementById('conteudo-enderecos').classList.add('hidden');
+    document.getElementById('tab-pedidos').classList.remove('ativa');
+    document.getElementById('tab-enderecos').classList.remove('ativa');
+    document.getElementById(`conteudo-${aba}`).classList.remove('hidden');
+    document.getElementById(`tab-${aba}`).classList.add('ativa');
+};
 
 function renderizarProdutos() {
     const grid = document.getElementById('product-grid');
@@ -18,13 +67,6 @@ function renderizarProdutos() {
     });
 }
 
-function adicionarAoCarrinho(id) {
-    const produto = produtos.find(p => p.id === id);
-    carrinho.push(produto);
-    atualizarCarrinho();
-    alert(`${produto.nome} adicionado ao carrinho!`);
-}
-
 function atualizarCarrinho() {
     document.getElementById('cart-count').innerText = carrinho.length;
     const cartItems = document.getElementById('cart-items');
@@ -42,32 +84,8 @@ function atualizarCarrinho() {
     document.getElementById('total-price').innerText = total.toFixed(2);
 }
 
-function removerDoCarrinho(index) {
-    carrinho.splice(index, 1);
-    atualizarCarrinho();
-}
-
-function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
-function togglePerfil() { document.getElementById('perfil-modal').classList.toggle('hidden'); carregarPerfil(); }
-function fecharAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-function mostrarAba(aba) {
-    document.getElementById('conteudo-pedidos').classList.add('hidden');
-    document.getElementById('conteudo-enderecos').classList.add('hidden');
-    document.getElementById('tab-pedidos').classList.remove('ativa');
-    document.getElementById('tab-enderecos').classList.remove('ativa');
-
-    document.getElementById(`conteudo-${aba}`).classList.remove('hidden');
-    document.getElementById(`tab-${aba}`).classList.add('ativa');
-}
-
-function copiarPix() {
-    const chavePix = "81999999999"; 
-    navigator.clipboard.writeText(chavePix).then(() => alert("Chave PIX copiada!"));
-}
-
-// Fechamento de Pedido
-document.getElementById('checkout-form').addEventListener('submit', function(e) {
+// Lógica de Fechar Pedido (Salva no Firebase e no Celular da Cliente)
+document.getElementById('checkout-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (carrinho.length === 0) return alert("Seu carrinho está vazio!");
 
@@ -75,36 +93,53 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     const endereco = document.getElementById('cliente-endereco').value;
     const obs = document.getElementById('cliente-obs').value;
     const total = document.getElementById('total-price').innerText;
-    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    
+    // Data exata para o Firebase conseguir ordenar
+    const dataIso = new Date().toISOString(); 
+    const dataFormatada = new Date().toLocaleDateString('pt-BR');
 
-    // Salvar pedido no histórico do navegador
-    salvarHistorico(nome, endereco, carrinho, total, dataAtual);
+    // 1. Salvar perfil no celular da cliente
+    salvarNoCelularDaCliente(nome, endereco, carrinho, total, dataFormatada);
 
+    // 2. SALVAR NO FIREBASE (Para a Maribella Kids ver no Admin)
+    try {
+        await addDoc(collection(db, "pedidos"), {
+            nome: nome,
+            endereco: endereco,
+            observacao: obs,
+            itens: carrinho.length,
+            total: total,
+            data: dataFormatada,
+            timestamp: dataIso 
+        });
+        console.log("Pedido salvo com sucesso no Firebase!");
+    } catch (erro) {
+        console.error("Erro ao salvar no banco de dados: ", erro);
+        alert("Houve um pequeno erro ao registrar no sistema, mas seu pedido será enviado para o WhatsApp!");
+    }
+
+    // 3. Montar mensagem do WhatsApp
     let mensagem = `Olá! Meu nome é ${nome} e gostaria de finalizar meu pedido da Maribella Kids:\n\n🛍️ *MEUS PRODUTOS:*\n`;
     carrinho.forEach(item => mensagem += `- ${item.nome} (R$ ${item.preco.toFixed(2)})\n`);
     mensagem += `\n💰 *TOTAL:* R$ ${total}\n\n📦 *DADOS DE ENVIO:*\n${endereco}\n`;
     if (obs) mensagem += `📌 *OBS:* ${obs}\n\n`;
     mensagem += `O pagamento foi feito via PIX e estou enviando o comprovante!`;
 
+    // COLOQUE O SEU NÚMERO DE WHATSAPP REAL AQUI (DDD + NÚMERO, ex: 5581999999999)
     const telefoneVendedora = "5581999999999";
     window.open(`https://wa.me/${telefoneVendedora}?text=${encodeURIComponent(mensagem)}`, '_blank');
     
     carrinho = [];
     atualizarCarrinho();
-    toggleCart();
+    window.toggleCart();
     this.reset();
 });
 
-// Lógica de Banco de Dados Local (LocalStorage)
-function salvarHistorico(nome, endereco, itens, total, data) {
+function salvarNoCelularDaCliente(nome, endereco, itens, total, data) {
     let historico = JSON.parse(localStorage.getItem('maribella_pedidos')) || [];
     let enderecos = JSON.parse(localStorage.getItem('maribella_enderecos')) || [];
-    
-    // Salva o pedido
     historico.push({ nome, data, total, itens: itens.length });
     localStorage.setItem('maribella_pedidos', JSON.stringify(historico));
-
-    // Salva o endereço se não existir
     if(!enderecos.includes(endereco)) {
         enderecos.push(endereco);
         localStorage.setItem('maribella_enderecos', JSON.stringify(enderecos));
@@ -114,7 +149,6 @@ function salvarHistorico(nome, endereco, itens, total, data) {
 function carregarPerfil() {
     const listaPedidos = document.getElementById('lista-meus-pedidos');
     const listaEnderecos = document.getElementById('lista-meus-enderecos');
-    
     let historico = JSON.parse(localStorage.getItem('maribella_pedidos')) || [];
     let enderecos = JSON.parse(localStorage.getItem('maribella_enderecos')) || [];
 
@@ -129,39 +163,48 @@ function carregarPerfil() {
     });
 }
 
-// Lógica do Administrador
-function abrirAdmin() {
-    const senhaAdmin = "1234"; // SENHA PARA ENTRAR NO ADMIN
+// --- ÁREA DO ADMINISTRADOR (Puxando do Firebase) ---
+window.abrirAdmin = function() {
+    const senhaAdmin = "1234"; // SUA SENHA DO ADMIN AQUI
     const tentativa = prompt("Digite a senha do administrador:");
-    
     if(tentativa === senhaAdmin) {
         document.getElementById('admin-modal').classList.remove('hidden');
-        carregarAdmin();
+        carregarAdminFirebase();
     } else if (tentativa !== null) {
         alert("Senha Incorreta!");
     }
-}
+};
 
-function carregarAdmin() {
+async function carregarAdminFirebase() {
     const lista = document.getElementById('lista-admin-pedidos');
-    let historico = JSON.parse(localStorage.getItem('maribella_pedidos')) || [];
+    lista.innerHTML = "<p>⏳ Carregando pedidos da nuvem...</p>";
     
-    lista.innerHTML = historico.length === 0 ? "<p>Nenhum pedido registrado ainda.</p>" : "";
-    historico.reverse().forEach(p => {
-        lista.innerHTML += `<div class="pedido-item" style="flex-direction:column; gap:5px; margin-bottom:10px; border:1px solid #ccc; padding:10px;">
-            <strong>Data: ${p.data} | Cliente: ${p.nome}</strong>
-            <span>Total: R$ ${p.total} (${p.itens} peças)</span>
-        </div>`;
-    });
-}
+    try {
+        const q = query(collection(db, "pedidos"), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            lista.innerHTML = "<p>Nenhum pedido registrado no banco de dados.</p>";
+            return;
+        }
 
-function limparHistoricoAdmin() {
-    if(confirm("Tem certeza que deseja apagar todo o histórico de pedidos deste aparelho?")) {
-        localStorage.removeItem('maribella_pedidos');
-        carregarAdmin();
+        lista.innerHTML = "";
+        querySnapshot.forEach((doc) => {
+            const p = doc.data();
+            lista.innerHTML += `
+            <div class="pedido-item" style="flex-direction:column; gap:5px; margin-bottom:10px; border:1px solid #ffb6c1; padding:10px; border-radius: 8px;">
+                <strong>Data: ${p.data} | Cliente: ${p.nome}</strong>
+                <span>Total: R$ ${p.total} (${p.itens} peças)</span>
+                <span style="font-size: 0.85em; color: #666;">📍 Endereço: ${p.endereco}</span>
+                <span style="font-size: 0.85em; color: #888;">📌 Obs: ${p.observacao || 'Nenhuma'}</span>
+            </div>`;
+        });
+    } catch (error) {
+        console.error(error);
+        lista.innerHTML = `<p style="color:red;">Erro ao carregar do Firebase. Verifique se o Firestore Database foi criado e as regras de segurança estão em modo de teste.</p>`;
     }
 }
 
-// Inicializar
+// Iniciar a loja
 renderizarProdutos();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
