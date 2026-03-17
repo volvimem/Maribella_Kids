@@ -1,8 +1,9 @@
 {
-  "name": "Boutique Kids Coleção",
-  "short_name": "BoutiqueKids",
+  "name": "Maribella Kids",
+  "short_name": "Maribella",
   "description": "Nossa coleção semanal de roupas infantis",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#fffaf0",
   "theme_color": "#ffb6c1",
