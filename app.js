@@ -1,7 +1,10 @@
+// Importações Oficiais do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-// COLOQUE SUAS CHAVES DO FIREBASE AQUI
+// SUAS CHAVES DO FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBSSDixkWzEaP3pbncJ5NhTf_0ZDNgzUtA",
   authDomain: "maribella-kids.firebaseapp.com",
@@ -14,48 +17,37 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app); 
+const auth = getAuth(app);       
 
 let carrinho = [];
 let listaDeProdutos = []; 
 
-// --- SISTEMA DE NOTIFICAÇÃO BONITA (TOAST) ---
+// --- NOTIFICAÇÕES TOAST ---
 window.mostrarNotificacao = function(mensagem, tipo = 'sucesso') {
     const toast = document.getElementById('toast-notificacao');
-    
-    // Define o ícone com base no tipo
-    let icone = "✅";
-    if(tipo === 'erro') icone = "❌";
-    if(tipo === 'info') icone = "ℹ️";
-
+    let icone = tipo === 'erro' ? "❌" : tipo === 'info' ? "ℹ️" : "✅";
     toast.innerHTML = `${icone} ${mensagem}`;
     toast.className = `toast show ${tipo}`;
-    
-    // Some após 3.5 segundos
-    setTimeout(() => {
-        toast.className = `toast hidden`;
-    }, 3500);
+    setTimeout(() => toast.className = `toast hidden`, 3500);
 };
 
-// --- INICIALIZAÇÃO DA LOJA ---
+// --- CARREGAR VITRINE DA LOJA ---
 window.carregarProdutosDoBanco = async function() {
     const grid = document.getElementById('product-grid');
     grid.innerHTML = '<p style="text-align:center; width: 100%; color: #aaa;">✨ Buscando a coleção perfeita para você...</p>';
-    
     try {
         const querySnapshot = await getDocs(collection(db, "produtos"));
         listaDeProdutos = [];
         grid.innerHTML = '';
-        
         if (querySnapshot.empty) {
             grid.innerHTML = '<p style="text-align:center; width: 100%;">Nenhuma peça disponível no momento. Volte mais tarde! 💕</p>';
             return;
         }
-
         querySnapshot.forEach((doc) => {
             let produto = doc.data();
             produto.id = doc.id;
             listaDeProdutos.push(produto);
-            
             const div = document.createElement('div');
             div.className = 'card';
             div.innerHTML = `
@@ -70,9 +62,7 @@ window.carregarProdutosDoBanco = async function() {
             `;
             grid.appendChild(div);
         });
-    } catch (error) {
-        grid.innerHTML = '<p style="color:red; text-align:center; width: 100%;">Ops, estamos atualizando nosso sistema. Tente recarregar!</p>';
-    }
+    } catch (error) { grid.innerHTML = '<p style="color:red; text-align:center; width: 100%;">Ops, erro ao carregar o sistema.</p>'; }
 }
 carregarProdutosDoBanco();
 
@@ -83,18 +73,11 @@ window.adicionarAoCarrinho = function(id) {
     atualizarCarrinho();
     mostrarNotificacao(`${produto.nome} foi para o carrinho!`, 'sucesso');
 };
-
-window.removerDoCarrinho = function(index) { 
-    carrinho.splice(index, 1); 
-    atualizarCarrinho(); 
-    mostrarNotificacao("Item removido do carrinho.", 'info');
-};
-
-window.toggleCart = () => {
-    document.getElementById('cart-modal').classList.toggle('hidden');
-    document.getElementById('etapa-carrinho').classList.remove('hidden');
-    document.getElementById('etapa-cadastro').classList.add('hidden');
-};
+window.removerDoCarrinho = function(index) { carrinho.splice(index, 1); atualizarCarrinho(); mostrarNotificacao("Item removido.", 'info');};
+window.toggleCart = () => { document.getElementById('cart-modal').classList.toggle('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); document.getElementById('etapa-cadastro').classList.add('hidden'); };
+window.irParaCadastro = function() { if(carrinho.length === 0) return mostrarNotificacao("Adicione uma roupinha ao carrinho primeiro!", 'erro'); document.getElementById('etapa-carrinho').classList.add('hidden'); document.getElementById('etapa-cadastro').classList.remove('hidden'); };
+window.voltarParaCarrinho = function() { document.getElementById('etapa-cadastro').classList.add('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); };
+window.copiarPix = function() { navigator.clipboard.writeText("81999999999").then(() => mostrarNotificacao("Chave PIX copiada! Abra o seu banco.", 'sucesso')); };
 
 function atualizarCarrinho() {
     document.getElementById('cart-count').innerText = carrinho.length;
@@ -103,33 +86,12 @@ function atualizarCarrinho() {
     let total = 0;
     carrinho.forEach((item, index) => {
         total += parseFloat(item.preco);
-        cartItems.innerHTML += `
-            <div class="cart-item">
-                <span style="font-weight: bold; color: #555;">${item.nome}</span>
-                <span>R$ ${parseFloat(item.preco).toFixed(2)} <button onclick="removerDoCarrinho(${index})" style="color:#ff4d4d; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.2rem; margin-left:10px;">&times;</button></span>
-            </div>
-        `;
+        cartItems.innerHTML += `<div class="cart-item"><span style="font-weight: bold; color: #555;">${item.nome}</span><span>R$ ${parseFloat(item.preco).toFixed(2)} <button onclick="removerDoCarrinho(${index})" style="color:#ff4d4d; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.2rem; margin-left:10px;">&times;</button></span></div>`;
     });
     document.getElementById('total-price').innerText = total.toFixed(2);
 }
 
-// --- FLUXO DE COMPRA ---
-window.irParaCadastro = function() {
-    if(carrinho.length === 0) return mostrarNotificacao("Adicione uma roupinha ao carrinho primeiro!", 'erro');
-    document.getElementById('etapa-carrinho').classList.add('hidden');
-    document.getElementById('etapa-cadastro').classList.remove('hidden');
-};
-
-window.voltarParaCarrinho = function() {
-    document.getElementById('etapa-cadastro').classList.add('hidden');
-    document.getElementById('etapa-carrinho').classList.remove('hidden');
-};
-
-window.copiarPix = function() {
-    navigator.clipboard.writeText("81999999999").then(() => mostrarNotificacao("Chave PIX copiada! Abra o seu banco.", 'sucesso'));
-};
-
-// --- VALIDAÇÃO DE CPF ---
+// --- VALIDAÇÃO DE CPF E CEP ---
 function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]+/g,'');
     if(cpf == '' || cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -150,28 +112,12 @@ document.getElementById('cliente-cpf').addEventListener('input', function(e) {
     let cpf = e.target.value;
     const msg = document.getElementById('cpf-msg');
     const btn = document.getElementById('btn-finalizar');
-    
     if(cpf.length === 11) {
-        if(validarCPF(cpf)) {
-            e.target.classList.add('cpf-valido');
-            msg.style.display = 'none';
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        } else {
-            e.target.classList.remove('cpf-valido');
-            msg.style.display = 'block';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-        }
-    } else {
-        e.target.classList.remove('cpf-valido');
-        msg.style.display = 'none';
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-    }
+        if(validarCPF(cpf)) { e.target.classList.add('cpf-valido'); msg.style.display = 'none'; btn.disabled = false; btn.style.opacity = '1';
+        } else { e.target.classList.remove('cpf-valido'); msg.style.display = 'block'; btn.disabled = true; btn.style.opacity = '0.5'; }
+    } else { e.target.classList.remove('cpf-valido'); msg.style.display = 'none'; btn.disabled = true; btn.style.opacity = '0.5'; }
 });
 
-// Busca CEP Automático
 document.getElementById('cliente-cep').addEventListener('blur', async function(e) {
     let cep = e.target.value.replace(/\D/g, '');
     if (cep.length === 8) {
@@ -185,14 +131,82 @@ document.getElementById('cliente-cep').addEventListener('blur', async function(e
                 document.getElementById('cliente-estado').value = data.uf;
                 document.getElementById('cliente-numero').focus();
                 mostrarNotificacao("Endereço encontrado!", 'sucesso');
-            } else {
-                mostrarNotificacao("CEP não encontrado.", 'erro');
-            }
+            } else { mostrarNotificacao("CEP não encontrado.", 'erro'); }
         } catch(err) { mostrarNotificacao("Erro ao buscar CEP.", 'erro'); }
     }
 });
 
-// --- FINALIZAR PEDIDO ---
+document.getElementById('perfil-cep').addEventListener('blur', async function(e) {
+    let cep = e.target.value.replace(/\D/g, '');
+    if (cep.length === 8) {
+        let res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        let data = await res.json();
+        if (!data.erro) {
+            document.getElementById('perfil-rua').value = data.logradouro;
+            document.getElementById('perfil-bairro').value = data.bairro;
+            document.getElementById('perfil-estado').value = data.uf;
+        }
+    }
+});
+
+// --- PAINEL DO USUÁRIO (PERFIL) ---
+window.abrirPerfil = () => document.getElementById('perfil-cliente-modal').classList.remove('hidden');
+window.fecharPerfil = () => {
+    document.getElementById('perfil-cliente-modal').classList.add('hidden');
+    document.getElementById('form-atualizar-perfil').classList.add('hidden');
+    document.getElementById('busca-perfil-area').classList.remove('hidden');
+    document.getElementById('busca-cpf').value = '';
+};
+
+window.buscarMeuCadastro = async function() {
+    const cpf = document.getElementById('busca-cpf').value.replace(/[^\d]+/g,'');
+    if(cpf.length !== 11 || !validarCPF(cpf)) return mostrarNotificacao("Digite um CPF válido!", "erro");
+    
+    mostrarNotificacao("Buscando dados...", "info");
+    const docRef = doc(db, "clientes", cpf);
+    const docSnap = await getDoc(docRef);
+
+    document.getElementById('busca-perfil-area').classList.add('hidden');
+    document.getElementById('form-atualizar-perfil').classList.remove('hidden');
+    document.getElementById('perfil-cpf').value = cpf;
+
+    if (docSnap.exists()) {
+        const c = docSnap.data();
+        document.getElementById('perfil-nome').value = c.nome;
+        document.getElementById('perfil-telefone').value = c.telefone;
+        document.getElementById('perfil-cep').value = c.cep;
+        document.getElementById('perfil-estado').value = c.estado;
+        document.getElementById('perfil-rua').value = c.rua;
+        document.getElementById('perfil-numero').value = c.numero;
+        document.getElementById('perfil-bairro').value = c.bairro;
+        document.getElementById('perfil-ref').value = c.ref || '';
+        mostrarNotificacao("Dados carregados com sucesso!", "sucesso");
+    } else {
+        mostrarNotificacao("Primeiro acesso! Preencha para salvar seu cadastro.", "info");
+    }
+};
+
+document.getElementById('form-atualizar-perfil').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const dadosCliente = {
+        nome: document.getElementById('perfil-nome').value,
+        cpf: document.getElementById('perfil-cpf').value,
+        telefone: document.getElementById('perfil-telefone').value,
+        cep: document.getElementById('perfil-cep').value,
+        rua: document.getElementById('perfil-rua').value,
+        numero: document.getElementById('perfil-numero').value,
+        bairro: document.getElementById('perfil-bairro').value,
+        estado: document.getElementById('perfil-estado').value,
+        ref: document.getElementById('perfil-ref').value
+    };
+    try {
+        await setDoc(doc(db, "clientes", dadosCliente.cpf), dadosCliente);
+        mostrarNotificacao("Seu endereço foi atualizado e salvo!", "sucesso");
+        window.fecharPerfil();
+    } catch (e) { mostrarNotificacao("Erro ao salvar.", "erro"); }
+});
+
+// --- FINALIZAR PEDIDO (CHECKOUT) ---
 document.getElementById('checkout-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -213,7 +227,7 @@ document.getElementById('checkout-form').addEventListener('submit', async functi
     const dataIso = new Date().toISOString(); 
     const dataFormatada = new Date().toLocaleDateString('pt-BR');
 
-    mostrarNotificacao("Processando pedido...", 'info');
+    mostrarNotificacao("Processando seu pedido...", 'info');
 
     try {
         await setDoc(doc(db, "clientes", dadosCliente.cpf), dadosCliente);
@@ -227,11 +241,9 @@ document.getElementById('checkout-form').addEventListener('submit', async functi
             data: dataFormatada,
             timestamp: dataIso 
         });
-    } catch (erro) {
-        console.error(erro);
-    }
+    } catch (erro) { console.error(erro); }
 
-    let mensagem = `Olá! Sou ${dadosCliente.nome} (CPF: ${dadosCliente.cpf}) e vim finalizar meu pedido da Maribella Kids:\n\n🛍️ *PRODUTOS:*\n`;
+    let mensagem = `Olá! Sou ${dadosCliente.nome} (CPF: ${dadosCliente.cpf}) e vim finalizar meu pedido:\n\n🛍️ *PRODUTOS:*\n`;
     carrinho.forEach(item => mensagem += `- ${item.nome} (R$ ${parseFloat(item.preco).toFixed(2)})\n`);
     mensagem += `\n💰 *TOTAL:* R$ ${total}\n\n📦 *ENTREGA:*\n${dadosCliente.rua}, ${dadosCliente.numero} - ${dadosCliente.bairro}, ${dadosCliente.estado}\nCEP: ${dadosCliente.cep}\nRef: ${dadosCliente.ref}\n`;
     if (obs) mensagem += `📌 *OBS:* ${obs}\n`;
@@ -247,22 +259,37 @@ document.getElementById('checkout-form').addEventListener('submit', async functi
 });
 
 
-// --- ÁREA DO ADMINISTRADOR TELA CHEIA ---
-window.abrirAdmin = function() {
-    const senhaAdmin = "1234"; 
-    const tentativa = prompt("Digite a senha do administrador:");
-    if(tentativa === senhaAdmin) {
+// --- ÁREA RESTRITA DO ADMIN (LOGIN SEGURO) ---
+window.abrirLoginAdmin = () => document.getElementById('admin-login-modal').classList.remove('hidden');
+window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
+
+document.getElementById('form-login-admin').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value;
+    const senha = document.getElementById('admin-senha').value;
+    const btn = document.getElementById('btn-entrar-admin');
+    
+    btn.innerText = "⏳ Autenticando...";
+    btn.disabled = true;
+    
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        mostrarNotificacao("Acesso Liberado com sucesso!", "sucesso");
+        fecharLoginAdmin();
         document.getElementById('admin-dashboard').classList.remove('hidden');
         document.getElementById('main-header').classList.add('hidden');
         document.getElementById('loja-main').classList.add('hidden');
-        mostrarNotificacao("Bem-vinda ao Painel Admin!", 'sucesso');
         carregarListaAdminPedidos();
-    } else if (tentativa !== null) {
-        mostrarNotificacao("Senha Incorreta!", 'erro');
+    } catch (error) {
+        mostrarNotificacao("E-mail ou Senha incorretos!", "erro");
     }
-};
+    btn.innerText = "Entrar no Painel";
+    btn.disabled = false;
+    this.reset();
+});
 
-window.fecharAdmin = function() {
+window.sairDoAdmin = async function() {
+    await signOut(auth);
     document.getElementById('admin-dashboard').classList.add('hidden');
     document.getElementById('main-header').classList.remove('hidden');
     document.getElementById('loja-main').classList.remove('hidden');
@@ -274,36 +301,50 @@ window.mudarAbaAdmin = function(abaId) {
     document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa'));
     document.getElementById(abaId).classList.remove('hidden');
     document.getElementById(`tab-${abaId}`).classList.add('ativa');
-
     if(abaId === 'admin-pedidos') carregarListaAdminPedidos();
     if(abaId === 'admin-clientes') carregarListaAdminClientes();
 };
 
-// Adicionar Produto
+// --- ADICIONAR PRODUTO (FAZENDO UPLOAD DA FOTO PRO STORAGE) ---
 document.getElementById('form-add-produto').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const btn = this.querySelector('button');
-    btn.innerText = "⏳ Salvando...";
+    const btn = document.getElementById('btn-salvar-produto');
+    const arquivoImagem = document.getElementById('add-imagem-file').files[0];
     
-    const novoProduto = {
-        nome: document.getElementById('add-nome').value,
-        preco: parseFloat(document.getElementById('add-preco').value),
-        tamanho: document.getElementById('add-tamanho').value,
-        material: document.getElementById('add-material').value,
-        imagem: document.getElementById('add-imagem').value
-    };
+    if (!arquivoImagem) return mostrarNotificacao("Você precisa selecionar uma foto!", "erro");
+
+    btn.innerText = "⏳ Enviando Foto e Salvando...";
+    btn.disabled = true;
 
     try {
+        // 1. Envia a foto para a pasta 'produtos' no Storage
+        const storageRef = ref(storage, 'produtos/' + Date.now() + '_' + arquivoImagem.name);
+        await uploadBytes(storageRef, arquivoImagem);
+        
+        // 2. Pega o link definitivo da foto que foi gerado
+        const urlFoto = await getDownloadURL(storageRef);
+
+        // 3. Salva os dados completos no Banco de Dados
+        const novoProduto = {
+            nome: document.getElementById('add-nome').value,
+            preco: parseFloat(document.getElementById('add-preco').value),
+            tamanho: document.getElementById('add-tamanho').value,
+            material: document.getElementById('add-material').value,
+            imagem: urlFoto 
+        };
+
         await addDoc(collection(db, "produtos"), novoProduto);
-        mostrarNotificacao("Produto adicionado com sucesso!", 'sucesso');
+        mostrarNotificacao("Roupinha adicionada com sucesso!", "sucesso");
         this.reset();
     } catch (erro) {
-        mostrarNotificacao("Erro ao salvar no banco de dados.", 'erro');
+        mostrarNotificacao("Erro ao enviar. Verifique sua conexão.", "erro");
+        console.error(erro);
     }
-    btn.innerText = "➕ Salvar Produto no Sistema";
+    btn.innerText = "➕ Salvar Produto";
+    btn.disabled = false;
 });
 
-// Admin: Carregar Pedidos
+// Admin: Puxar Pedidos
 async function carregarListaAdminPedidos() {
     const lista = document.getElementById('lista-admin-pedidos');
     lista.innerHTML = "<p style='color:#777;'>⏳ Puxando vendas da nuvem...</p>";
@@ -324,7 +365,7 @@ async function carregarListaAdminPedidos() {
     } catch (e) { lista.innerHTML = "<p style='color:red;'>Erro ao carregar do banco.</p>"; }
 }
 
-// Admin: Carregar Clientes
+// Admin: Puxar Clientes
 async function carregarListaAdminClientes() {
     const lista = document.getElementById('lista-admin-clientes');
     lista.innerHTML = "<p style='color:#777;'>⏳ Puxando clientes...</p>";
@@ -342,42 +383,3 @@ async function carregarListaAdminClientes() {
         });
     } catch (e) { lista.innerHTML = "<p style='color:red;'>Erro ao carregar clientes.</p>"; }
 }
-
-// --- GERAR DADOS FICTÍCIOS DE EXEMPLO ---
-window.gerarDadosFicticios = async function() {
-    mostrarNotificacao("Gerando exemplos... Aguarde!", 'info');
-    
-    const produtosExemplo = [
-        { nome: "Conjunto Moletom Ursinho", preco: 119.90, tamanho: "2, 3, 4 anos", material: "Moletom Peluciado", imagem: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?auto=format&fit=crop&q=80&w=800" },
-        { nome: "Vestido Floral Luxo", preco: 89.90, tamanho: "4, 6, 8 anos", material: "Algodão com Tule", imagem: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&q=80&w=800" },
-        { nome: "Jardineira Jeans Kids", preco: 95.00, tamanho: "P, M, G, GG", material: "Jeans Leve com Elastano", imagem: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=800" }
-    ];
-
-    const clienteExemplo = {
-        nome: "Maria Oliveira (Teste)", cpf: "12345678909", telefone: "(81) 99999-9999", cep: "50000-000",
-        rua: "Av. Principal", numero: "100", bairro: "Centro", estado: "PE", ref: "Ao lado da padaria"
-    };
-
-    try {
-        // Insere 3 produtos de exemplo
-        for(let prod of produtosExemplo) {
-            await addDoc(collection(db, "produtos"), prod);
-        }
-        
-        // Insere 1 cliente de exemplo
-        await setDoc(doc(db, "clientes", clienteExemplo.cpf), clienteExemplo);
-        
-        // Insere 1 pedido de exemplo
-        await addDoc(collection(db, "pedidos"), {
-            cliente: clienteExemplo.nome, cpf: clienteExemplo.cpf,
-            endereco: `${clienteExemplo.rua}, ${clienteExemplo.numero} - ${clienteExemplo.bairro}, ${clienteExemplo.estado}`,
-            observacao: "Deixar na portaria", itens: "Vestido Floral Luxo", total: "89.90",
-            data: new Date().toLocaleDateString('pt-BR'), timestamp: new Date().toISOString()
-        });
-
-        mostrarNotificacao("Exemplos criados com sucesso!", 'sucesso');
-        carregarListaAdminPedidos();
-    } catch(err) {
-        mostrarNotificacao("Erro ao gerar exemplos.", 'erro');
-    }
-};
