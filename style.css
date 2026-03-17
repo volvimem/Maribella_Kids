@@ -1,33 +1,31 @@
 :root {
     --primary: #ffb6c1; 
     --secondary: #87cefa; 
-    --bg-color: #000; /* Fundo escuro atrás do feed */
+    --bg-color: #111; /* Fundo escuro para o feed ficar imersivo */
     --text: #333;
     --success: #2ecc71;
     --error: #e74c3c;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
-body { background-color: var(--bg-color); color: var(--text); overflow: hidden; /* Trava rolagem do body */ }
+body { background-color: var(--bg-color); color: var(--text); overflow: hidden; /* Trava corpo, só o feed rola */ }
 
-header { background-color: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.logo { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: bold; color: white; }
-.logo-gif { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
-.menu-botoes { display: flex; gap: 10px; align-items: center; }
-.btn-icon, #cart-btn { background: white; border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.9rem; transition: 0.3s; }
+/* Cabeçalho Maior com Busca */
+header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px; }
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; color: white; }
+.logo-gif { width: 35px; height: 35px; border-radius: 50%; border: 2px solid white; }
+.menu-botoes { display: flex; gap: 8px; align-items: center; }
+.btn-icon, #cart-btn { background: white; border: none; padding: 8px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.85rem; transition: 0.3s; }
+.search-bar input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; font-size: 0.95rem; }
 
 /* FEED ESTILO TIKTOK */
-#loja-main { height: 100vh; width: 100vw; padding-top: 70px; background: #111; }
-.feed-grid { 
-    height: 100%; 
-    overflow-y: scroll; 
-    scroll-snap-type: y mandatory; /* Força a parada em cada produto */
-    scroll-behavior: smooth;
-}
-.feed-grid::-webkit-scrollbar { display: none; } /* Esconde barra de rolagem */
+#loja-main { height: 100vh; width: 100vw; padding-top: 105px; /* Espaço pro cabeçalho duplo */ }
+.feed-grid { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+.feed-grid::-webkit-scrollbar { display: none; } 
 
 .card { 
-    height: calc(100vh - 70px); 
+    height: calc(100vh - 105px); /* Tamanho exato da tela menos cabeçalho */
     width: 100%; 
     scroll-snap-align: start; 
     position: relative; 
@@ -37,37 +35,38 @@ header { background-color: var(--primary); padding: 15px 20px; display: flex; ju
 }
 .card img { 
     width: 100%; 
-    height: 70%; 
+    height: 65%; 
     object-fit: cover; 
     image-rendering: crisp-edges; 
+    cursor: zoom-in;
 }
 .card-info {
-    padding: 20px;
-    background: white;
-    height: 30%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border-radius: 20px 20px 0 0;
-    margin-top: -20px; /* Sobrepõe a imagem levemente */
-    z-index: 10;
+    padding: 15px 20px; background: white; height: 35%; display: flex; flex-direction: column; justify-content: space-between; border-radius: 25px 25px 0 0; margin-top: -25px; z-index: 10; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
 }
 .card-info h3 { font-size: 1.4rem; color: #333; }
-.card-info p { font-size: 0.9rem; color: #777; margin-bottom: 3px; }
-.card-info .preco { font-size: 1.5rem; font-weight: bold; color: var(--secondary); margin: 5px 0; }
-.btn-add { background: var(--secondary); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 1.1rem; font-weight: bold; }
+.card-info p { font-size: 0.95rem; color: #777; margin-bottom: 2px; }
+.card-info .preco { font-size: 1.6rem; font-weight: bold; color: var(--secondary); margin: 5px 0; }
+.btn-add { background: var(--secondary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-/* Restante dos Modais e Formulários */
-.modal { display: flex; align-items: flex-end; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; backdrop-filter: blur(3px);}
+/* ZOOM DA FOTO (Lightbox) */
+#lightbox-img { max-width: 95vw; max-height: 80vh; margin: auto; border-radius: 10px; transition: transform 0.3s ease; cursor: zoom-in; }
+#lightbox-img.zoomed { transform: scale(1.8); cursor: zoom-out; }
+
+/* Botão Flutuante do Admin */
+.btn-admin-flutuante { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 999; backdrop-filter: blur(5px); transition: 0.3s;}
+.btn-admin-flutuante:hover { background: rgba(0,0,0,0.8); transform: scale(1.1); }
+
+/* Modais e Forms */
+.modal { display: flex; align-items: flex-end; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; backdrop-filter: blur(3px);}
 .hidden { display: none !important; }
 .modal-content { background: white; width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 25px 25px 0 0; max-height: 90vh; overflow-y: auto; position: relative;}
-.close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: #aaa; line-height: 1;}
+.close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: #aaa; line-height: 1; z-index: 10;}
 
 .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; font-size: 1rem;}
 .cart-total { font-size: 1.4rem; font-weight: bold; text-align: right; margin-top: 15px; color: var(--primary);}
 
-form { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-input, textarea { padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 1rem; outline: none; background: #fafafa;}
+form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+input, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fafafa;}
 input[type="file"] { padding: 10px; border: 2px dashed var(--primary); background: #fffaf0; }
 .btn-whatsapp { background: #25D366; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; margin-top: 10px;}
 .pagamento-info { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; border: 2px dashed #ffb6c1;}
@@ -78,10 +77,9 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.sucesso { border-left: 5px solid var(--success); }
 .toast.erro { border-left: 5px solid var(--error); }
-.toast.info { border-left: 5px solid var(--secondary); }
 
 /* Admin Fullscreen */
-#admin-dashboard { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f4f4f9; z-index: 300; display: flex; flex-direction: column; }
+#admin-dashboard { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f4f4f9; z-index: 3000; display: flex; flex-direction: column; }
 @media (min-width: 768px) { #admin-dashboard { flex-direction: row; } }
 .admin-sidebar { background: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); overflow-y: auto;}
 @media (min-width: 768px) { .admin-sidebar { width: 280px; } }
@@ -90,8 +88,6 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .admin-tab-btn { background: none; border: none; text-align: left; padding: 15px; font-size: 1.1rem; cursor: pointer; border-radius: 8px; color: #555;}
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
-/* Status do Pedido */
 .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: white;}
 .status-pendente { background: #f39c12; }
 .status-aprovado { background: var(--success); }
