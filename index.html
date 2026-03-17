@@ -11,10 +11,17 @@
 <body>
 
     <header>
-        <div class="logo">🧸 Maribella Kids</div>
-        <button id="cart-btn" onclick="toggleCart()">
-            🛒 Carrinho (<span id="cart-count">0</span>)
-        </button>
+        <div class="logo">
+            <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Criança Modelo" class="logo-gif">
+            <span>Maribella Kids</span>
+        </div>
+        <div class="menu-botoes">
+            <button class="btn-icon" onclick="abrirAdmin()" title="Área do Administrador">⚙️</button>
+            <button class="btn-icon" onclick="togglePerfil()">👤 Perfil</button>
+            <button id="cart-btn" onclick="toggleCart()">
+                🛒 Carrinho (<span id="cart-count">0</span>)
+            </button>
+        </div>
     </header>
 
     <main>
@@ -29,23 +36,48 @@
             <h2>Seu Carrinho</h2>
             <div id="cart-items"></div>
             <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
-
             <hr>
-
             <h3>Dados para Envio</h3>
             <form id="checkout-form">
                 <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
                 <input type="text" id="cliente-endereco" placeholder="Endereço Completo (Rua, Nº, Bairro, CEP)" required>
-                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho, tamanho específico...)"></textarea>
-                
+                <textarea id="cliente-obs" placeholder="Observações (Ex: Deixar com o vizinho...)"></textarea>
                 <div class="pagamento-info">
                     <h4>Pagamento via PIX</h4>
-                    <p>Chave PIX (Celular): <strong>81999999999</strong></p>
+                    <p>Chave PIX: <strong>81999999999</strong></p>
                     <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
                 </div>
-
                 <button type="submit" class="btn-whatsapp">📲 Enviar Pedido no WhatsApp</button>
             </form>
+        </div>
+    </div>
+
+    <div id="perfil-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="togglePerfil()">&times;</span>
+            <h2>👤 Meu Perfil</h2>
+            <div class="tabs">
+                <button onclick="mostrarAba('pedidos')" class="tab-btn ativa" id="tab-pedidos">Meus Pedidos</button>
+                <button onclick="mostrarAba('enderecos')" class="tab-btn" id="tab-enderecos">Meus Endereços</button>
+            </div>
+            <div id="conteudo-pedidos" class="tab-conteudo">
+                <p>Aqui ficam os seus pedidos anteriores.</p>
+                <div id="lista-meus-pedidos"></div>
+            </div>
+            <div id="conteudo-enderecos" class="tab-conteudo hidden">
+                <p>Seus endereços salvos:</p>
+                <div id="lista-meus-enderecos"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="fecharAdmin()">&times;</span>
+            <h2 style="color: red;">⚙️ Painel do Administrador</h2>
+            <p>Histórico de todos os pedidos gerados neste dispositivo:</p>
+            <div id="lista-admin-pedidos"></div>
+            <button onclick="limparHistoricoAdmin()" style="margin-top: 15px; background: red; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">Limpar Histórico</button>
         </div>
     </div>
 
