@@ -4,14 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Maribella Kids | Coleção Semanal</title>
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
-    <meta name="theme-color" content="#ffb6c1">
-    
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
@@ -19,105 +14,63 @@
 
     <header id="main-header">
         <div class="logo">
-            <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Criança Modelo" class="logo-gif">
+            <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Logo" class="logo-gif">
             <span>Maribella Kids</span>
         </div>
         <div class="menu-botoes">
-            <button class="btn-icon" onclick="abrirPerfil()" title="Meu Cadastro">👤 Meu Perfil</button>
-            <button id="cart-btn" onclick="toggleCart()">🛒 Carrinho (<span id="cart-count">0</span>)</button>
+            <button class="btn-icon" onclick="abrirLoginCliente()" title="Meus Pedidos">👤 Entrar</button>
+            <button id="cart-btn" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</button>
         </div>
     </header>
 
     <main id="loja-main">
-        <h2 class="colecao-titulo">Coleção da Semana ✨</h2>
-        <div id="product-grid" class="grid">
-            <p style="text-align: center; width: 100%; color: #aaa;">⏳ Carregando novidades lindas para você...</p>
+        <div id="product-grid" class="feed-grid">
+            <p style="text-align: center; width: 100%; color: #aaa; margin-top: 50px;">⏳ Carregando coleção...</p>
         </div>
     </main>
 
-    <footer style="text-align: center; padding: 40px 20px; margin-top: 40px; font-size: 0.8rem; color: #ddd; cursor: pointer;" onclick="abrirLoginAdmin()">
-        Área Restrita do Sistema
+    <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: #ddd; cursor: pointer;" onclick="abrirLoginAdmin()">
+        Área Restrita
     </footer>
 
-    <div id="admin-login-modal" class="modal hidden">
+    <div id="cliente-login-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 350px; text-align: center;">
-            <span class="close" onclick="fecharLoginAdmin()">&times;</span>
-            <h2 style="color: var(--primary); margin-bottom: 10px;">🔐 Acesso Restrito</h2>
-            <p style="font-size: 0.9rem; color: #777; margin-bottom: 20px;">Painel exclusivo da administração Maribella Kids.</p>
-            <form id="form-login-admin">
-                <input type="email" id="admin-email" placeholder="E-mail Administrativo" required>
-                <input type="password" id="admin-senha" placeholder="Senha" required>
-                <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar no Painel</button>
+            <span class="close" onclick="fecharLoginCliente()">&times;</span>
+            <h2 style="color: var(--secondary); margin-bottom: 10px;">👤 Meus Pedidos</h2>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">Acompanhe suas compras.</p>
+            <form id="form-login-cliente">
+                <input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="mascaraCPF(this)">
+                <input type="password" id="login-senha-cliente" placeholder="Sua Senha" required>
+                <button type="submit" class="btn-whatsapp" style="width: 100%;">Entrar</button>
             </form>
-        </div>
-    </div>
-
-    <div id="admin-dashboard" class="hidden">
-        <div class="admin-sidebar">
-            <h2>⚙️ Painel Maribella</h2>
-            <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn ativa" id="tab-admin-produtos">📦 Produtos</button>
-            <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn" id="tab-admin-pedidos">🛍️ Pedidos</button>
-            <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
-            <div style="margin-top: auto;">
-                <button onclick="sairDoAdmin()" class="btn-sair">❌ Sair do Painel</button>
-            </div>
-        </div>
-        
-        <div class="admin-content">
-            <div id="admin-produtos" class="admin-aba">
-                <h3>Adicionar Novo Produto</h3>
-                <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">Faça o upload da foto oficial da roupinha direto do seu celular ou computador.</p>
-                <form id="form-add-produto" class="admin-form">
-                    <input type="text" id="add-nome" placeholder="Nome do Modelo (Ex: Vestido Princesa)" required>
-                    <input type="number" id="add-preco" placeholder="Preço (Ex: 89.90)" step="0.01" required>
-                    <input type="text" id="add-tamanho" placeholder="Tamanhos Disponíveis (Ex: 2, 4, 6 anos)" required>
-                    <input type="text" id="add-material" placeholder="Tipo do Material" required>
-                    
-                    <label for="add-imagem-file" style="font-weight: bold; font-size: 0.9rem; color: #555; margin-top: 10px;">Envie a Foto do Produto:</label>
-                    <input type="file" id="add-imagem-file" accept="image/*" required style="background: white;">
-                    
-                    <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">➕ Salvar Produto</button>
-                </form>
-            </div>
-
-            <div id="admin-pedidos" class="admin-aba hidden">
-                <h3>Histórico de Vendas</h3>
-                <div id="lista-admin-pedidos"></div>
-            </div>
-
-            <div id="admin-clientes" class="admin-aba hidden">
-                <h3>Cadastro de Clientes</h3>
-                <div id="lista-admin-clientes"></div>
-            </div>
         </div>
     </div>
 
     <div id="perfil-cliente-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="fecharPerfil()">&times;</span>
-            <h2 style="color: var(--secondary);">👤 Meu Cadastro</h2>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Mantenha seus dados de entrega atualizados.</p>
+            <h2 style="color: var(--secondary);">👤 Meu Painel</h2>
+            <button onclick="sairCliente()" class="btn-icon" style="background:#eee; color:#333; margin-bottom: 15px;">Sair da Conta</button>
             
-            <div id="busca-perfil-area">
-                <input type="text" id="busca-cpf" placeholder="Digite seu CPF para buscar" maxlength="11">
-                <button class="btn-add" onclick="buscarMeuCadastro()">🔍 Buscar Meus Dados</button>
-            </div>
+            <h3>Meus Pedidos</h3>
+            <div id="lista-meus-pedidos" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
 
-            <form id="form-atualizar-perfil" class="hidden">
+            <h3>Atualizar Endereço</h3>
+            <form id="form-atualizar-perfil">
                 <input type="hidden" id="perfil-cpf">
                 <input type="text" id="perfil-nome" placeholder="Nome Completo" required>
-                <input type="tel" id="perfil-telefone" placeholder="Telefone / WhatsApp" required>
+                <input type="tel" id="perfil-telefone" placeholder="WhatsApp" required>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required>
-                    <input type="text" id="perfil-estado" placeholder="Estado (UF)" style="width: 80px;" required>
+                    <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'perfil')">
+                    <input type="text" id="perfil-estado" placeholder="UF" style="width: 80px;" required>
                 </div>
                 <input type="text" id="perfil-rua" placeholder="Rua / Avenida" required>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="perfil-numero" placeholder="Número" style="width: 100px;" required>
+                    <input type="text" id="perfil-numero" placeholder="Nº" style="width: 100px;" required>
                     <input type="text" id="perfil-bairro" placeholder="Bairro" style="flex: 1;" required>
                 </div>
                 <input type="text" id="perfil-ref" placeholder="Ponto de Referência">
-                <button type="submit" class="btn-whatsapp">💾 Atualizar Meu Endereço</button>
+                <button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button>
             </form>
         </div>
     </div>
@@ -130,41 +83,97 @@
                 <h2>Seu Carrinho</h2>
                 <div id="cart-items"></div>
                 <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
-                <button class="btn-whatsapp" onclick="irParaCadastro()" style="width: 100%; margin-top: 20px;">Fazer Meu Pedido</button>
+                <button class="btn-whatsapp" onclick="irParaCadastro()" style="width: 100%; margin-top: 20px;">Finalizar Compra</button>
             </div>
 
             <div id="etapa-cadastro" class="hidden">
-                <h2>Finalizar Pedido</h2>
-                <p>Preencha seus dados para envio.</p>
+                <h2>Dados de Envio</h2>
                 <form id="checkout-form">
-                    <input type="text" id="cliente-nome" placeholder="Nome Completo" required>
-                    <input type="text" id="cliente-cpf" placeholder="CPF (Apenas números)" maxlength="11" required>
-                    <span id="cpf-msg" style="font-size: 0.8rem; color: red; margin-top:-5px; display:none;">CPF Inválido!</span>
-                    <input type="tel" id="cliente-telefone" placeholder="Telefone / WhatsApp" required>
+                    <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()">
+                    <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()">
                     
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required>
-                        <input type="text" id="cliente-estado" placeholder="Estado (UF)" style="width: 80px;" required>
+                    <div id="area-senha-nova" style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acompanhar seu pedido:</label>
+                        <input type="password" id="cliente-senha" placeholder="Crie uma senha" required>
                     </div>
-                    
-                    <input type="text" id="cliente-rua" placeholder="Rua / Avenida" required>
+
+                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp" required oninput="salvarFormulario()">
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" id="cliente-numero" placeholder="Número" style="width: 100px;" required>
-                        <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex: 1;" required>
+                        <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()">
+                        <input type="text" id="cliente-estado" placeholder="UF" style="width: 80px;" required oninput="salvarFormulario()">
                     </div>
-                    
-                    <input type="text" id="cliente-ref" placeholder="Ponto de Referência">
-                    <textarea id="cliente-obs" placeholder="Observações do Pedido (Opcional)"></textarea>
+                    <input type="text" id="cliente-rua" placeholder="Rua" required oninput="salvarFormulario()">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cliente-numero" placeholder="Nº" style="width: 100px;" required oninput="salvarFormulario()">
+                        <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex: 1;" required oninput="salvarFormulario()">
+                    </div>
+                    <input type="text" id="cliente-ref" placeholder="Ponto de Referência" oninput="salvarFormulario()">
+                    <textarea id="cliente-obs" placeholder="Observações do Pedido" oninput="salvarFormulario()"></textarea>
                     
                     <div class="pagamento-info">
                         <h4>Pagamento via PIX</h4>
                         <p>Chave PIX: <strong>81999999999</strong></p>
-                        <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+                        <button type="button" class="btn-pix" onclick="copiarPix()">📋 Copiar Chave</button>
                     </div>
 
-                    <button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background: #ccc; color: #333;">Voltar</button>
-                    <button type="submit" class="btn-whatsapp" id="btn-finalizar" disabled style="opacity: 0.5;">📲 Confirmar e Enviar WhatsApp</button>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background: #ccc; color: #333; flex: 1;">Voltar</button>
+                        <button type="submit" class="btn-whatsapp" style="flex: 2; margin-top:0;">📲 Enviar Pedido</button>
+                    </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-login-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <span class="close" onclick="fecharLoginAdmin()">&times;</span>
+            <h2 style="color: var(--primary); margin-bottom: 10px;">🔐 Admin</h2>
+            <form id="form-login-admin">
+                <input type="email" id="admin-email" placeholder="E-mail Administrativo" required>
+                <input type="password" id="admin-senha" placeholder="Senha" required>
+                <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+        <div class="admin-sidebar">
+            <h2>⚙️ Painel Maribella</h2>
+            <button onclick="mudarAbaAdmin('admin-produtos')" class="admin-tab-btn ativa" id="tab-admin-produtos">📦 Produtos</button>
+            <button onclick="mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn" id="tab-admin-pedidos">🛍️ Pedidos</button>
+            <button onclick="mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
+            <button onclick="sairDoAdmin()" class="btn-sair" style="margin-top: auto;">❌ Sair</button>
+        </div>
+        
+        <div class="admin-content">
+            <div id="admin-produtos" class="admin-aba">
+                <h3>Adicionar / Editar Produto</h3>
+                <form id="form-add-produto" class="admin-form">
+                    <input type="hidden" id="edit-produto-id">
+                    <input type="text" id="add-nome" placeholder="Nome do Modelo" required>
+                    <input type="number" id="add-preco" placeholder="Preço (Ex: 89.90)" step="0.01" required>
+                    <input type="text" id="add-tamanho" placeholder="Tamanhos Disponíveis" required>
+                    <input type="text" id="add-material" placeholder="Tipo do Material" required>
+                    <label style="font-size: 0.9rem; margin-top: 10px;">Foto (Deixe em branco para manter a atual na edição):</label>
+                    <input type="file" id="add-imagem-file" accept="image/*" style="background: white;">
+                    <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
+                    <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Cancelar Edição</button>
+                </form>
+
+                <h3 style="margin-top: 30px;">Produtos Cadastrados</h3>
+                <div id="lista-admin-produtos-cadastrados" style="display: grid; gap: 10px; margin-top: 15px;"></div>
+            </div>
+
+            <div id="admin-pedidos" class="admin-aba hidden">
+                <h3>Gerenciar Vendas</h3>
+                <div id="lista-admin-pedidos"></div>
+            </div>
+
+            <div id="admin-clientes" class="admin-aba hidden">
+                <h3>Clientes & Transmissão</h3>
+                <button onclick="gerarListaTransmissao()" class="btn-add" style="margin-bottom: 15px; background: #2ecc71;">📢 Copiar Números para Transmissão</button>
+                <div id="lista-admin-clientes"></div>
             </div>
         </div>
     </div>
