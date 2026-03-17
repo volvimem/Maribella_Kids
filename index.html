@@ -155,11 +155,11 @@
             <div id="admin-pedidos" class="admin-aba">
                 <h3>Gerenciar Vendas</h3>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="busca-pedido" placeholder="Buscar Cliente ou Cidade..." oninput="filtrarPedidosAdmin()" style="flex:2;">
+                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente ou CPF..." oninput="filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
                     <select id="filtro-status" onchange="filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
                         <option value="Todos">Todos</option>
-                        <option value="Aprovado">Aprovados</option>
                         <option value="Pendente">Pendentes</option>
+                        <option value="Aprovado">Aprovados</option>
                     </select>
                 </div>
                 <div id="lista-admin-pedidos"></div>
@@ -178,17 +178,15 @@
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
                     <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Cancelar Edição</button>
                 </form>
+                
                 <h3 style="margin-top: 30px;">Catálogo</h3>
-                <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px; margin-top: 15px;"></div>
+                <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto para editar..." oninput="filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
+                <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px;"></div>
             </div>
 
             <div id="admin-clientes" class="admin-aba hidden">
-                <h3>Clientes & Transmissão</h3>
-                <p style="font-size:0.85rem; color:#666; margin-bottom:10px;">Selecione os clientes e copie os números para colar em sua lista de transmissão.</p>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <button onclick="selecionarTodosClientes()" class="btn-icon" style="background:#ddd;">Marcar Todos</button>
-                    <button onclick="gerarListaTransmissao()" class="btn-add" style="background: #2ecc71; margin-top:0;">📢 Copiar Selecionados</button>
-                </div>
+                <h3>Clientes Cadastrados</h3>
+                <input type="text" id="busca-cliente-admin" placeholder="🔍 Buscar por nome ou telefone..." oninput="filtrarClientesAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-clientes"></div>
             </div>
 
@@ -219,7 +217,7 @@
 
             <div id="admin-config" class="admin-aba hidden">
                 <h3>🔧 Ajustes da Loja</h3>
-                <form id="form-config-loja" class="admin-form">
+                <form id="form-config-loja" class="admin-form" onsubmit="salvarConfiguracoes(event)">
                     <label style="font-weight:bold;">Chave PIX:</label>
                     <input type="text" id="config-pix" required>
                     <label style="font-weight:bold; margin-top:10px;">Telefone da Vendedora (Com DDD):</label>
