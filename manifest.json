@@ -1,0 +1,21 @@
+{
+  "name": "Boutique Kids Coleção",
+  "short_name": "BoutiqueKids",
+  "description": "Nossa coleção semanal de roupas infantis",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#ffb6c1",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
