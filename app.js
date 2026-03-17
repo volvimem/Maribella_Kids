@@ -14,319 +14,195 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app); 
-const auth = getAuth(app);       
+const db = getFirestore(app); const storage = getStorage(app); const auth = getAuth(app);       
 
 let carrinho = JSON.parse(localStorage.getItem('maribella_carrinho')) || [];
-let listaDeProdutos = []; // Lista original
-let clienteLogadoCpf = null;
+let listaDeProdutos = []; 
+let todosPedidosAdmin = []; 
+let todosProdutosAdmin = [];
+let todosClientesAdmin = [];
+let configLoja = { pix: "Chave não configurada", telefone: "5581999999999" };
 
-// --- FUNÇÕES ÚTEIS ---
-window.mascaraCPF = function(input) {
-    let v = input.value.replace(/\D/g,"");
-    v = v.replace(/(\d{3})(\d)/,"$1.$2");
-    v = v.replace(/(\d{3})(\d)/,"$1.$2");
-    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
-    input.value = v;
-};
+// --- UTILIDADES ---
+window.mascaraCPF = function(i) { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
+window.mostrarNotificacao = function(msg, t = 'sucesso') { const toast = document.getElementById('toast-notificacao'); toast.innerHTML = `${t==='erro'?"❌":t==='info'?"ℹ️":"✅"} ${msg}`; toast.className = `toast show ${t}`; setTimeout(() => toast.className = `toast hidden`, 3500); };
+window.abrirLightbox = function(src) { const m = document.getElementById('lightbox-modal'); const img = document.getElementById('lightbox-img'); img.src = src; img.classList.remove('zoomed'); m.classList.remove('hidden'); };
+window.fecharLightbox = function() { document.getElementById('lightbox-modal').classList.add('hidden'); };
+window.toggleZoom = function() { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 
-window.mostrarNotificacao = function(mensagem, tipo = 'sucesso') {
-    const toast = document.getElementById('toast-notificacao');
-    let icone = tipo === 'erro' ? "❌" : tipo === 'info' ? "ℹ️" : "✅";
-    toast.innerHTML = `${icone} ${mensagem}`;
-    toast.className = `toast show ${tipo}`;
-    setTimeout(() => toast.className = `toast hidden`, 3500);
-};
+// --- CONFIGURAÇÕES DA LOJA ---
+async function carregarConfiguracoes() {
+    const snap = await getDoc(doc(db, "config", "loja"));
+    if(snap.exists()) {
+        configLoja = snap.data();
+        document.getElementById('pix-display').innerText = configLoja.pix;
+        document.getElementById('config-pix').value = configLoja.pix;
+        document.getElementById('config-telefone').value = configLoja.telefone;
+    }
+}
 
-// --- ZOOM DA IMAGEM (LIGHTBOX) ---
-window.abrirLightbox = function(src) {
-    const modal = document.getElementById('lightbox-modal');
-    const img = document.getElementById('lightbox-img');
-    img.src = src;
-    img.classList.remove('zoomed'); // reseta zoom
-    modal.classList.remove('hidden');
-};
-window.fecharLightbox = function() {
-    document.getElementById('lightbox-modal').classList.add('hidden');
-};
-window.toggleZoom = function() {
-    const img = document.getElementById('lightbox-img');
-    img.classList.toggle('zoomed');
-};
-
-// --- CARREGAR E FILTRAR VITRINE ---
-window.carregarProdutosDoBanco = async function() {
-    const grid = document.getElementById('product-grid');
-    grid.innerHTML = '<p style="text-align:center; width: 100%; color: #aaa; margin-top: 50px;">✨ Preparando o desfile...</p>';
+// Previne o reload na hora de salvar a Configuração do Admin (Problema 5 resolvido)
+window.salvarConfiguracoes = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-salvar-config');
+    btn.innerText = "⏳ Salvando...";
     try {
-        const querySnapshot = await getDocs(collection(db, "produtos"));
-        listaDeProdutos = [];
-        if (querySnapshot.empty) {
-            grid.innerHTML = '<p style="text-align:center; color:white; margin-top: 50px;">Nenhuma peça no momento.</p>';
-            return;
-        }
-        querySnapshot.forEach((doc) => {
-            let p = doc.data(); p.id = doc.id;
-            listaDeProdutos.push(p);
-        });
+        configLoja.pix = document.getElementById('config-pix').value;
+        configLoja.telefone = document.getElementById('config-telefone').value;
+        await setDoc(doc(db, "config", "loja"), configLoja);
+        document.getElementById('pix-display').innerText = configLoja.pix;
+        mostrarNotificacao("Ajustes salvos com sucesso!", "sucesso");
+    } catch(err) { mostrarNotificacao("Erro ao salvar config.", "erro"); }
+    btn.innerText = "💾 Atualizar Dados";
+};
+
+// --- VITRINE ---
+window.carregarProdutosDoBanco = async function() {
+    const grid = document.getElementById('product-grid'); grid.innerHTML = '<p style="text-align:center;color:#aaa;margin-top:50px;">✨ Carregando...</p>';
+    try {
+        const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
+        if (snap.empty) { grid.innerHTML = '<p style="text-align:center;color:white;margin-top:50px;">Nenhuma peça no momento.</p>'; return; }
+        snap.forEach(d => { let p = d.data(); p.id = d.id; listaDeProdutos.push(p); });
         renderizarFeed(listaDeProdutos);
-    } catch (error) { grid.innerHTML = '<p style="color:red; text-align:center; margin-top:50px;">Ops, erro ao carregar.</p>'; }
+    } catch (e) { grid.innerHTML = '<p style="color:red;text-align:center;">Erro ao carregar.</p>'; }
 }
 
 function renderizarFeed(lista) {
-    const grid = document.getElementById('product-grid');
-    grid.innerHTML = '';
-    if(lista.length === 0) grid.innerHTML = '<p style="text-align:center; color:white; margin-top:50px;">Nenhum produto encontrado com essa busca.</p>';
-    lista.forEach(produto => {
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.innerHTML = `
-            <img src="${produto.imagem}" alt="${produto.nome}" onclick="abrirLightbox('${produto.imagem}')" title="Toque para ampliar">
-            <div class="card-info">
-                <div>
-                    <h3>${produto.nome}</h3>
-                    <p><strong>Tam:</strong> ${produto.tamanho} | <strong>Tecido:</strong> ${produto.material}</p>
-                    <p class="preco">R$ ${parseFloat(produto.preco).toFixed(2)}</p>
-                </div>
-                <button class="btn-add" onclick="adicionarAoCarrinho('${produto.id}')">🛒 Colocar no Carrinho</button>
-            </div>
-        `;
-        grid.appendChild(div);
+    const grid = document.getElementById('product-grid'); grid.innerHTML = '';
+    if(lista.length === 0) grid.innerHTML = '<p style="text-align:center;color:white;margin-top:50px;">Nenhum produto encontrado.</p>';
+    lista.forEach(p => {
+        grid.innerHTML += `<div class="card"><img src="${p.imagem}" onclick="abrirLightbox('${p.imagem}')"><div class="card-info"><div><h3>${p.nome}</h3><p><strong>Tam:</strong> ${p.tamanho} | <strong>Tec:</strong> ${p.material}</p><p class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</p></div><button class="btn-add" onclick="adicionarAoCarrinho('${p.id}')">🛒 Colocar no Carrinho</button></div></div>`;
     });
 }
-
 window.filtrarProdutos = function() {
     const termo = document.getElementById('busca-input').value.toLowerCase();
-    const filtrados = listaDeProdutos.filter(p => 
-        p.nome.toLowerCase().includes(termo) || 
-        p.material.toLowerCase().includes(termo) ||
-        p.id.toLowerCase().includes(termo)
-    );
-    renderizarFeed(filtrados);
+    renderizarFeed(listaDeProdutos.filter(p => p.nome.toLowerCase().includes(termo) || p.material.toLowerCase().includes(termo)));
 };
 
-// --- CARRINHO E PERSISTÊNCIA ---
-window.adicionarAoCarrinho = function(id) {
-    const produto = listaDeProdutos.find(p => p.id === id);
-    carrinho.push(produto);
-    salvarCarrinhoNoLocal();
-    mostrarNotificacao(`${produto.nome} adicionado!`, 'sucesso');
-};
-window.removerDoCarrinho = function(index) { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); mostrarNotificacao("Item removido.", 'info');};
+// --- CARRINHO E CHECKOUT ---
+window.adicionarAoCarrinho = function(id) { carrinho.push(listaDeProdutos.find(p => p.id === id)); salvarCarrinhoNoLocal(); mostrarNotificacao("Adicionado!", 'sucesso'); };
+window.removerDoCarrinho = function(index) { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 function salvarCarrinhoNoLocal() { localStorage.setItem('maribella_carrinho', JSON.stringify(carrinho)); atualizarCarrinho(); }
 window.toggleCart = () => { document.getElementById('cart-modal').classList.toggle('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); document.getElementById('etapa-cadastro').classList.add('hidden'); };
-window.irParaCadastro = function() { 
-    if(carrinho.length === 0) return mostrarNotificacao("Carrinho vazio!", 'erro'); 
-    document.getElementById('etapa-carrinho').classList.add('hidden'); 
-    document.getElementById('etapa-cadastro').classList.remove('hidden'); 
-};
+window.irParaCadastro = function() { if(carrinho.length===0) return mostrarNotificacao("Carrinho vazio!",'erro'); document.getElementById('etapa-carrinho').classList.add('hidden'); document.getElementById('etapa-cadastro').classList.remove('hidden'); };
 window.voltarParaCarrinho = function() { document.getElementById('etapa-cadastro').classList.add('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); };
-window.copiarPix = function() { navigator.clipboard.writeText("81999999999").then(() => mostrarNotificacao("Chave PIX copiada!", 'sucesso')); };
+window.copiarPix = function() { navigator.clipboard.writeText(configLoja.pix).then(() => mostrarNotificacao("Chave PIX copiada!", 'sucesso')); };
 
 function atualizarCarrinho() {
     document.getElementById('cart-count').innerText = carrinho.length;
-    const cartItems = document.getElementById('cart-items');
-    cartItems.innerHTML = '';
-    let total = 0;
-    carrinho.forEach((item, index) => {
-        total += parseFloat(item.preco);
-        cartItems.innerHTML += `<div class="cart-item"><span style="font-weight: bold; color: #555;">${item.nome}</span><span>R$ ${parseFloat(item.preco).toFixed(2)} <button onclick="removerDoCarrinho(${index})" style="color:#ff4d4d; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.2rem; margin-left:10px;">&times;</button></span></div>`;
-    });
+    const cartItems = document.getElementById('cart-items'); cartItems.innerHTML = ''; let total = 0;
+    carrinho.forEach((item, index) => { total += parseFloat(item.preco); cartItems.innerHTML += `<div class="cart-item"><span>${item.nome}</span><span>R$ ${parseFloat(item.preco).toFixed(2)} <button onclick="removerDoCarrinho(${index})" style="color:red;background:none;border:none;font-weight:bold;">X</button></span></div>`; });
     document.getElementById('total-price').innerText = total.toFixed(2);
 }
 
-// Salva digitacao do form checkout
 window.salvarFormulario = function() {
-    const formDados = {
-        nome: document.getElementById('cliente-nome').value,
-        cpf: document.getElementById('cliente-cpf').value,
-        telefone: document.getElementById('cliente-telefone').value,
-        cep: document.getElementById('cliente-cep').value,
-        estado: document.getElementById('cliente-estado').value,
-        rua: document.getElementById('cliente-rua').value,
-        numero: document.getElementById('cliente-numero').value,
-        bairro: document.getElementById('cliente-bairro').value,
-        ref: document.getElementById('cliente-ref').value,
-        obs: document.getElementById('cliente-obs').value
-    };
-    localStorage.setItem('maribella_form_checkout', JSON.stringify(formDados));
+    localStorage.setItem('maribella_form', JSON.stringify({ nome: document.getElementById('cliente-nome').value, cpf: document.getElementById('cliente-cpf').value, tel: document.getElementById('cliente-telefone').value, cep: document.getElementById('cliente-cep').value, uf: document.getElementById('cliente-estado').value, rua: document.getElementById('cliente-rua').value, num: document.getElementById('cliente-numero').value, bairro: document.getElementById('cliente-bairro').value, ref: document.getElementById('cliente-ref').value }));
 };
-function carregarFormularioSalvo() {
-    const salvo = JSON.parse(localStorage.getItem('maribella_form_checkout'));
-    if(salvo) {
-        document.getElementById('cliente-nome').value = salvo.nome || '';
-        document.getElementById('cliente-cpf').value = salvo.cpf || '';
-        document.getElementById('cliente-telefone').value = salvo.telefone || '';
-        document.getElementById('cliente-cep').value = salvo.cep || '';
-        document.getElementById('cliente-estado').value = salvo.estado || '';
-        document.getElementById('cliente-rua').value = salvo.rua || '';
-        document.getElementById('cliente-numero').value = salvo.numero || '';
-        document.getElementById('cliente-bairro').value = salvo.bairro || '';
-        document.getElementById('cliente-ref').value = salvo.ref || '';
-        document.getElementById('cliente-obs').value = salvo.obs || '';
-    }
+function carregarForm() {
+    const s = JSON.parse(localStorage.getItem('maribella_form'));
+    if(s) { document.getElementById('cliente-nome').value=s.nome||''; document.getElementById('cliente-cpf').value=s.cpf||''; document.getElementById('cliente-telefone').value=s.tel||''; document.getElementById('cliente-cep').value=s.cep||''; document.getElementById('cliente-estado').value=s.uf||''; document.getElementById('cliente-rua').value=s.rua||''; document.getElementById('cliente-numero').value=s.num||''; document.getElementById('cliente-bairro').value=s.bairro||''; document.getElementById('cliente-ref').value=s.ref||''; }
 }
 
-// Busca CEP Automático
 window.buscarCep = async function(cepValor, prefixo) {
     let cep = cepValor.replace(/\D/g, '');
     if (cep.length === 8) {
-        mostrarNotificacao("Buscando endereço...", 'info');
-        try {
-            let res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            let data = await res.json();
-            if (!data.erro) {
-                document.getElementById(`${prefixo}-rua`).value = data.logradouro;
-                document.getElementById(`${prefixo}-bairro`).value = data.bairro;
-                document.getElementById(`${prefixo}-estado`).value = data.uf;
-                if(prefixo === 'cliente') salvarFormulario();
-                mostrarNotificacao("Endereço encontrado!", 'sucesso');
-            }
-        } catch(err) { }
+        try { let data = await (await fetch(`https://viacep.com.br/ws/${cep}/json/`)).json();
+            if (!data.erro) { document.getElementById(`${prefixo}-rua`).value = data.logradouro; document.getElementById(`${prefixo}-bairro`).value = data.bairro; document.getElementById(`${prefixo}-estado`).value = data.uf; if(prefixo==='cliente') salvarFormulario(); }
+        } catch(err) {}
     }
 };
 
-// --- LOGIN RÁPIDO DENTRO DO CHECKOUT ---
-window.loginRapidoCheckout = async function() {
-    const cpfFormatado = document.getElementById('checkout-cpf-rapido').value;
-    const cpf = cpfFormatado.replace(/\D/g,'');
-    const senha = document.getElementById('checkout-senha-rapida').value;
+document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-finalizar-checkout'); btn.disabled=true; btn.innerText="⏳ Processando...";
+    const cpf = document.getElementById('cliente-cpf').value.replace(/\D/g,'');
+    const nome = document.getElementById('cliente-nome').value;
+    const tel = document.getElementById('cliente-telefone').value;
+    const endereco = `${document.getElementById('cliente-rua').value}, ${document.getElementById('cliente-numero').value} - ${document.getElementById('cliente-bairro').value}`;
+    const total = document.getElementById('total-price').innerText;
 
-    if(cpf.length !== 11 || !senha) return mostrarNotificacao("Preencha CPF e Senha corretamente.", "erro");
+    try {
+        await setDoc(doc(db, "clientes", cpf), { nome, cpf, telefone: tel, senha: document.getElementById('cliente-senha').value, cep: document.getElementById('cliente-cep').value, rua: document.getElementById('cliente-rua').value, numero: document.getElementById('cliente-numero').value, bairro: document.getElementById('cliente-bairro').value, estado: document.getElementById('cliente-estado').value, ref: document.getElementById('cliente-ref').value });
+        const dataH = new Date();
+        // Problema 3 Resolvido: O pedido é salvo como "Pendente" (e não "Aguardando Pagamento")
+        await addDoc(collection(db, "pedidos"), { cliente: nome, cpf, cidade: document.getElementById('cliente-bairro').value, telefone: tel, endereco, observacao: document.getElementById('cliente-obs').value, itens: carrinho.map(i=>i.nome).join(", "), detalhes_itens: carrinho, total, data: dataH.toLocaleDateString('pt-BR'), hora: dataH.toLocaleTimeString('pt-BR'), timestamp: dataH.toISOString(), status: "Pendente" });
+    } catch (e) { console.error(e); }
 
-    mostrarNotificacao("Buscando seu cadastro...", "info");
-    const docSnap = await getDoc(doc(db, "clientes", cpf));
+    let msg = `Olá! Sou ${nome} e vim finalizar meu pedido:\n\n🛍️ *PRODUTOS:*\n`;
+    carrinho.forEach(i => msg += `- ${i.nome} (R$ ${parseFloat(i.preco).toFixed(2)})\n`);
+    msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${endereco}\n`;
+    
+    let zapGestora = configLoja.telefone.replace(/\D/g,'');
+    window.open(`https://wa.me/${zapGestora}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    carrinho = []; salvarCarrinhoNoLocal(); localStorage.removeItem('maribella_form'); toggleCart(); this.reset();
+    btn.disabled=false; btn.innerText="💾 Salvar e Enviar Pedido";
+});
 
-    if (docSnap.exists() && docSnap.data().senha === senha) {
-        const dados = docSnap.data();
-        // Preenche o formulário grande
-        document.getElementById('cliente-nome').value = dados.nome;
-        document.getElementById('cliente-cpf').value = cpfFormatado;
-        document.getElementById('cliente-senha').value = dados.senha; // Repete a senha pra não perder
-        document.getElementById('cliente-telefone').value = dados.telefone;
-        document.getElementById('cliente-cep').value = dados.cep;
-        document.getElementById('cliente-estado').value = dados.estado;
-        document.getElementById('cliente-rua').value = dados.rua;
-        document.getElementById('cliente-numero').value = dados.numero;
-        document.getElementById('cliente-bairro').value = dados.bairro;
-        document.getElementById('cliente-ref').value = dados.ref || '';
-        
-        salvarFormulario();
-        document.getElementById('checkout-login-box').style.display = 'none'; // Esconde a caixinha
-        mostrarNotificacao("Dados preenchidos! Confirme e envie o pedido.", "sucesso");
-    } else {
-        mostrarNotificacao("CPF ou Senha não encontrados.", "erro");
-    }
-};
-
-// --- AUTENTICAÇÃO DO CLIENTE (VER PEDIDOS) ---
-window.abrirLoginCliente = () => document.getElementById('cliente-login-modal').classList.remove('hidden');
+// --- PAINEL DO CLIENTE (AUTO LOGIN) ---
+window.verificarLoginCliente = function() {
+    const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente'));
+    if(logado) autoLogin(logado.cpf, logado.senha);
+    else document.getElementById('cliente-login-modal').classList.remove('hidden');
+}
 window.fecharLoginCliente = () => document.getElementById('cliente-login-modal').classList.add('hidden');
 window.fecharPerfil = () => document.getElementById('perfil-cliente-modal').classList.add('hidden');
+
+async function autoLogin(cpf, senha) {
+    const d = await getDoc(doc(db, "clientes", cpf));
+    if(d.exists() && d.data().senha === senha) abrirPainelCliente(d.data());
+    else { localStorage.removeItem('maribella_auth_cliente'); document.getElementById('cliente-login-modal').classList.remove('hidden'); }
+}
 
 document.getElementById('form-login-cliente').addEventListener('submit', async function(e) {
     e.preventDefault();
     const cpf = document.getElementById('login-cpf-cliente').value.replace(/\D/g,'');
     const senha = document.getElementById('login-senha-cliente').value;
-    mostrarNotificacao("Verificando acesso...", "info");
-    const docSnap = await getDoc(doc(db, "clientes", cpf));
-
-    if (docSnap.exists() && docSnap.data().senha === senha) {
-        clienteLogadoCpf = cpf;
-        fecharLoginCliente();
-        abrirPainelCliente(docSnap.data());
-        this.reset();
-    } else { mostrarNotificacao("CPF ou Senha incorretos.", "erro"); }
+    const manter = document.getElementById('lembrar-senha').checked;
+    
+    mostrarNotificacao("Verificando...", "info");
+    const d = await getDoc(doc(db, "clientes", cpf));
+    if(d.exists() && d.data().senha === senha) {
+        if(manter) localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha}));
+        fecharLoginCliente(); abrirPainelCliente(d.data()); this.reset();
+    } else mostrarNotificacao("CPF ou Senha incorretos.", "erro");
 });
+
+window.mudarAbaCliente = function(idAba) {
+    document.getElementById('aba-historico').classList.add('hidden'); document.getElementById('aba-dados').classList.add('hidden');
+    document.getElementById('btn-aba-historico').classList.remove('ativa'); document.getElementById('btn-aba-historico').style.color='#aaa';
+    document.getElementById('btn-aba-dados').classList.remove('ativa'); document.getElementById('btn-aba-dados').style.color='#aaa';
+    document.getElementById(idAba).classList.remove('hidden'); document.getElementById('btn-'+idAba).classList.add('ativa'); document.getElementById('btn-'+idAba).style.color='var(--primary)';
+}
 
 async function abrirPainelCliente(dados) {
     document.getElementById('perfil-cliente-modal').classList.remove('hidden');
-    document.getElementById('perfil-cpf').value = dados.cpf;
-    document.getElementById('perfil-nome').value = dados.nome;
-    document.getElementById('perfil-telefone').value = dados.telefone;
-    document.getElementById('perfil-cep').value = dados.cep;
-    document.getElementById('perfil-estado').value = dados.estado;
-    document.getElementById('perfil-rua').value = dados.rua;
-    document.getElementById('perfil-numero').value = dados.numero;
-    document.getElementById('perfil-bairro').value = dados.bairro;
+    document.getElementById('perfil-cpf').value = dados.cpf; document.getElementById('perfil-nome').value = dados.nome; document.getElementById('perfil-telefone').value = dados.telefone; document.getElementById('perfil-cep').value = dados.cep; document.getElementById('perfil-estado').value = dados.estado; document.getElementById('perfil-rua').value = dados.rua; document.getElementById('perfil-numero').value = dados.numero; document.getElementById('perfil-bairro').value = dados.bairro;
     
-    const lista = document.getElementById('lista-meus-pedidos');
-    lista.innerHTML = "⏳ Carregando...";
+    const lista = document.getElementById('lista-meus-pedidos'); lista.innerHTML = "⏳ Carregando histórico...";
     const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc")));
-    lista.innerHTML = "";
-    let temPedido = false;
+    lista.innerHTML = ""; let tem = false;
     snap.forEach(doc => {
         const p = doc.data();
         if(p.cpf === dados.cpf) {
-            temPedido = true;
-            let corStatus = p.status === 'Aprovado' ? 'var(--success)' : '#f39c12';
-            lista.innerHTML += `<div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${corStatus};"><strong>Data: ${p.data}</strong> - R$ ${p.total}<br><span style="font-size:0.85rem; color:#666;">Itens: ${p.itens}</span><br><span style="font-size:0.85rem; font-weight:bold; color:${corStatus};">Status: ${p.status || 'Aguardando Pagamento'}</span></div>`;
+            tem = true; let cor = p.status === 'Aprovado' ? 'var(--success)' : '#f39c12';
+            lista.innerHTML += `<div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid ${cor};"><strong style="font-size:1.1rem;">📅 ${p.data} às ${p.hora}</strong><br><div style="margin:5px 0; color:#555; font-size:0.9rem;"><strong>Itens:</strong> ${p.itens}</div><strong style="color:var(--primary); font-size:1.1rem;">💰 R$ ${p.total}</strong><br><span style="font-size:0.9rem; font-weight:bold; color:${cor};">● Status: ${p.status}</span></div>`;
         }
     });
-    if(!temPedido) lista.innerHTML = "<p>Você ainda não fez pedidos.</p>";
+    if(!tem) lista.innerHTML = "<p>Nenhuma compra encontrada.</p>";
 }
 
 document.getElementById('form-atualizar-perfil').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const cpf = document.getElementById('perfil-cpf').value;
+    e.preventDefault(); const cpf = document.getElementById('perfil-cpf').value;
     try {
-        await updateDoc(doc(db, "clientes", cpf), {
-            nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value,
-            cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value,
-            numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value,
-            estado: document.getElementById('perfil-estado').value
-        });
+        await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, estado: document.getElementById('perfil-estado').value });
         mostrarNotificacao("Endereço atualizado!", "sucesso");
     } catch (e) { mostrarNotificacao("Erro ao salvar.", "erro"); }
 });
 
-window.sairCliente = function() { clienteLogadoCpf = null; fecharPerfil(); mostrarNotificacao("Sessão encerrada.", "info"); };
+window.sairCliente = function() { localStorage.removeItem('maribella_auth_cliente'); fecharPerfil(); mostrarNotificacao("Você saiu.", "info"); };
 
-// --- FINALIZAR PEDIDO (SALVAR TUDO) ---
-document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btnFinalizar = document.getElementById('btn-finalizar-checkout');
-    btnFinalizar.disabled = true; btnFinalizar.innerText = "⏳ Processando...";
-
-    const dadosCliente = {
-        nome: document.getElementById('cliente-nome').value,
-        cpf: document.getElementById('cliente-cpf').value.replace(/\D/g,''),
-        telefone: document.getElementById('cliente-telefone').value,
-        senha: document.getElementById('cliente-senha').value,
-        cep: document.getElementById('cliente-cep').value, rua: document.getElementById('cliente-rua').value,
-        numero: document.getElementById('cliente-numero').value, bairro: document.getElementById('cliente-bairro').value,
-        estado: document.getElementById('cliente-estado').value, ref: document.getElementById('cliente-ref').value
-    };
-    
-    const obs = document.getElementById('cliente-obs').value;
-    const total = document.getElementById('total-price').innerText;
-
-    try {
-        await setDoc(doc(db, "clientes", dadosCliente.cpf), dadosCliente); // Cria ou Atualiza Cliente
-        await addDoc(collection(db, "pedidos"), {
-            cliente: dadosCliente.nome, cpf: dadosCliente.cpf, telefone: dadosCliente.telefone,
-            endereco: `${dadosCliente.rua}, ${dadosCliente.numero} - ${dadosCliente.bairro}, ${dadosCliente.estado}`,
-            observacao: obs, itens: carrinho.map(i => i.nome).join(", "),
-            total: total, data: new Date().toLocaleDateString('pt-BR'), timestamp: new Date().toISOString(),
-            status: "Aguardando Pagamento"
-        });
-    } catch (erro) { console.error(erro); }
-
-    let mensagem = `Olá! Sou ${dadosCliente.nome} e vim finalizar meu pedido:\n\n🛍️ *PRODUTOS:*\n`;
-    carrinho.forEach(item => mensagem += `- ${item.nome} (R$ ${parseFloat(item.preco).toFixed(2)})\n`);
-    mensagem += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${dadosCliente.rua}, ${dadosCliente.numero} - ${dadosCliente.bairro}\n`;
-    
-    window.open(`https://wa.me/5581999999999?text=${encodeURIComponent(mensagem)}`, '_blank');
-    
-    carrinho = []; salvarCarrinhoNoLocal();
-    localStorage.removeItem('maribella_form_checkout'); // Limpa form local
-    toggleCart(); this.reset(); document.getElementById('checkout-login-box').style.display = 'block';
-    btnFinalizar.disabled = false; btnFinalizar.innerText = "💾 Salvar e Enviar Pedido";
-});
-
-
-// --- ADMINISTRAÇÃO (LOGIN E PAINEL) ---
+// --- ADMINISTRAÇÃO COMPLETA ---
 window.abrirLoginAdmin = () => document.getElementById('admin-login-modal').classList.remove('hidden');
 window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
 
@@ -334,131 +210,140 @@ document.getElementById('form-login-admin').addEventListener('submit', async fun
     e.preventDefault();
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value);
-        mostrarNotificacao("Acesso Liberado!", "sucesso");
-        fecharLoginAdmin();
-        document.getElementById('admin-dashboard').classList.remove('hidden');
-        carregarListaAdminPedidos();
-    } catch (error) { mostrarNotificacao("Credenciais incorretas!", "erro"); }
+        mostrarNotificacao("Acesso Liberado!", "sucesso"); fecharLoginAdmin();
+        document.getElementById('admin-dashboard').classList.remove('hidden'); carregarListaAdminPedidos();
+    } catch(e) { mostrarNotificacao("Erro!", "erro"); }
 });
-
-window.sairDoAdmin = async function() {
-    await signOut(auth);
-    document.getElementById('admin-dashboard').classList.add('hidden');
-    carregarProdutosDoBanco(); 
-};
+window.sairDoAdmin = async function() { await signOut(auth); document.getElementById('admin-dashboard').classList.add('hidden'); carregarProdutosDoBanco(); };
 
 window.mudarAbaAdmin = function(abaId) {
     document.querySelectorAll('.admin-aba').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa'));
-    document.getElementById(abaId).classList.remove('hidden');
-    document.getElementById(`tab-${abaId}`).classList.add('ativa');
-    
-    if(abaId === 'admin-pedidos') carregarListaAdminPedidos();
-    if(abaId === 'admin-clientes') carregarListaAdminClientes();
-    if(abaId === 'admin-produtos') carregarListaAdminProdutosEditar();
+    document.getElementById(abaId).classList.remove('hidden'); document.getElementById(`tab-${abaId}`).classList.add('ativa');
+    if(abaId==='admin-pedidos') carregarListaAdminPedidos();
+    if(abaId==='admin-produtos') carregarListaAdminProdutosEditar();
+    if(abaId==='admin-clientes') carregarListaAdminClientes();
+    if(abaId==='admin-ranking'){ document.getElementById('rank-ano').value = new Date().getFullYear(); gerarRankings(); }
 };
 
-// Admin: Adicionar / Editar Produto
-document.getElementById('form-add-produto').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-salvar-produto');
-    const arquivoImagem = document.getElementById('add-imagem-file').files[0];
-    const idEdicao = document.getElementById('edit-produto-id').value;
+// Pedidos Admin (Busca Realtime & Filtro Pendente arrumado)
+async function carregarListaAdminPedidos() {
+    const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "⏳ Puxando vendas...";
+    const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc")));
+    todosPedidosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosPedidosAdmin.push(p); });
+    filtrarPedidosAdmin();
+}
+window.filtrarPedidosAdmin = function() {
+    const termo = document.getElementById('busca-pedido').value.toLowerCase();
+    const filtro = document.getElementById('filtro-status').value;
+    const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "";
     
-    btn.innerText = "⏳ Salvando..."; btn.disabled = true;
+    let resultados = todosPedidosAdmin.filter(p => {
+        let matchTermo = p.cliente.toLowerCase().includes(termo) || p.cpf.includes(termo);
+        let matchStatus = filtro === 'Todos' || p.status === filtro;
+        return matchTermo && matchStatus;
+    });
 
+    if(resultados.length === 0) lista.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+    resultados.forEach(p => {
+        const btnAprovar = p.status !== 'Aprovado' ? `<button onclick="aprovarPedido('${p.id}')" style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px; margin-top:10px; cursor:pointer;">✅ Aprovar Pagamento</button>` : `<span class="status-badge status-aprovado" style="margin-top:10px; display:inline-block;">Pagamento Aprovado</span>`;
+        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente} | <strong>Local:</strong> ${p.cidade||'Não info'}<br><strong>Total:</strong> R$ ${p.total} (${p.itens})<br>${btnAprovar}</div>`;
+    });
+}
+window.aprovarPedido = async function(id) { await updateDoc(doc(db, "pedidos", id), { status: "Aprovado" }); carregarListaAdminPedidos(); };
+
+// Produtos Admin (Com Imagem Bonita e Busca Realtime)
+document.getElementById('form-add-produto').addEventListener('submit', async function(e) {
+    e.preventDefault(); const btn = document.getElementById('btn-salvar-produto'); const img = document.getElementById('add-imagem-file').files[0]; const id = document.getElementById('edit-produto-id').value;
+    btn.innerText = "⏳ Salvando..."; btn.disabled = true;
     try {
         let urlFoto = null;
-        if (arquivoImagem) {
-            const storageRef = ref(storage, 'produtos/' + Date.now() + '_' + arquivoImagem.name);
-            await uploadBytes(storageRef, arquivoImagem);
-            urlFoto = await getDownloadURL(storageRef);
-        }
-
-        const produtoData = {
-            nome: document.getElementById('add-nome').value, preco: parseFloat(document.getElementById('add-preco').value),
-            tamanho: document.getElementById('add-tamanho').value, material: document.getElementById('add-material').value
-        };
-        if(urlFoto) produtoData.imagem = urlFoto;
-
-        if (idEdicao) {
-            await updateDoc(doc(db, "produtos", idEdicao), produtoData);
-            mostrarNotificacao("Produto atualizado!", "sucesso");
-        } else {
-            if(!urlFoto) return mostrarNotificacao("Foto obrigatória!", "erro");
-            await addDoc(collection(db, "produtos"), produtoData);
-            mostrarNotificacao("Produto criado!", "sucesso");
-        }
-        limparFormProduto(); carregarListaAdminProdutosEditar();
-    } catch (erro) { mostrarNotificacao("Erro ao salvar.", "erro"); }
-    btn.innerText = "💾 Salvar Produto"; btn.disabled = false;
+        if (img) { const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); await uploadBytes(sRef, img); urlFoto = await getDownloadURL(sRef); }
+        const pData = { nome: document.getElementById('add-nome').value, preco: parseFloat(document.getElementById('add-preco').value), tamanho: document.getElementById('add-tamanho').value, material: document.getElementById('add-material').value };
+        if(urlFoto) pData.imagem = urlFoto;
+        if (id) { await updateDoc(doc(db, "produtos", id), pData); } 
+        else { if(!urlFoto) return mostrarNotificacao("Foto obrigatória!","erro"); await addDoc(collection(db, "produtos"), pData); }
+        limparFormProduto(); carregarListaAdminProdutosEditar(); mostrarNotificacao("Sucesso!","sucesso");
+    } catch(e) { mostrarNotificacao("Erro","erro"); }
+    btn.innerText = "💾 Salvar"; btn.disabled = false;
 });
-
-window.limparFormProduto = function() {
-    document.getElementById('form-add-produto').reset(); document.getElementById('edit-produto-id').value = '';
-    document.getElementById('btn-salvar-produto').innerText = "💾 Salvar Produto";
-};
+window.limparFormProduto = function() { document.getElementById('form-add-produto').reset(); document.getElementById('edit-produto-id').value=''; };
 
 async function carregarListaAdminProdutosEditar() {
-    const lista = document.getElementById('lista-admin-produtos-cadastrados');
-    lista.innerHTML = "⏳ Carregando...";
-    const snap = await getDocs(collection(db, "produtos"));
-    lista.innerHTML = "";
-    snap.forEach(d => {
-        const p = d.data();
-        lista.innerHTML += `<div class="admin-card" style="display:flex; justify-content:space-between; align-items:center;"><div><strong>${p.nome}</strong> - R$ ${p.preco}</div><button onclick="editarProdutoAdmin('${d.id}', '${p.nome}', ${p.preco}, '${p.tamanho}', '${p.material}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️ Editar</button></div>`;
+    const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳...";
+    const snap = await getDocs(collection(db, "produtos")); 
+    todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosProdutosAdmin.push(p); });
+    filtrarProdutosAdmin();
+}
+
+window.filtrarProdutosAdmin = function() {
+    const termo = document.getElementById('busca-produto-admin').value.toLowerCase();
+    const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "";
+    let filtrados = todosProdutosAdmin.filter(p => p.nome.toLowerCase().includes(termo));
+    if(filtrados.length === 0) lista.innerHTML = "<p>Nenhum produto encontrado.</p>";
+    
+    // Problema 2 Resolvido: Imagem inserida com estilo para ficar perfeita ao lado do nome!
+    filtrados.forEach(p => {
+        lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px; border-bottom:1px solid #eee;">
+            <img src="${p.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover; border: 1px solid #ccc;">
+            <div style="flex:1;"><strong>${p.nome}</strong><br><span style="color:var(--secondary); font-weight:bold;">R$ ${p.preco}</span></div>
+            <button onclick="editarProdutoAdmin('${p.id}', '${p.nome}', ${p.preco}, '${p.tamanho}', '${p.material}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️ Editar</button>
+        </div>`;
     });
 }
 
-window.editarProdutoAdmin = function(id, nome, preco, tamanho, material) {
-    document.getElementById('edit-produto-id').value = id; document.getElementById('add-nome').value = nome;
-    document.getElementById('add-preco').value = preco; document.getElementById('add-tamanho').value = tamanho;
-    document.getElementById('add-material').value = material; document.getElementById('btn-salvar-produto').innerText = "💾 Atualizar Produto";
-    document.getElementById('admin-content').scrollTo(0,0);
-};
+window.editarProdutoAdmin = function(id, n, p, t, m) { document.getElementById('edit-produto-id').value=id; document.getElementById('add-nome').value=n; document.getElementById('add-preco').value=p; document.getElementById('add-tamanho').value=t; document.getElementById('add-material').value=m; document.querySelector('.admin-content').scrollTo(0,0); };
 
-// Admin: Aprovar Pedidos
-window.aprovarPedido = async function(idPedido) {
-    try {
-        await updateDoc(doc(db, "pedidos", idPedido), { status: "Aprovado" });
-        mostrarNotificacao("Pagamento Aprovado!", "sucesso"); carregarListaAdminPedidos();
-    } catch(e) { mostrarNotificacao("Erro ao aprovar.", "erro"); }
-};
-
-async function carregarListaAdminPedidos() {
-    const lista = document.getElementById('lista-admin-pedidos');
-    lista.innerHTML = "⏳ Puxando vendas...";
-    const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc")));
-    lista.innerHTML = "";
-    snap.forEach(d => {
-        const p = d.data();
-        const btnAprovar = p.status !== 'Aprovado' ? `<button onclick="aprovarPedido('${d.id}')" style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px; margin-top:10px; cursor:pointer;">✅ Aprovar Pagamento</button>` : `<span class="status-badge status-aprovado">Pagamento Aprovado</span>`;
-        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Total Pago:</strong> R$ ${p.total} (${p.itens})<br><div style="margin-top:10px;">${btnAprovar}</div></div>`;
-    });
-}
-
-// Admin: Transmissão
-window.gerarListaTransmissao = async function() {
-    try {
-        const snap = await getDocs(collection(db, "clientes"));
-        let numeros = [];
-        snap.forEach(d => { let tel = d.data().telefone.replace(/\D/g, ''); if(tel) numeros.push(tel); });
-        navigator.clipboard.writeText(numeros.join(", ")).then(() => mostrarNotificacao("Números copiados!", "sucesso"));
-    } catch(e) { mostrarNotificacao("Erro ao gerar lista.", "erro"); }
-};
-
+// Clientes Admin (Sem Lista de Transmissão e com Busca Realtime)
 async function carregarListaAdminClientes() {
-    const lista = document.getElementById('lista-admin-clientes');
-    lista.innerHTML = "⏳ Puxando clientes...";
+    const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳...";
     const snap = await getDocs(collection(db, "clientes"));
-    lista.innerHTML = "";
-    snap.forEach(d => {
-        const c = d.data(); let telLimpo = c.telefone.replace(/\D/g, '');
-        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span>${c.telefone}</span></div><a href="https://wa.me/55${telLimpo}" target="_blank" style="background:#25D366; color:white; padding:10px; border-radius:50%; text-decoration:none;">💬</a></div>`;
+    todosClientesAdmin = []; snap.forEach(d => todosClientesAdmin.push(d.data()));
+    filtrarClientesAdmin();
+}
+
+window.filtrarClientesAdmin = function() {
+    const termo = document.getElementById('busca-cliente-admin').value.toLowerCase();
+    const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "";
+    let filtrados = todosClientesAdmin.filter(c => c.nome.toLowerCase().includes(termo) || c.telefone.includes(termo));
+    if(filtrados.length === 0) lista.innerHTML = "<p>Nenhum cliente encontrado.</p>";
+    
+    filtrados.forEach(c => {
+        let telLimpo = c.telefone.replace(/\D/g, '');
+        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;">
+            <div><strong>${c.nome}</strong><br><span>${c.telefone}</span></div>
+            <a href="https://wa.me/55${telLimpo}" target="_blank" style="background:#25D366; color:white; padding:10px; border-radius:50%; text-decoration:none;">💬</a>
+        </div>`;
     });
 }
 
-// Iniciar app
-carregarFormularioSalvo();
+// Rankings (Mês e Ano)
+window.gerarRankings = async function() {
+    const mes = document.getElementById('rank-mes').value; const ano = document.getElementById('rank-ano').value;
+    const listaProd = document.getElementById('rank-produtos-lista'); const listaCli = document.getElementById('rank-clientes-lista');
+    listaProd.innerHTML="⏳..."; listaCli.innerHTML="⏳...";
+    const snap = await getDocs(collection(db, "pedidos"));
+    let prodCount = {}; let cliGasto = {};
+    
+    snap.forEach(d => {
+        let p = d.data(); let [dDia, dMes, dAno] = p.data.split('/');
+        if(dMes === mes && dAno === ano && p.status === 'Aprovado') {
+            if(p.detalhes_itens) { p.detalhes_itens.forEach(item => { prodCount[item.nome] = (prodCount[item.nome]||0) + 1; }); }
+            cliGasto[p.cliente] = (cliGasto[p.cliente]||0) + parseFloat(p.total);
+        }
+    });
+
+    let arrProd = Object.keys(prodCount).map(k => ({nome:k, qtd:prodCount[k]})).sort((a,b)=>b.qtd - a.qtd);
+    listaProd.innerHTML = arrProd.length===0?"<p>Sem vendas aprovadas neste período.</p>":"";
+    arrProd.forEach((p,i) => listaProd.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee;"><strong>#${i+1}</strong> ${p.nome} (${p.qtd} un)</div>`);
+
+    let arrCli = Object.keys(cliGasto).map(k => ({nome:k, valor:cliGasto[k]})).sort((a,b)=>b.valor - a.valor);
+    listaCli.innerHTML = arrCli.length===0?"<p>Sem clientes neste período.</p>":"";
+    arrCli.forEach((c,i) => listaCli.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee;"><strong>#${i+1}</strong> ${c.nome} (R$ ${c.valor.toFixed(2)})</div>`);
+}
+
+// Inicialização
+carregarConfiguracoes();
+carregarForm();
 atualizarCarrinho();
 carregarProdutosDoBanco();
