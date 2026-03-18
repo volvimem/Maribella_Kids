@@ -3,27 +3,27 @@
 body { background-color: var(--bg-color); color: var(--text); overflow-x: hidden; }
 
 /* CABEÇALHO */
-header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
 .header-top { display: flex; justify-content: space-between; align-items: center; }
-.logo { display: flex; align-items: center; gap: 10px; font-weight: bold; color: white; }
+.logo { display: flex; align-items: center; font-weight: bold; color: white; }
 .menu-botoes { display: flex; gap: 8px; align-items: center; }
 .btn-icon, #cart-btn { background: white; border: none; padding: 8px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.85rem; transition: 0.3s; }
 
-/* 4° STORIES (Infinidade Animada) */
+/* STORIES */
 .stories-wrapper { background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
 .stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 25s linear infinite; }
 .story-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid var(--primary); padding: 2px; object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
 @keyframes scrollStories { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-/* 5° AVISO IMPORTANTE */
-.info-banner { background: var(--secondary); color: white; padding: 8px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+/* AVISO IMPORTANTE (Aceita várias linhas) */
+.info-banner { background: var(--secondary); color: white; padding: 10px 15px; font-weight: bold; font-size: 0.9rem; text-align: center; line-height: 1.5; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-/* 6° RODAPÉ (Footer) */
+/* RODAPÉ */
 .site-footer { text-align: center; padding: 30px 20px; background: white; margin-top: 30px; border-top: 1px solid #eee; }
 .btn-instagram { display: inline-block; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; margin: 10px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-/* MENU LATERAL */
-.sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 3000; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; padding: 20px; }
+/* MENU LATERAL (Z-INDEX ALTO PARA NÃO TRAVAR) */
+.sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 99999; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; padding: 20px; }
 .sidebar.open { left: 0; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; }
 .close-sidebar { font-size: 2rem; cursor: pointer; color: var(--error); }
@@ -31,7 +31,7 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .menu-links li { padding: 15px 10px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; }
 .review-card { display: flex; gap: 10px; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-top: 10px; }
 .review-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-#sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2999; }
+#sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99998; }
 
 /* VITRINE 2 COLUNAS */
 .estacao-section { margin-top: 20px; margin-bottom: 30px; }
@@ -64,7 +64,6 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .pagamento-info { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; border: 2px dashed #ffb6c1;}
 .btn-pix { background: #e0e0e0; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold;}
 
-/* TOAST (COM OPÇÃO DE FECHAR) */
 .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: white; color: #333; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; z-index: 9999; display: flex; align-items: center; gap: 10px;}
 .toast.sucesso { border-left: 5px solid var(--success); }
 .toast.erro { border-left: 5px solid var(--error); }
@@ -81,3 +80,4 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: white;}
 .status-pendente { background: #f39c12; }
 .status-aprovado { background: var(--success); }
+.tab-btn.ativa { color: var(--primary) !important; border-bottom: 3px solid var(--primary) !important; margin-bottom: -2px; }
