@@ -37,7 +37,7 @@
                 <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop" alt="Cliente">
                 <div>
                     <strong>Mariana Silva 🇧🇷 SP</strong>
-                    <p style="font-size:0.75rem; color:#888;">(11) 98***-**32 - 14/03/2026</p>
+                    <p style="font-size:0.75rem; color:#888;">(11) 98***-**32</p>
                     <p>Qualidade incrível, amei o vestido!</p>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop" alt="Cliente">
                 <div>
                     <strong>Carla Mendes 🇧🇷 PE</strong>
-                    <p style="font-size:0.75rem; color:#888;">(81) 99***-**15 - 12/03/2026</p>
+                    <p style="font-size:0.75rem; color:#888;">(81) 99***-**15</p>
                     <p>Chegou super rápido, recomendo muito.</p>
                 </div>
             </div>
@@ -68,17 +68,139 @@
     </header>
 
     <main id="loja-main">
-        <div id="vitrine-estacoes" style="margin-top: 120px;">
+        <div id="vitrine-estacoes" style="margin-top: 120px; padding-bottom: 50px;">
             <p style="text-align: center; color: #aaa; margin-top: 50px;">⏳ Carregando coleção...</p>
         </div>
     </main>
 
     <button onclick="abrirLoginAdmin()" class="btn-admin-flutuante" title="Acesso da Gestora">⚙️</button>
 
-    <div id="cliente-login-modal" class="modal hidden"><div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;"><span class="close" onclick="fecharLoginCliente()">&times;</span><h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2><form id="form-login-cliente" onsubmit="realizarLoginCliente(event)"><input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="mascaraCPF(this)"><input type="password" id="login-senha-cliente" placeholder="Sua Senha" required><div style="display:flex; align-items:center; gap:5px; margin-top:5px; justify-content:center;"><input type="checkbox" id="lembrar-senha" style="width:auto;"><label for="lembrar-senha" style="font-size:0.9rem; color:#555;">Manter conectado</label></div><button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Entrar na Minha Conta</button></form><p style="margin-top:15px; font-size:0.9rem;"><a href="#" onclick="abrirRecuperacaoSenha()" style="color:var(--secondary); text-decoration:underline;">Esqueci minha senha</a></p></div></div>
-    <div id="perfil-cliente-modal" class="modal hidden"><div class="modal-content" style="display:flex; flex-direction:column;"><span class="close" onclick="fecharPerfil()">&times;</span><h2 style="color:var(--secondary); margin-bottom:5px;" id="titulo-painel-cliente">👤 Meu Painel</h2><div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;"><button onclick="mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button><button onclick="mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button></div><div id="aba-historico" style="margin-top:15px; max-height:50vh; overflow-y:auto;"><div id="lista-meus-pedidos"></div></div><div id="aba-dados" class="hidden" style="margin-top:15px;"><form id="form-atualizar-perfil" onsubmit="atualizarPerfilCliente(event)"><input type="hidden" id="perfil-cpf"><input type="text" id="perfil-nome" placeholder="Nome Completo" required><input type="tel" id="perfil-telefone" placeholder="WhatsApp" maxlength="15" required oninput="mascaraTelefone(this)"><div style="display:flex; gap:10px;"><input type="text" id="perfil-cep" placeholder="CEP" style="flex:1;" required onblur="buscarCep(this.value, 'perfil')"><input type="text" id="perfil-estado" placeholder="UF" style="width:80px;" required></div><input type="text" id="perfil-rua" placeholder="Rua / Avenida" required><div style="display:flex; gap:10px;"><input type="text" id="perfil-numero" placeholder="Nº" style="width:100px;" required><input type="text" id="perfil-bairro" placeholder="Bairro/Cidade" style="flex:1;" required></div><button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button></form></div><button onclick="sairCliente()" class="btn-sair" style="margin-top:20px;">Sair da Conta</button></div></div>
-    <div id="cart-modal" class="modal hidden"><div class="modal-content"><span class="close" onclick="toggleCart()">&times;</span><div id="etapa-carrinho"><h2>🛒 Seu Carrinho</h2><div id="cart-items"></div><div class="cart-total">Total: R$ <span id="total-price">0.00</span></div><button class="btn-whatsapp" onclick="irParaCadastro()" style="width:100%; margin-top:20px;">Finalizar Compra</button></div><div id="etapa-cadastro" class="hidden"><h2>Dados de Envio</h2><div id="checkout-login-box" style="background:#eef2f5; padding:15px; border-radius:10px; border:1px solid #ccc; margin-bottom:20px;"><h4 style="color:#333; margin-bottom:10px;">Já tem cadastro? Entre aqui:</h4><div style="display:flex; gap:10px;"><input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="mascaraCPF(this)" style="flex:1; padding:10px;"><input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width:100px; padding:10px;"></div><button type="button" onclick="loginRapidoCheckout()" style="background:var(--secondary); color:white; border:none; padding:10px; width:100%; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">Entrar e Preencher Automático</button></div><form id="checkout-form" onsubmit="finalizarCheckout(event)"><input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()"><input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()"><div id="area-senha-nova" style="background:#f0fff4; padding:10px; border-radius:8px; border:1px solid var(--success); margin:5px 0;"><label style="font-size:0.85rem; font-weight:bold; color:var(--success);">Crie uma senha para acessar seus pedidos depois:</label><input type="password" id="cliente-senha" placeholder="Senha" required></div><input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()"><div style="display:flex; gap:10px;"><input type="text" id="cliente-cep" placeholder="CEP" style="flex:1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()"><input type="text" id="cliente-estado" placeholder="UF" style="width:80px;" required oninput="salvarFormulario()"></div><input type="text" id="cliente-rua" placeholder="Rua" required oninput="salvarFormulario()"><div style="display:flex; gap:10px;"><input type="text" id="cliente-numero" placeholder="Nº" style="width:100px;" required oninput="salvarFormulario()"><input type="text" id="cliente-bairro" placeholder="Bairro/Cidade" style="flex:1;" required oninput="salvarFormulario()"></div><input type="text" id="cliente-ref" placeholder="Ponto de Referência" oninput="salvarFormulario()"><div class="pagamento-info"><h4>Pagamento via PIX</h4><p>Chave: <strong id="pix-display">Carregando...</strong></p><button type="button" class="btn-pix" onclick="tentarCopiarPix()">📋 Copiar Chave PIX</button></div><div style="display:flex; gap:10px; margin-top:15px;"><button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background:#ccc; color:#333; flex:1;">Voltar</button><button type="submit" class="btn-whatsapp" id="btn-finalizar-checkout" style="flex:2; margin-top:0;" onclick="tentarFinalizar(event)">💾 Enviar Pedido</button></div></form></div></div></div>
-    <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow: auto;"><span class="close" onclick="fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed;">&times;</span><img id="lightbox-img" src="" onclick="toggleZoom()" alt="Zoom"></div>
+    <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow: auto;">
+        <span class="close" onclick="fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed;">&times;</span>
+        <img id="lightbox-img" src="" onclick="toggleZoom()" alt="Zoom">
+    </div>
+
+    <div id="cliente-login-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
+            <span class="close" onclick="fecharLoginCliente()">&times;</span>
+            <h2 style="color: var(--secondary); margin-bottom: 10px;">📦 Meus Pedidos</h2>
+            <form id="form-login-cliente" onsubmit="realizarLoginCliente(event)">
+                <input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="mascaraCPF(this)">
+                <input type="password" id="login-senha-cliente" placeholder="Sua Senha" required>
+                <div style="display:flex; align-items:center; gap:5px; margin-top:5px; justify-content:center;">
+                    <input type="checkbox" id="lembrar-senha" style="width: auto;"> <label for="lembrar-senha" style="font-size:0.9rem; color:#555;">Manter conectado</label>
+                </div>
+                <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Entrar na Minha Conta</button>
+            </form>
+            <p style="margin-top: 15px; font-size: 0.9rem;"><a href="#" onclick="abrirRecuperacaoSenha()" style="color: var(--secondary); text-decoration: underline;">Esqueci minha senha</a></p>
+        </div>
+    </div>
+
+    <div id="recuperacao-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
+            <span class="close" onclick="fecharRecuperacao()">&times;</span>
+            <h2 style="color: var(--primary); margin-bottom: 10px;">🔄 Nova Senha</h2>
+            <form id="form-recuperacao" onsubmit="recuperarSenhaCliente(event)">
+                <input type="text" id="rec-cpf" placeholder="Seu CPF cadastrado" maxlength="14" required oninput="mascaraCPF(this)">
+                <input type="tel" id="rec-tel" placeholder="Telefone (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this)">
+                <input type="password" id="rec-senha" placeholder="Digite a nova senha" required>
+                <button type="submit" class="btn-whatsapp" style="width: 100%; margin-top:15px;">Salvar Nova Senha</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="perfil-cliente-modal" class="modal hidden">
+        <div class="modal-content" style="display:flex; flex-direction:column;">
+            <span class="close" onclick="fecharPerfil()">&times;</span>
+            <h2 style="color: var(--secondary); margin-bottom: 5px;" id="titulo-painel-cliente">👤 Meu Painel</h2>
+            <div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;">
+                <button onclick="mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button>
+                <button onclick="mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button>
+            </div>
+            <div id="aba-historico" style="margin-top: 15px; max-height: 50vh; overflow-y: auto;">
+                <div id="lista-meus-pedidos"></div>
+            </div>
+            <div id="aba-dados" class="hidden" style="margin-top: 15px;">
+                <form id="form-atualizar-perfil" onsubmit="atualizarPerfilCliente(event)">
+                    <input type="hidden" id="perfil-cpf">
+                    <input type="text" id="perfil-nome" placeholder="Nome Completo" required>
+                    <input type="tel" id="perfil-telefone" placeholder="WhatsApp" maxlength="15" required oninput="mascaraTelefone(this)">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="perfil-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'perfil')">
+                        <input type="text" id="perfil-estado" placeholder="UF" style="width: 80px;" required>
+                    </div>
+                    <input type="text" id="perfil-rua" placeholder="Rua / Avenida" required>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="perfil-numero" placeholder="Nº" style="width: 100px;" required>
+                        <input type="text" id="perfil-bairro" placeholder="Bairro/Cidade" style="flex: 1;" required>
+                    </div>
+                    <button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button>
+                </form>
+            </div>
+            <button onclick="sairCliente()" class="btn-sair" style="margin-top: 20px;">Sair da Conta</button>
+        </div>
+    </div>
+
+    <div id="modal-editar-pedido" class="modal hidden" style="z-index: 3000;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharEdicaoPedido()">&times;</span>
+            <h2 style="color: var(--secondary);">✏️ Editar Carrinho</h2>
+            <div id="lista-editar-itens" style="margin-top:15px; max-height:40vh; overflow-y:auto;"></div>
+            <div class="cart-total">Novo Total: R$ <span id="novo-total-edicao">0.00</span></div>
+            <button onclick="salvarEdicaoPedido()" class="btn-whatsapp" style="width:100%; margin-top:15px;">💾 Salvar Alterações</button>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="toggleCart()">&times;</span>
+            <div id="etapa-carrinho">
+                <h2>🛒 Seu Carrinho</h2>
+                <div id="cart-items"></div>
+                <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
+                <button class="btn-whatsapp" onclick="irParaCadastro()" style="width: 100%; margin-top: 20px;">Finalizar Compra</button>
+            </div>
+            <div id="etapa-cadastro" class="hidden">
+                <h2>Dados de Envio</h2>
+                <div id="checkout-login-box" style="background: #eef2f5; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 20px;">
+                    <h4 style="color: #333; margin-bottom: 10px;">Já tem cadastro? Entre aqui:</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="mascaraCPF(this)" style="flex:1; padding: 10px;">
+                        <input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width: 100px; padding: 10px;">
+                    </div>
+                    <button type="button" onclick="loginRapidoCheckout()" style="background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor:pointer;">Entrar e Preencher Automático</button>
+                </div>
+                <form id="checkout-form" onsubmit="finalizarCheckout(event)">
+                    <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()">
+                    <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()">
+                    <div id="area-senha-nova" style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acessar seus pedidos:</label>
+                        <input type="password" id="cliente-senha" placeholder="Senha" required>
+                    </div>
+                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cliente-cep" placeholder="CEP" style="flex: 1;" required onblur="buscarCep(this.value, 'cliente')" oninput="salvarFormulario()">
+                        <input type="text" id="cliente-estado" placeholder="UF" style="width: 80px;" required oninput="salvarFormulario()">
+                    </div>
+                    <input type="text" id="cliente-rua" placeholder="Rua" required oninput="salvarFormulario()">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cliente-numero" placeholder="Nº" style="width: 100px;" required oninput="salvarFormulario()">
+                        <input type="text" id="cliente-bairro" placeholder="Bairro/Cidade" style="flex: 1;" required oninput="salvarFormulario()">
+                    </div>
+                    <input type="text" id="cliente-ref" placeholder="Ponto de Referência" oninput="salvarFormulario()">
+                    <div class="pagamento-info">
+                        <h4>Pagamento via PIX</h4>
+                        <p>Chave: <strong id="pix-display">Carregando...</strong></p>
+                        <button type="button" class="btn-pix" onclick="tentarCopiarPix()">📋 Copiar Chave PIX</button>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="button" class="btn-add" onclick="voltarParaCarrinho()" style="background: #ccc; color: #333; flex: 1;">Voltar</button>
+                        <button type="submit" class="btn-whatsapp" id="btn-finalizar-checkout" style="flex: 2; margin-top:0;" onclick="tentarFinalizar(event)">💾 Enviar Pedido</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div id="admin-login-modal" class="modal hidden">
         <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; border-radius: 20px;">
@@ -89,6 +211,14 @@
                 <input type="password" id="admin-senha" placeholder="Senha" required>
                 <button type="submit" class="btn-whatsapp" id="btn-entrar-admin" style="width: 100%;">Entrar</button>
             </form>
+        </div>
+    </div>
+
+    <div id="admin-historico-cliente-modal" class="modal hidden" style="z-index: 4000;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharHistoricoClienteAdmin()">&times;</span>
+            <h2 style="color: var(--secondary);" id="nome-historico-admin">Histórico</h2>
+            <div id="lista-historico-cliente-admin" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -122,38 +252,27 @@
                 <form id="form-add-produto" class="admin-form" onsubmit="salvarProdutoAdmin(event)">
                     <input type="hidden" id="edit-produto-id">
                     <input type="text" id="add-nome" placeholder="Nome do Modelo" required>
-                    
                     <div style="display:flex; gap:10px;">
                         <input type="number" id="add-preco" placeholder="Preço" step="0.01" required style="flex:1;">
-                        <input type="number" id="add-estoque" placeholder="Qtd Estoque" required style="flex:1;">
+                        <input type="number" id="add-estoque" placeholder="Estoque" required style="flex:1;">
                     </div>
-                    
                     <div style="display:flex; gap:10px;">
                         <select id="add-categoria" required style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
+                            <option value="Lançamento">Lançamento 🌟</option>
                             <option value="Vestido">Vestido</option>
-                            <option value="Blusa/Cropped/Body">Blusa / Cropped / Body</option>
-                            <option value="Short/Calça/Saia">Short / Calça / Saia</option>
+                            <option value="Blusa/Cropped/Body">Blusa / Cropped</option>
+                            <option value="Short/Calça/Saia">Short / Calça</option>
                             <option value="Conjunto">Conjunto</option>
-                            <option value="Macacão/Macaquito">Macacão / Macaquito</option>
-                            <option value="Acessório">Acessório</option>
-                        </select>
-                        <select id="add-estacao" required style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
-                            <option value="Verão">Verão</option>
-                            <option value="Inverno">Inverno</option>
-                            <option value="Outono">Outono</option>
                         </select>
                     </div>
-
-                    <input type="text" id="add-tamanho" placeholder="Tamanhos (Ex: P, M, G)" required>
-                    <input type="text" id="add-cores" placeholder="Cores (Ex: Rosa, Azul)" required>
-                    <input type="text" id="add-material" placeholder="Material" required>
-                    
+                    <input type="text" id="add-tamanho" placeholder="Tamanhos Disponíveis" required>
+                    <input type="text" id="add-cores" placeholder="Cores (Opcional)">
+                    <input type="text" id="add-material" placeholder="Tipo do Material" required>
                     <label style="font-size: 0.9rem; margin-top: 10px;">Foto Oficial:</label>
                     <input type="file" id="add-imagem-file" accept="image/*" style="background: white;">
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
                     <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="limparFormProduto()">Cancelar Edição</button>
                 </form>
-                
                 <h3 style="margin-top: 30px;">Catálogo</h3>
                 <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto..." oninput="filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px;"></div>
@@ -166,7 +285,7 @@
             </div>
 
             <div id="admin-config" class="admin-aba hidden">
-                <h3>🔧 Ajustes da Loja</h3>
+                <h3>🔧 Ajustes e Ferramentas</h3>
                 <form id="form-config-loja" class="admin-form" onsubmit="salvarConfiguracoes(event)">
                     <label style="font-weight:bold;">Chave PIX:</label>
                     <input type="text" id="config-pix" required>
@@ -174,6 +293,10 @@
                     <input type="text" id="config-telefone" placeholder="Ex: 81 999999999" maxlength="15" required oninput="mascaraTelefone(this)">
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
                 </form>
+                
+                <h4 style="margin-top:30px; color:var(--primary);">🪄 Mágica (Teste)</h4>
+                <p style="font-size:0.85rem; color:#666;">Clique abaixo para encher a loja com produtos e vendas de exemplo.</p>
+                <button onclick="gerarDadosDeExemplo()" class="btn-add" style="background: #2ecc71; margin-top: 10px;">➕ Gerar Dados Falsos</button>
             </div>
         </div>
     </div>
