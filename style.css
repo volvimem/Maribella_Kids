@@ -2,7 +2,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text); overflow-x: hidden; }
 
-/* CABEÇALHO */
 header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px; }
 .header-top { display: flex; justify-content: space-between; align-items: center; }
 .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; color: white; }
@@ -11,7 +10,7 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .btn-icon, #cart-btn { background: white; border: none; padding: 8px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.85rem; transition: 0.3s; }
 .search-bar input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; font-size: 0.95rem; }
 
-/* MENU LATERAL (SIDEBAR) */
+/* MENU LATERAL */
 .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 3000; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; padding: 20px; }
 .sidebar.open { left: 0; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; }
@@ -23,24 +22,26 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .review-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2999; }
 
-/* CARROSSEL HORIZONTAL (Novo formato visual) */
+/* VITRINE COM 2 PRODUTOS LADO A LADO */
 .estacao-section { margin-bottom: 30px; }
-.estacao-titulo { margin-left: 15px; margin-bottom: 10px; color: var(--primary); font-size: 1.5rem; }
-.carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 15px; padding: 0 15px 20px 15px; scroll-behavior: smooth; }
+.estacao-titulo { margin-left: 15px; margin-bottom: 10px; color: var(--primary); font-size: 1.3rem; font-weight: 800; text-transform: uppercase;}
+.carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; padding: 0 15px 20px 15px; scroll-behavior: smooth; }
 .carousel-container::-webkit-scrollbar { display: none; }
-.card { flex: 0 0 75%; max-width: 280px; scroll-snap-align: center; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-.card img { width: 100%; height: 280px; object-fit: cover; image-rendering: crisp-edges; cursor: zoom-in; }
-.card-info { padding: 15px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
-.card-info h3 { font-size: 1.2rem; color: #333; margin-bottom: 5px; }
-.card-info p { font-size: 0.85rem; color: #666; margin-bottom: 3px; }
-.card-info .preco { font-size: 1.4rem; font-weight: bold; color: var(--secondary); margin: 10px 0; }
-.btn-add { background: var(--secondary); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+
+/* A Mágica do Lado a Lado: 47% de largura para caberem 2 perfeitamente */
+.card { flex: 0 0 47%; max-width: 200px; scroll-snap-align: start; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+.card img { width: 100%; height: 180px; object-fit: cover; image-rendering: crisp-edges; cursor: zoom-in; }
+.card-info { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+.card-info h3 { font-size: 0.95rem; color: #333; margin-bottom: 5px; line-height: 1.2;}
+.card-info p { font-size: 0.75rem; color: #666; margin-bottom: 2px; }
+.card-info .preco { font-size: 1.1rem; font-weight: bold; color: var(--secondary); margin: 5px 0; }
+.btn-add { background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
 .esgotado { opacity: 0.5; pointer-events: none; }
 
-/* RESTANTE DOS ESTILOS BÁSICOS (Formulários, Admin, Toast) */
 #lightbox-img { max-width: 95vw; max-height: 80vh; margin: auto; border-radius: 10px; transition: 0.3s ease; cursor: zoom-in; }
 #lightbox-img.zoomed { transform: scale(1.8); cursor: zoom-out; }
 .btn-admin-flutuante { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 999; backdrop-filter: blur(5px);}
+
 .modal { display: flex; align-items: flex-end; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; backdrop-filter: blur(3px);}
 .hidden { display: none !important; }
 .modal-content { background: white; width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 25px 25px 0 0; max-height: 90vh; overflow-y: auto; position: relative;}
