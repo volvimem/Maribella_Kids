@@ -24,7 +24,7 @@ window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
-// 6° NOTIFICAÇÃO E MODAL DE CONFIRMAÇÃO CUSTOMIZADO
+// --- CONFIRMAÇÃO ELEGANTE E NOTIFICAÇÕES ---
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
     let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:15px; cursor:pointer; font-size:1.5rem; color:#666;">&times;</span>` : '';
@@ -51,46 +51,13 @@ window.confirmarAcao = function(titulo, mensagem) {
     });
 };
 
-// 4° WHATSAPP FORMATADO COM +55 OCULTO
 function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     let telLimpo = telefoneBruto.replace(/\D/g, '');
     if(!telLimpo.startsWith('55')) telLimpo = '55' + telLimpo;
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-// 5° ETIQUETA CORREIOS
-window.imprimirEtiqueta = async function(idPedido) {
-    let p = todosPedidosAdmin.find(x => x.id === idPedido);
-    if(!p) return window.mostrarNotificacao("Pedido não encontrado", "erro");
-    
-    let endHTML = `<p><strong>Destinatário:</strong> ${p.cliente}</p>
-                   <p>${p.rua || p.endereco}</p>
-                   <p>Nº: ${p.numero || ''} | Bairro: ${p.bairro || p.cidade || ''}</p>
-                   <p>CEP: ${p.cep || ''} - ${p.estado || ''}</p>
-                   <p>Tel: ${p.telefone || ''}</p>`;
-                   
-    let remetHTML = `<p><strong>Remetente:</strong> Maribella Kids</p>
-                     <p>${configLoja.endereco}</p>
-                     <p>Tel: ${configLoja.telefone}</p>`;
-
-    let w = window.open('', '_blank');
-    w.document.write(`
-        <html><head><title>Etiqueta de Envio</title>
-        <style>body{font-family: Arial, sans-serif;} .caixa{border: 2px solid #000; padding: 20px; width: 10cm; height: 14cm; margin: 20px auto;}</style>
-        </head><body>
-        <div class="caixa">
-            <h2 style="border-bottom:1px solid #000; padding-bottom:5px;">ETIQUETA DE ENVIO</h2>
-            <div style="margin-bottom: 20px; font-size:18px;">${endHTML}</div>
-            <hr>
-            <div style="margin-top: 20px; font-size:14px; color:#555;">${remetHTML}</div>
-        </div>
-        <script>window.print();</script>
-        </body></html>
-    `);
-    w.document.close();
-};
-
-// VENDAS FAKES COM TEMPO ALEATÓRIO
+// --- VENDAS FAKES & PESSOAS ONLINE ---
 const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia", "Carla", "Vanessa", "Bruna", "Aline", "Renata", "Larissa"];
 const cidadesFakes = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Recife, PE", "Salvador, BA", "Fortaleza, CE", "Curitiba, PR", "Manaus, AM", "Brasília, DF", "Goiânia, GO", "Belém, PA", "Porto Alegre, RS", "Campinas, SP", "São Luís, MA", "Maceió, AL", "Natal, RN", "Teresina, PI", "Florianópolis, SC", "Surubim, PE", "Caruaru, PE", "Campina Grande, PB", "Feira de Santana, BA", "Natal, RN", "Aracaju, AL"];
 function dispararVendaFalsa() {
@@ -99,12 +66,11 @@ function dispararVendaFalsa() {
     let v = (Math.random() * (250 - 50) + 50).toFixed(2);
     mostrarNotificacao(`${n} de ${c} comprou R$ ${v}!`, 'info', true);
     setTimeout(window.fecharToast, 10000); 
-    let tempoAleatorio = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000; // Entre 1 e 5 min
+    let tempoAleatorio = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000;
     setTimeout(dispararVendaFalsa, tempoAleatorio);
 }
 setTimeout(dispararVendaFalsa, Math.random() * 30000 + 30000); 
 
-// PESSOAS ONLINE
 function atualizarPessoasOnline() {
     let el = document.getElementById('online-count'); if(!el) return;
     let hora = new Date().getHours(); let minBase, maxBase;
@@ -117,33 +83,47 @@ function atualizarPessoasOnline() {
 }
 setTimeout(atualizarPessoasOnline, 2000);
 
+
+// --- LUPA, LIGHTBOX & CARRINHO NO STORY ---
 window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
-window.abrirLightbox = (src) => { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox-modal').classList.remove('hidden'); };
-window.fecharLightbox = () => { document.getElementById('lightbox-modal').classList.add('hidden'); };
-window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 
-// 2° MENU LATERAL 100% BLINDADO (Eventos Nativos)
-document.addEventListener("DOMContentLoaded", () => {
-    const btnMenu = document.getElementById('btn-abrir-menu');
-    if(btnMenu) {
-        btnMenu.addEventListener('click', () => {
-            document.getElementById('sidebar-menu').classList.add('open');
-            document.getElementById('sidebar-overlay').classList.remove('hidden');
-        });
+let lightboxCurrentProdId = null;
+window.abrirLightbox = (src, id = null) => { 
+    lightboxCurrentProdId = id;
+    document.getElementById('lightbox-img').src = src; 
+    document.getElementById('lightbox-modal').classList.remove('hidden'); 
+    
+    // Se clicou de um produto válido, exibe o botão adicionar ao carrinho
+    let ctrl = document.getElementById('lightbox-controls');
+    if(id && ctrl) {
+        ctrl.style.display = 'block';
+    } else if(ctrl) {
+        ctrl.style.display = 'none';
     }
-    const fecharOverlay = document.getElementById('sidebar-overlay');
-    if(fecharOverlay) fecharOverlay.addEventListener('click', window.toggleMenu);
-    const fecharX = document.getElementById('btn-fechar-menu');
-    if(fecharX) fecharX.addEventListener('click', window.toggleMenu);
-});
-
-window.toggleMenu = () => { 
-    document.getElementById('sidebar-menu').classList.remove('open'); 
-    document.getElementById('sidebar-overlay').classList.add('hidden'); 
+};
+window.fecharLightbox = () => { 
+    document.getElementById('lightbox-modal').classList.add('hidden'); 
+    lightboxCurrentProdId = null;
+};
+window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
+window.adicionarAoCarrinhoLightbox = () => {
+    if(lightboxCurrentProdId) {
+        window.adicionarAoCarrinho(lightboxCurrentProdId);
+        window.fecharLightbox();
+    }
 };
 
+// --- MENU LATERAL (RESOLVIDO E 100% FUNCIONAL) ---
+window.abrirMenuLateral = () => {
+    document.getElementById('sidebar-menu').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.remove('hidden');
+};
+window.fecharMenuLateral = () => {
+    document.getElementById('sidebar-menu').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+};
 window.filtrarCategoria = (cat) => {
-    window.toggleMenu(); 
+    window.fecharMenuLateral(); 
     const termo = removerAcentos(document.getElementById('busca-input').value);
     let filtrados = listaDeProdutos.filter(p => {
         let matchCat = (cat === 'Todas') || (p.categoria === cat) || (cat === 'Lançamento' && p.lancamento === true);
@@ -168,7 +148,9 @@ async function carregarConfiguracoes() {
     document.getElementById('menu-endereco-info').innerText = configLoja.endereco || "Nossa Loja";
 }
 window.salvarConfiguracoes = async (e) => { 
-    e.preventDefault(); const btn = document.getElementById('btn-salvar-config'); btn.innerText = "⏳..."; 
+    e.preventDefault(); 
+    const sim = await window.confirmarAcao("Ajustes", "Salvar novas informações da loja?"); if(!sim) return;
+    const btn = document.getElementById('btn-salvar-config'); btn.innerText = "⏳..."; 
     try { 
         configLoja.pix = document.getElementById('config-pix').value; configLoja.telefone = document.getElementById('config-telefone').value; configLoja.aviso = document.getElementById('config-aviso').value; configLoja.instagram = document.getElementById('config-instagram').value; configLoja.endereco = document.getElementById('config-endereco').value;
         await setDoc(doc(db, "config", "loja"), configLoja); 
@@ -190,7 +172,8 @@ window.carregarProdutosDoBanco = async () => {
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
     let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
-    storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="window.abrirLightbox('${p.imagem}')" title="${p.nome}">`; });
+    // Manda o ID junto para habilitar o carrinho no Lightbox
+    storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="window.abrirLightbox('${p.imagem}', '${p.id}')" title="${p.nome}">`; });
 }
 
 function renderizarVitrinesCategorias(lista, tituloUnico = null) {
@@ -218,7 +201,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     
     produtos.forEach(p => {
         let btnStatus = p.estoque > 0 ? `<button class="btn-add" onclick="window.adicionarAoCarrinho('${p.id}')">🛒 Quero</button>` : `<button class="btn-add esgotado">Esgotado</button>`;
-        carrossel.innerHTML += `<div class="card"><img src="${p.imagem}" onclick="window.abrirLightbox('${p.imagem}')"><div class="card-info"><div><h3>${p.nome}</h3><p style="font-size:0.75rem;">Tam: ${p.tamanho}</p><p class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</p></div>${btnStatus}</div></div>`;
+        carrossel.innerHTML += `<div class="card"><img src="${p.imagem}" onclick="window.abrirLightbox('${p.imagem}', '${p.id}')"><div class="card-info"><div><h3>${p.nome}</h3><p style="font-size:0.75rem;">Tam: ${p.tamanho}</p><p class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</p></div>${btnStatus}</div></div>`;
     });
     containerMaster.appendChild(section);
 
