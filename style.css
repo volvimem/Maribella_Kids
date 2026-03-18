@@ -9,9 +9,9 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .menu-botoes { display: flex; gap: 8px; align-items: center; }
 .btn-icon, #cart-btn { background: white; border: none; padding: 8px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.85rem; transition: 0.3s; }
 
-/* STORIES (Lentos) */
+/* STORIES */
 .stories-wrapper { background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
-.stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 45s linear infinite; }
+.stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 25s linear infinite; }
 .story-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid var(--primary); padding: 2px; object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
 @keyframes scrollStories { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
@@ -67,7 +67,6 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .pagamento-info { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; border: 2px dashed #ffb6c1;}
 .btn-pix { background: #e0e0e0; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold;}
 
-/* TOAST (NOTIFICAÇÃO FECHÁVEL) */
 .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: white; color: #333; padding: 15px 20px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; z-index: 9999; display: flex; align-items: center; gap: 10px;}
 .toast.sucesso { border-left: 5px solid var(--success); }
 .toast.erro { border-left: 5px solid var(--error); }
