@@ -2,7 +2,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text); overflow-x: hidden; }
 
-/* CABEÇALHO */
 header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
 .header-top { display: flex; justify-content: space-between; align-items: center; }
 .logo { display: flex; align-items: center; font-weight: bold; color: white; }
@@ -11,7 +10,7 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 
 /* STORIES */
 .stories-wrapper { background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
-.stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 25s linear infinite; }
+.stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 45s linear infinite; }
 .story-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid var(--primary); padding: 2px; object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
 @keyframes scrollStories { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
@@ -61,7 +60,7 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; font-size: 1rem;}
 .cart-total { font-size: 1.4rem; font-weight: bold; text-align: right; margin-top: 15px; color: var(--primary);}
 form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-input, textarea, select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fafafa;}
+input, textarea, select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fafafa; max-width: 100%;}
 input[type="file"] { padding: 10px; border: 2px dashed var(--primary); background: #fffaf0; }
 .btn-whatsapp { background: #25D366; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; margin-top: 10px;}
 .pagamento-info { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; border: 2px dashed #ffb6c1;}
