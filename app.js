@@ -19,38 +19,79 @@ let clienteLogadoCpf = null; let clienteLogadoDados = null;
 let meusPedidosSalvos = []; let pedidoEmEdicao = null;
 let carouselIntervals = [];
 
-// --- FUNÇÕES GLOBAIS ---
+// --- FUNÇÕES GLOBAIS E MÁSCARAS ---
 window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
+// NOTIFICAÇÕES (COM X PARA FECHAR E TEMPO ALEATÓRIO DE 1 A 5 MIN)
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
-    let fecharBtn = fechavel ? `<span onclick="fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.5rem; color:#fff;">&times;</span>` : '';
+    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:15px; cursor:pointer; font-size:1.5rem; color:#666;">&times;</span>` : '';
     toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🛍️":"✅"} ${msg}</span> ${fecharBtn}`; 
     toast.className = `toast show ${t}`; 
     if(!fechavel) setTimeout(window.fecharToast, 3500); 
 };
 window.fecharToast = () => { document.getElementById('toast-notificacao').className = 'toast hidden'; };
 
-// NOTIFICAÇÃO 1 MINUTO
 const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia", "Carla", "Vanessa"];
-const cidadesFakes = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Recife, PE", "Salvador, BA", "Fortaleza, CE", "Curitiba, PR", "Manaus, AM"];
-setInterval(() => {
-    let n = nomesFakes[Math.floor(Math.random()*nomesFakes.length)]; let c = cidadesFakes[Math.floor(Math.random()*cidadesFakes.length)]; let v = (Math.random() * 100 + 50).toFixed(2);
-    mostrarNotificacao(`${n} de ${c} comprou R$ ${v}!`, 'info', true);
-    setTimeout(window.fecharToast, 15000); 
-}, 60000);
+const cidadesFakes = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Recife, PE", "Salvador, BA", "Fortaleza, CE", "Curitiba, PR", "Manaus, AM", "Brasília, DF", "Goiânia, GO", "Belém, PA", "Porto Alegre, RS", "Campinas, SP", "São Luís, MA", "Maceió, AL", "Natal, RN", "Teresina, PI", "Florianópolis, SC", "Surubim, PE", "Caruaru, PE", "Campina Grande, PB", "Feira de Santana, BA"];
 
-window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
+function dispararVendaFalsa() {
+    let n = nomesFakes[Math.floor(Math.random()*nomesFakes.length)];
+    let c = cidadesFakes[Math.floor(Math.random()*cidadesFakes.length)];
+    let v = (Math.random() * (250 - 50) + 50).toFixed(2);
+    mostrarNotificacao(`${n} de ${c} comprou R$ ${v}!`, 'info', true);
+    
+    setTimeout(window.fecharToast, 10000); // Some sozinho depois de 10s se não fechar no X
+    
+    // Dispara a próxima notificação entre 1 min e 5 min
+    let tempoAleatorio = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000;
+    setTimeout(dispararVendaFalsa, tempoAleatorio);
+}
+// Começa a primeira notificação após uns 30 segundos
+setTimeout(dispararVendaFalsa, Math.random() * 30000 + 30000);
+
+// CONTADOR DE PESSOAS ONLINE FAKE (1280 a 8630)
+function atualizarPessoasOnline() {
+    let el = document.getElementById('online-count');
+    if(!el) return;
+    let current = parseInt(el.innerText.replace('.', ''));
+    let variacao = Math.floor(Math.random() * 50) - 20; // Sobe e desce
+    let novoValor = current + variacao;
+    if(novoValor < 1280) novoValor = 1280 + Math.floor(Math.random()*100);
+    if(novoValor > 8630) novoValor = 8630 - Math.floor(Math.random()*100);
+    
+    el.innerText = novoValor.toLocaleString('pt-BR');
+    setTimeout(atualizarPessoasOnline, Math.random() * 5000 + 3000); // Muda a cada 3 a 8 segundos
+}
+setTimeout(atualizarPessoasOnline, 3000);
+
+
+// --- LUPA DE BUSCA, MENU E LIGHTBOX ---
+window.toggleBusca = () => { 
+    let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); 
+    if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); 
+};
 window.abrirLightbox = (src) => { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox-modal').classList.remove('hidden'); };
 window.fecharLightbox = () => { document.getElementById('lightbox-modal').classList.add('hidden'); };
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 
-// MENU LATERAL
-window.toggleMenu = () => { document.getElementById('sidebar-menu').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
+// MENU LATERAL 100% BLINDADO (Usando Event Listener Direto)
+document.getElementById('btn-abrir-menu').addEventListener('click', () => {
+    document.getElementById('sidebar-menu').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.remove('hidden');
+});
+document.getElementById('btn-fechar-menu').addEventListener('click', fecharMenu);
+document.getElementById('sidebar-overlay').addEventListener('click', fecharMenu);
+
+function fecharMenu() {
+    document.getElementById('sidebar-menu').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+}
 window.filtrarCategoria = (cat) => {
-    toggleMenu(); const termo = removerAcentos(document.getElementById('busca-input').value);
+    fecharMenu(); 
+    const termo = removerAcentos(document.getElementById('busca-input').value);
     let filtrados = listaDeProdutos.filter(p => (cat === 'Todas' || p.categoria === cat) && (removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo)));
     renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null);
 };
@@ -91,7 +132,7 @@ window.carregarProdutosDoBanco = async () => {
 
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
-    let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; // Bastante para não quebrar a animação
+    let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
     storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="abrirLightbox('${p.imagem}')" title="${p.nome}">`; });
 }
 
@@ -137,12 +178,12 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
             if(carrossel.scrollLeft <= 10) carrossel.scrollTo({left:carrossel.scrollWidth, behavior:'smooth'});
             else carrossel.scrollBy({left: -cardWidth, behavior:'smooth'});
         }
-    }, 4500); // 4.5s para dar tempo de ler e clicar
+    }, 4500); 
     carouselIntervals.push(autoScroll);
 }
 window.filtrarProdutos = () => { let t = document.getElementById('busca-input').value; if(t) renderizarVitrinesCategorias(listaDeProdutos.filter(p => removerAcentos(p.nome).includes(removerAcentos(t))), "Resultados da Busca"); else renderizarVitrinesCategorias(listaDeProdutos); };
 
-// --- CARRINHO ---
+// --- CARRINHO BÁSICO E CHECKOUT ---
 window.adicionarAoCarrinho = (id) => { let prod = listaDeProdutos.find(p => p.id === id); let itemEx = carrinho.find(p => p.id === id); let qtdAtual = itemEx ? itemEx.qtd : 0; if(qtdAtual + 1 > prod.estoque) return mostrarNotificacao("Sem estoque suficiente!", 'erro'); if(itemEx) itemEx.qtd++; else carrinho.push({...prod, qtd: 1}); salvarCarrinhoNoLocal(); mostrarNotificacao("Adicionado!", 'sucesso'); };
 window.alterarQtdCarrinho = (index, delta) => { let novoQtd = (carrinho[index].qtd || 1) + delta; if(novoQtd > carrinho[index].estoque) return mostrarNotificacao("Estoque insuficiente!", 'erro'); carrinho[index].qtd = novoQtd; if(carrinho[index].qtd <= 0) carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 window.removerDoCarrinho = (index) => { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
@@ -213,12 +254,22 @@ window.sairCliente = () => { localStorage.removeItem('maribella_auth_cliente'); 
 // --- ADMINISTRAÇÃO ---
 window.abrirLoginAdmin = () => document.getElementById('admin-login-modal').classList.remove('hidden');
 window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
-window.realizarLoginAdmin = async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); mostrarNotificacao("Liberado!", "sucesso"); fecharLoginAdmin(); document.getElementById('admin-dashboard').classList.remove('hidden'); carregarListaAdminPedidos(); e.target.reset(); } catch(e) {} };
+window.realizarLoginAdmin = async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); mostrarNotificacao("Liberado!", "sucesso"); fecharLoginAdmin(); document.getElementById('admin-dashboard').classList.remove('hidden'); carregarListaAdminPedidos(); e.target.reset(); } catch(e) { mostrarNotificacao("Erro!", "erro"); } };
 window.sairDoAdmin = async () => { await signOut(auth); document.getElementById('admin-dashboard').classList.add('hidden'); carregarProdutosDoBanco(); };
 window.mudarAbaAdmin = (abaId) => { document.querySelectorAll('.admin-aba').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa')); document.getElementById(abaId).classList.remove('hidden'); document.getElementById(`tab-${abaId}`).classList.add('ativa'); if(abaId==='admin-pedidos') carregarListaAdminPedidos(); if(abaId==='admin-produtos') carregarListaAdminProdutosEditar(); if(abaId==='admin-clientes') carregarListaAdminClientes(); };
 
 async function carregarListaAdminPedidos() { const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "⏳ Puxando vendas..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); todosPedidosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosPedidosAdmin.push(p); }); filtrarPedidosAdmin(); }
-window.filtrarPedidosAdmin = () => { const termo = removerAcentos(document.getElementById('busca-pedido').value); const filtro = document.getElementById('filtro-status').value; const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = ""; let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)) || p.cpf.includes(termo); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; }); if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>"; res.forEach(p => { let btnAprovar = p.status === 'Pendente' ? `<button onclick="aprovarPedido('${p.id}')" style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px;">✅ Aprovar</button>` : ''; let btnVoltar = p.status !== 'Pendente' ? `<button onclick="voltarPendentePedido('${p.id}')" style="background:#f39c12; color:white; border:none; padding:8px; border-radius:5px;">↩️ Pendente</button>` : ''; let btnExcluir = `<button onclick="excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px;">🗑️ Excluir</button>`; lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Total:</strong> R$ ${p.total} (${p.itens})<br><span style="font-weight:bold;">Status: ${p.status}</span><div style="display:flex; gap:10px; margin-top:10px;">${btnAprovar}${btnVoltar}${btnExcluir}</div></div>`; }); }
+window.filtrarPedidosAdmin = () => {
+    const termo = removerAcentos(document.getElementById('busca-pedido').value); const filtro = document.getElementById('filtro-status').value; const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "";
+    let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)) || p.cpf.includes(termo); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
+    if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
+    res.forEach(p => { 
+        let btnAprovar = p.status === 'Pendente' ? `<button onclick="aprovarPedido('${p.id}')" style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">✅ Aprovar</button>` : '';
+        let btnVoltar = p.status !== 'Pendente' ? `<button onclick="voltarPendentePedido('${p.id}')" style="background:#f39c12; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">↩️ Pendente</button>` : '';
+        let btnExcluir = `<button onclick="excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🗑️ Excluir</button>`;
+        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Total:</strong> R$ ${p.total} (${p.itens})<br><span style="font-weight:bold;">Status: ${p.status}</span><div style="display:flex; gap:10px; margin-top:10px;">${btnAprovar}${btnVoltar}${btnExcluir}</div></div>`; 
+    });
+}
 window.aprovarPedido = async (id) => { await updateDoc(doc(db, "pedidos", id), { status: "Aprovado" }); carregarListaAdminPedidos(); };
 window.voltarPendentePedido = async (id) => { if(confirm("Voltar para Pendente?")) { await updateDoc(doc(db, "pedidos", id), { status: "Pendente" }); carregarListaAdminPedidos(); } };
 window.excluirPedidoAdmin = async (id) => { if(confirm("Deseja APAGAR este pedido?")) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
@@ -228,7 +279,7 @@ window.limparFormProduto = () => { document.getElementById('form-add-produto').r
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosProdutosAdmin.push(p); }); filtrarProdutosAdmin(); }
 window.filtrarProdutosAdmin = () => { const termo = removerAcentos(document.getElementById('busca-produto-admin').value); const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = ""; let res = todosProdutosAdmin.filter(p => removerAcentos(p.nome).includes(termo)); if(res.length === 0) lista.innerHTML = "<p>Nenhum produto.</p>"; res.forEach(p => { lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${p.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Estq: ${p.estoque||0} | R$ ${p.preco}</div><div style="display:flex; gap:5px;"><button onclick="editarProdutoAdmin('${p.id}', '${p.nome}', ${p.preco}, '${p.tamanho}', '${p.material}', ${p.estoque||0}, '${p.cores||''}', '${p.categoria||'Vestido'}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️</button> <button onclick="excluirProdutoAdmin('${p.id}')" class="btn-icon" style="background:#e74c3c; color:white;">🗑️</button></div></div>`; }); }
 window.editarProdutoAdmin = (id, n, p, t, m, estq, cor, cat) => { document.getElementById('edit-produto-id').value=id; document.getElementById('add-nome').value=n; document.getElementById('add-preco').value=p; document.getElementById('add-estoque').value=estq; document.getElementById('add-categoria').value=cat; document.getElementById('add-tamanho').value=t; document.getElementById('add-cores').value=cor; document.getElementById('add-material').value=m; document.querySelector('.admin-content').scrollTo(0,0); };
-window.excluirProdutoAdmin = async (id) => { if(confirm("🗑️ Excluir permanentemente este produto?")) { await deleteDoc(doc(db, "produtos", id)); mostrarNotificacao("Excluído!", "info"); carregarListaAdminProdutosEditar(); carregarProdutosDoBanco(); } };
+window.excluirProdutoAdmin = async (id) => { if(confirm("🗑️ ATENÇÃO: Tem certeza que deseja apagar essa peça do sistema?")) { await deleteDoc(doc(db, "produtos", id)); mostrarNotificacao("Peça apagada!", "info"); carregarListaAdminProdutosEditar(); carregarProdutosDoBanco(); } };
 
 async function carregarListaAdminClientes() { const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "clientes")); todosClientesAdmin = []; snap.forEach(d => todosClientesAdmin.push(d.data())); filtrarClientesAdmin(); }
 window.filtrarClientesAdmin = () => { const termo = removerAcentos(document.getElementById('busca-cliente-admin').value); const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = ""; let res = todosClientesAdmin.filter(c => removerAcentos(c.nome).includes(termo) || c.telefone.includes(termo) || (c.cpf && c.cpf.includes(termo))); if(res.length === 0) lista.innerHTML = "<p>Nenhum cliente.</p>"; res.forEach(c => { let telLimpo = c.telefone.replace(/\D/g, ''); lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="verHistoricoClienteAdmin('${c.cpf}', '${c.nome}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold;">🛍️ Histórico</button><a href="https://wa.me/55${telLimpo}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a></div></div>`; }); }
