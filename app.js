@@ -14,48 +14,40 @@ const db = getFirestore(app); const storage = getStorage(app); const auth = getA
 
 let carrinho = JSON.parse(localStorage.getItem('maribella_carrinho')) || [];
 let listaDeProdutos = []; let todosPedidosAdmin = []; let todosProdutosAdmin = []; let todosClientesAdmin = [];
-// 5° & 6° NOVA CONFIGURAÇÃO (Aviso, Instagram, Endereço)
 let configLoja = { pix: "", telefone: "5581999999999", aviso: "Enviamos para todo o Brasil. Frete via WhatsApp!", instagram: "https://instagram.com/maribellakids", endereco: "Sua Cidade, Estado" };
 let clienteLogadoCpf = null; let clienteLogadoDados = null;
 let meusPedidosSalvos = []; let pedidoEmEdicao = null;
 let carouselIntervals = [];
 
-// --- FUNÇÕES GLOBAIS E MÁSCARAS ---
+// --- FUNÇÕES GLOBAIS ---
 window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
-// 6° NOTIFICAÇÕES (COM X PARA FECHAR E 1 MINUTO)
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
-    let fecharBtn = fechavel ? `<span onclick="fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.5rem;">&times;</span>` : '';
+    let fecharBtn = fechavel ? `<span onclick="fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.5rem; color:#fff;">&times;</span>` : '';
     toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🛍️":"✅"} ${msg}</span> ${fecharBtn}`; 
     toast.className = `toast show ${t}`; 
     if(!fechavel) setTimeout(window.fecharToast, 3500); 
 };
 window.fecharToast = () => { document.getElementById('toast-notificacao').className = 'toast hidden'; };
 
-// 1° GATILHO VENDAS FICTÍCIAS A CADA 1 MINUTO
+// NOTIFICAÇÃO 1 MINUTO
 const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia", "Carla", "Vanessa"];
 const cidadesFakes = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Recife, PE", "Salvador, BA", "Fortaleza, CE", "Curitiba, PR", "Manaus, AM"];
 setInterval(() => {
-    let n = nomesFakes[Math.floor(Math.random()*nomesFakes.length)];
-    let c = cidadesFakes[Math.floor(Math.random()*cidadesFakes.length)];
-    let v = (Math.random() * 100 + 50).toFixed(2);
+    let n = nomesFakes[Math.floor(Math.random()*nomesFakes.length)]; let c = cidadesFakes[Math.floor(Math.random()*cidadesFakes.length)]; let v = (Math.random() * 100 + 50).toFixed(2);
     mostrarNotificacao(`${n} de ${c} comprou R$ ${v}!`, 'info', true);
-    setTimeout(window.fecharToast, 15000); // Some sozinho depois de 15s
-}, 60000); // Exato 1 minuto (60.000 ms)
+    setTimeout(window.fecharToast, 15000); 
+}, 60000);
 
-// --- LUPA DE BUSCA, MENU E LIGHTBOX ---
-window.toggleBusca = () => { 
-    let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); 
-    if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); 
-};
+window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
 window.abrirLightbox = (src) => { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox-modal').classList.remove('hidden'); };
 window.fecharLightbox = () => { document.getElementById('lightbox-modal').classList.add('hidden'); };
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 
-// 7° MENU LATERAL (Corrigido e Vinculado 100%)
+// MENU LATERAL
 window.toggleMenu = () => { document.getElementById('sidebar-menu').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
 window.filtrarCategoria = (cat) => {
     toggleMenu(); const termo = removerAcentos(document.getElementById('busca-input').value);
@@ -63,19 +55,15 @@ window.filtrarCategoria = (cat) => {
     renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null);
 };
 
-// --- CONFIGURAÇÕES DA LOJA (Lê e Aplica Banner/Rodapé) ---
+// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
         configLoja = snap.data(); 
-        document.getElementById('pix-display').innerText = configLoja.pix; 
-        document.getElementById('config-pix').value = configLoja.pix; 
-        document.getElementById('config-telefone').value = configLoja.telefone; 
-        document.getElementById('config-aviso').value = configLoja.aviso || "";
-        document.getElementById('config-instagram').value = configLoja.instagram || "";
-        document.getElementById('config-endereco').value = configLoja.endereco || "";
+        document.getElementById('pix-display').innerText = configLoja.pix; document.getElementById('config-pix').value = configLoja.pix; 
+        document.getElementById('config-telefone').value = configLoja.telefone; document.getElementById('config-aviso').value = configLoja.aviso || "";
+        document.getElementById('config-instagram').value = configLoja.instagram || ""; document.getElementById('config-endereco').value = configLoja.endereco || "";
     } 
-    // Aplica no visual
     document.getElementById('texto-aviso-loja').innerText = configLoja.aviso || "Enviamos para todo o Brasil.";
     document.getElementById('footer-instagram-link').href = configLoja.instagram || "#";
     document.getElementById('footer-endereco-texto').innerText = configLoja.endereco || "Nossa Loja";
@@ -84,19 +72,14 @@ async function carregarConfiguracoes() {
 window.salvarConfiguracoes = async (e) => { 
     e.preventDefault(); const btn = document.getElementById('btn-salvar-config'); btn.innerText = "⏳..."; 
     try { 
-        configLoja.pix = document.getElementById('config-pix').value; configLoja.telefone = document.getElementById('config-telefone').value; 
-        configLoja.aviso = document.getElementById('config-aviso').value; configLoja.instagram = document.getElementById('config-instagram').value;
-        configLoja.endereco = document.getElementById('config-endereco').value;
+        configLoja.pix = document.getElementById('config-pix').value; configLoja.telefone = document.getElementById('config-telefone').value; configLoja.aviso = document.getElementById('config-aviso').value; configLoja.instagram = document.getElementById('config-instagram').value; configLoja.endereco = document.getElementById('config-endereco').value;
         await setDoc(doc(db, "config", "loja"), configLoja); 
-        document.getElementById('pix-display').innerText = configLoja.pix; 
-        document.getElementById('texto-aviso-loja').innerText = configLoja.aviso;
-        document.getElementById('footer-instagram-link').href = configLoja.instagram;
-        document.getElementById('footer-endereco-texto').innerText = configLoja.endereco;
+        document.getElementById('pix-display').innerText = configLoja.pix; document.getElementById('texto-aviso-loja').innerText = configLoja.aviso; document.getElementById('footer-instagram-link').href = configLoja.instagram; document.getElementById('footer-endereco-texto').innerText = configLoja.endereco;
         mostrarNotificacao("Salvo!", "sucesso"); 
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- 4° STORIES & VITRINE ---
+// --- STORIES & VITRINE ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -108,8 +91,7 @@ window.carregarProdutosDoBanco = async () => {
 
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
-    // Duplica a lista de produtos para dar o efeito infinito de rotação contínua (Marquee CSS)
-    let storyList = [...listaDeProdutos, ...listaDeProdutos]; 
+    let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; // Bastante para não quebrar a animação
     storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="abrirLightbox('${p.imagem}')" title="${p.nome}">`; });
 }
 
@@ -119,7 +101,7 @@ function renderizarVitrinesCategorias(lista, tituloUnico = null) {
 
     if(lista.length === 0) { container.innerHTML = '<p style="text-align:center;">Nenhum produto encontrado.</p>'; return; }
 
-    let indexFila = 0; // Para saber se roda pra esquerda ou direita
+    let indexFila = 0; 
     if(tituloUnico) { criarSecaoCarrossel(tituloUnico, lista, container, indexFila); } 
     else {
         let lancamentos = lista.filter(p => p.categoria === 'Lançamento'); let vestidos = lista.filter(p => p.categoria === 'Vestido'); let shorts = lista.filter(p => p.categoria === 'Short/Calça/Saia'); let blusas = lista.filter(p => p.categoria === 'Blusa/Cropped/Body'); let conjuntos = lista.filter(p => p.categoria === 'Conjunto');
@@ -131,7 +113,6 @@ function renderizarVitrinesCategorias(lista, tituloUnico = null) {
     }
 }
 
-// 2° CARROSSÉIS LADOS OPOSTOS AUTOMÁTICOS
 function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     let section = document.createElement('div'); section.className = 'estacao-section';
     section.innerHTML = `<h2 class="estacao-titulo">${titulo}</h2><div class="carousel-container"></div>`;
@@ -143,26 +124,25 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     });
     containerMaster.appendChild(section);
 
-    // Direção da Rolagem: Par vai para Esquerda, Ímpar para Direita
     let direcao = (indexFila % 2 === 0) ? 1 : -1;
-    if(direcao === -1) setTimeout(() => carrossel.scrollLeft = carrossel.scrollWidth, 100);
+    if(direcao === -1) setTimeout(() => carrossel.scrollLeft = carrossel.scrollWidth, 300);
 
     let autoScroll = setInterval(() => {
         if(!carrossel.querySelector('.card')) return;
         let cardWidth = carrossel.querySelector('.card').clientWidth + 10;
-        if(direcao === 1) { // Rola pra Direita
+        if(direcao === 1) { 
             if(carrossel.scrollLeft + carrossel.clientWidth >= carrossel.scrollWidth - 10) carrossel.scrollTo({left:0, behavior:'smooth'});
             else carrossel.scrollBy({left: cardWidth, behavior:'smooth'});
-        } else { // Rola pra Esquerda
+        } else { 
             if(carrossel.scrollLeft <= 10) carrossel.scrollTo({left:carrossel.scrollWidth, behavior:'smooth'});
             else carrossel.scrollBy({left: -cardWidth, behavior:'smooth'});
         }
-    }, 3500);
+    }, 4500); // 4.5s para dar tempo de ler e clicar
     carouselIntervals.push(autoScroll);
 }
 window.filtrarProdutos = () => { let t = document.getElementById('busca-input').value; if(t) renderizarVitrinesCategorias(listaDeProdutos.filter(p => removerAcentos(p.nome).includes(removerAcentos(t))), "Resultados da Busca"); else renderizarVitrinesCategorias(listaDeProdutos); };
 
-// --- CARRINHO BÁSICO E CHECKOUT ---
+// --- CARRINHO ---
 window.adicionarAoCarrinho = (id) => { let prod = listaDeProdutos.find(p => p.id === id); let itemEx = carrinho.find(p => p.id === id); let qtdAtual = itemEx ? itemEx.qtd : 0; if(qtdAtual + 1 > prod.estoque) return mostrarNotificacao("Sem estoque suficiente!", 'erro'); if(itemEx) itemEx.qtd++; else carrinho.push({...prod, qtd: 1}); salvarCarrinhoNoLocal(); mostrarNotificacao("Adicionado!", 'sucesso'); };
 window.alterarQtdCarrinho = (index, delta) => { let novoQtd = (carrinho[index].qtd || 1) + delta; if(novoQtd > carrinho[index].estoque) return mostrarNotificacao("Estoque insuficiente!", 'erro'); carrinho[index].qtd = novoQtd; if(carrinho[index].qtd <= 0) carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 window.removerDoCarrinho = (index) => { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
@@ -188,14 +168,18 @@ window.buscarCep = async (cepV, pref) => { let cep = cepV.replace(/\D/g, ''); if
 window.finalizarCheckout = async (e) => {
     e.preventDefault(); const btn = document.getElementById('btn-finalizar-checkout'); btn.disabled=true; btn.innerText="⏳...";
     const cpf = document.getElementById('cliente-cpf').value.replace(/\D/g,''); const nome = document.getElementById('cliente-nome').value; const tel = document.getElementById('cliente-telefone').value; const bairroCidade = document.getElementById('cliente-bairro').value; const endereco = `${document.getElementById('cliente-rua').value}, ${document.getElementById('cliente-numero').value} - ${bairroCidade}`; const total = document.getElementById('total-price').innerText;
+
     try {
         let dadosC = { nome, cpf, telefone: tel, cep: document.getElementById('cliente-cep').value, rua: document.getElementById('cliente-rua').value, numero: document.getElementById('cliente-numero').value, bairro: bairroCidade, estado: document.getElementById('cliente-estado').value, ref: document.getElementById('cliente-ref').value };
         if(!clienteLogadoCpf) dadosC.senha = document.getElementById('cliente-senha').value;
         await setDoc(doc(db, "clientes", cpf), dadosC, { merge: true });
+        
         let strItens = carrinho.map(i=> `${i.qtd||1}x ${i.nome}`).join(", "); const dataH = new Date();
         await addDoc(collection(db, "pedidos"), { cliente: nome, cpf, cidade: bairroCidade, telefone: tel, endereco, observacao: document.getElementById('cliente-obs').value, itens: strItens, detalhes_itens: carrinho, total, data: dataH.toLocaleDateString('pt-BR'), hora: dataH.toLocaleTimeString('pt-BR'), timestamp: dataH.toISOString(), status: "Pendente" });
+        
         for(let item of carrinho) { let novaQtd = (item.estoque || 0) - (item.qtd || 1); await updateDoc(doc(db, "produtos", item.id), { estoque: novaQtd >= 0 ? novaQtd : 0 }); }
     } catch (e) {}
+
     let msg = `Olá! Sou ${nome} e vim finalizar meu pedido:\n\n🛍️ *PRODUTOS:*\n`; carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} (R$ ${parseFloat(i.preco).toFixed(2)})\n`); msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${endereco}\n`;
     let zapGestora = configLoja.telefone.replace(/\D/g,''); window.open(`https://wa.me/${zapGestora}?text=${encodeURIComponent(msg)}`, '_blank');
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; carregarProdutosDoBanco();
@@ -220,7 +204,7 @@ window.carregarMeusPedidosPainel = async (cpf) => { const lista = document.getEl
 window.cancelarMeuPedido = async (id) => { if(confirm("Deseja cancelar este pedido?")) { await updateDoc(doc(db, "pedidos", id), { status: "Cancelado" }); carregarMeusPedidosPainel(clienteLogadoCpf); } };
 window.abrirEdicaoPedido = (id) => { pedidoEmEdicao = JSON.parse(JSON.stringify(meusPedidosSalvos.find(p => p.id === id))); pedidoEmEdicao.detalhes_itens.forEach(i => i.qtd = i.qtd || 1); renderizarEdicaoPedido(); document.getElementById('modal-editar-pedido').classList.remove('hidden'); };
 window.fecharEdicaoPedido = () => document.getElementById('modal-editar-pedido').classList.add('hidden');
-function renderizarEdicaoPedido() { const lista = document.getElementById('lista-editar-itens'); lista.innerHTML = ""; let total = 0; if(pedidoEmEdicao.detalhes_itens.length === 0) lista.innerHTML = "<p style='color:red;'>O pedido será cancelado.</p>"; pedidoEmEdicao.detalhes_itens.forEach((item, index) => { total += parseFloat(item.preco) * item.qtd; lista.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1;"><strong>${item.nome}</strong><br><span style="color:#888;">R$ ${parseFloat(item.preco).toFixed(2)}</span></div><div style="display:flex; align-items:center; gap:8px;"><button onclick="alterarQtdEdicao(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">-</button><span>${item.qtd}</span><button onclick="alterarQtdEdicao(${index}, 1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">+</button></div></div>`; }); document.getElementById('novo-total-edicao').innerText = total.toFixed(2); }
+function renderizarEdicaoPedido() { const lista = document.getElementById('lista-editar-itens'); lista.innerHTML = ""; let total = 0; if(pedidoEmEdicao.detalhes_itens.length === 0) lista.innerHTML = "<p style='color:red;'>O pedido será cancelado ao salvar.</p>"; pedidoEmEdicao.detalhes_itens.forEach((item, index) => { total += parseFloat(item.preco) * item.qtd; lista.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1;"><strong>${item.nome}</strong><br><span style="color:#888;">R$ ${parseFloat(item.preco).toFixed(2)}</span></div><div style="display:flex; align-items:center; gap:8px;"><button onclick="alterarQtdEdicao(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">-</button><span>${item.qtd}</span><button onclick="alterarQtdEdicao(${index}, 1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">+</button></div></div>`; }); document.getElementById('novo-total-edicao').innerText = total.toFixed(2); }
 window.alterarQtdEdicao = (index, delta) => { pedidoEmEdicao.detalhes_itens[index].qtd += delta; if(pedidoEmEdicao.detalhes_itens[index].qtd <= 0) pedidoEmEdicao.detalhes_itens.splice(index, 1); renderizarEdicaoPedido(); };
 window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.length === 0) { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { status: "Cancelado" }); fecharEdicaoPedido(); return carregarMeusPedidosPainel(clienteLogadoCpf); } let total = 0; pedidoEmEdicao.detalhes_itens.forEach(i => total += parseFloat(i.preco) * i.qtd); let strItens = pedidoEmEdicao.detalhes_itens.map(i => `${i.qtd}x ${i.nome}`).join(", "); try { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { detalhes_itens: pedidoEmEdicao.detalhes_itens, itens: strItens, total: total.toFixed(2) }); mostrarNotificacao("Atualizado!", "sucesso"); fecharEdicaoPedido(); carregarMeusPedidosPainel(clienteLogadoCpf); } catch(e) {} };
 window.atualizarPerfilCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('perfil-cpf').value; try { await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, estado: document.getElementById('perfil-estado').value }); clienteLogadoDados.nome = document.getElementById('perfil-nome').value; atualizarHeaderLogado(); mostrarNotificacao("Atualizado!", "sucesso"); } catch (e) { } };
@@ -239,13 +223,12 @@ window.aprovarPedido = async (id) => { await updateDoc(doc(db, "pedidos", id), {
 window.voltarPendentePedido = async (id) => { if(confirm("Voltar para Pendente?")) { await updateDoc(doc(db, "pedidos", id), { status: "Pendente" }); carregarListaAdminPedidos(); } };
 window.excluirPedidoAdmin = async (id) => { if(confirm("Deseja APAGAR este pedido?")) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
 
-// 7° LIXEIRA PRODUTOS COM CONFIRMAÇÃO BONITA
 window.salvarProdutoAdmin = async (e) => { e.preventDefault(); const btn = document.getElementById('btn-salvar-produto'); const img = document.getElementById('add-imagem-file').files[0]; const id = document.getElementById('edit-produto-id').value; btn.innerText = "⏳..."; btn.disabled = true; try { let urlFoto = null; if (img) { const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); await uploadBytes(sRef, img); urlFoto = await getDownloadURL(sRef); } const pData = { nome: document.getElementById('add-nome').value, preco: parseFloat(document.getElementById('add-preco').value), estoque: parseInt(document.getElementById('add-estoque').value), categoria: document.getElementById('add-categoria').value, tamanho: document.getElementById('add-tamanho').value, cores: document.getElementById('add-cores').value, material: document.getElementById('add-material').value }; if(urlFoto) pData.imagem = urlFoto; if (id) { await updateDoc(doc(db, "produtos", id), pData); } else { if(!urlFoto) return mostrarNotificacao("Foto obrigatória!","erro"); await addDoc(collection(db, "produtos"), pData); } limparFormProduto(); carregarListaAdminProdutosEditar(); mostrarNotificacao("Sucesso!","sucesso"); } catch(e) {} btn.innerText = "💾 Salvar Produto"; btn.disabled = false; };
 window.limparFormProduto = () => { document.getElementById('form-add-produto').reset(); document.getElementById('edit-produto-id').value=''; };
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosProdutosAdmin.push(p); }); filtrarProdutosAdmin(); }
 window.filtrarProdutosAdmin = () => { const termo = removerAcentos(document.getElementById('busca-produto-admin').value); const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = ""; let res = todosProdutosAdmin.filter(p => removerAcentos(p.nome).includes(termo)); if(res.length === 0) lista.innerHTML = "<p>Nenhum produto.</p>"; res.forEach(p => { lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${p.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Estq: ${p.estoque||0} | R$ ${p.preco}</div><div style="display:flex; gap:5px;"><button onclick="editarProdutoAdmin('${p.id}', '${p.nome}', ${p.preco}, '${p.tamanho}', '${p.material}', ${p.estoque||0}, '${p.cores||''}', '${p.categoria||'Vestido'}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️</button> <button onclick="excluirProdutoAdmin('${p.id}')" class="btn-icon" style="background:#e74c3c; color:white;">🗑️</button></div></div>`; }); }
 window.editarProdutoAdmin = (id, n, p, t, m, estq, cor, cat) => { document.getElementById('edit-produto-id').value=id; document.getElementById('add-nome').value=n; document.getElementById('add-preco').value=p; document.getElementById('add-estoque').value=estq; document.getElementById('add-categoria').value=cat; document.getElementById('add-tamanho').value=t; document.getElementById('add-cores').value=cor; document.getElementById('add-material').value=m; document.querySelector('.admin-content').scrollTo(0,0); };
-window.excluirProdutoAdmin = async (id) => { if(confirm("🗑️ ATENÇÃO: Tem certeza que deseja apagar essa peça do sistema?")) { await deleteDoc(doc(db, "produtos", id)); mostrarNotificacao("Peça apagada!", "info"); carregarListaAdminProdutosEditar(); carregarProdutosDoBanco(); } };
+window.excluirProdutoAdmin = async (id) => { if(confirm("🗑️ Excluir permanentemente este produto?")) { await deleteDoc(doc(db, "produtos", id)); mostrarNotificacao("Excluído!", "info"); carregarListaAdminProdutosEditar(); carregarProdutosDoBanco(); } };
 
 async function carregarListaAdminClientes() { const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "clientes")); todosClientesAdmin = []; snap.forEach(d => todosClientesAdmin.push(d.data())); filtrarClientesAdmin(); }
 window.filtrarClientesAdmin = () => { const termo = removerAcentos(document.getElementById('busca-cliente-admin').value); const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = ""; let res = todosClientesAdmin.filter(c => removerAcentos(c.nome).includes(termo) || c.telefone.includes(termo) || (c.cpf && c.cpf.includes(termo))); if(res.length === 0) lista.innerHTML = "<p>Nenhum cliente.</p>"; res.forEach(c => { let telLimpo = c.telefone.replace(/\D/g, ''); lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="verHistoricoClienteAdmin('${c.cpf}', '${c.nome}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold;">🛍️ Histórico</button><a href="https://wa.me/55${telLimpo}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a></div></div>`; }); }
@@ -253,7 +236,7 @@ window.fecharHistoricoClienteAdmin = () => document.getElementById('admin-histor
 window.verHistoricoClienteAdmin = async (cpf, nome) => { document.getElementById('admin-historico-cliente-modal').classList.remove('hidden'); document.getElementById('nome-historico-admin').innerText = `🛍️ Histórico: ${nome.split(' ')[0]}`; const lista = document.getElementById('lista-historico-cliente-admin'); lista.innerHTML = "⏳ Buscando..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); lista.innerHTML = ""; let tem = false; snap.forEach(d => { const p = d.data(); if(p.cpf === cpf) { tem = true; let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; lista.innerHTML += `<div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${cor};"><strong>Data: ${p.data}</strong><br><span style="font-size:0.85rem;">Itens: ${p.itens}</span><br><strong>R$ ${p.total}</strong> - <span style="font-weight:bold; color:${cor};">${p.status}</span></div>`; } }); if(!tem) lista.innerHTML = "<p>Sem compras.</p>"; };
 
 window.gerarDadosDeExemplo = async () => {
-    mostrarNotificacao("Mágica Iniciada! Aguarde...", "info");
+    mostrarNotificacao("Gerando Lançamentos, Vestidos, Shorts e Blusas...", "info");
     const prods = [
         {nome: "Vestido Floral Princesa", preco: 89.90, estoque: 10, categoria: "Vestido", tamanho: "2, 4, 6", material: "Algodão", imagem: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500"},
         {nome: "Blusa Babado Luxo", preco: 45.00, estoque: 20, categoria: "Blusa/Cropped/Body", tamanho: "2, 4, 6", material: "Algodão", imagem: "https://images.unsplash.com/photo-1618828665011-0abd973f7bb8?w=500"},
