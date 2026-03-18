@@ -57,7 +57,7 @@
         <div class="header-top">
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="btn-icon" onclick="toggleMenu()" style="font-size:1.5rem; padding:5px 10px;">☰</button>
-                <div class="logo"><img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="Logo" class="logo-gif"></div>
+                <div class="logo"><span style="font-size: 1.4rem;">Maribella Kids</span></div>
             </div>
             <div class="menu-botoes">
                 <button class="btn-icon" id="btn-header-pedidos" onclick="verificarLoginCliente()">📦 Entrar</button>
@@ -168,13 +168,13 @@
                         <input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="mascaraCPF(this)" style="flex:1; padding: 10px;">
                         <input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width: 100px; padding: 10px;">
                     </div>
-                    <button type="button" onclick="loginRapidoCheckout()" style="background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor:pointer;">Entrar e Preencher Automático</button>
+                    <button type="button" onclick="loginRapidoCheckout()" style="background: var(--secondary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 10px; font-weight: bold; cursor:pointer;">Entrar e Preencher</button>
                 </div>
                 <form id="checkout-form" onsubmit="finalizarCheckout(event)">
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="salvarFormulario()">
                     <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="mascaraCPF(this); salvarFormulario()">
                     <div id="area-senha-nova" style="background: #f0fff4; padding: 10px; border-radius: 8px; border: 1px solid var(--success); margin: 5px 0;">
-                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acessar seus pedidos:</label>
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--success);">Crie uma senha para acessar seus pedidos depois:</label>
                         <input type="password" id="cliente-senha" placeholder="Senha" required>
                     </div>
                     <input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="mascaraTelefone(this); salvarFormulario()">
@@ -261,7 +261,7 @@
                             <option value="Lançamento">Lançamento 🌟</option>
                             <option value="Vestido">Vestido</option>
                             <option value="Blusa/Cropped/Body">Blusa / Cropped</option>
-                            <option value="Short/Calça/Saia">Short / Calça</option>
+                            <option value="Short/Calça/Saia">Short / Calça / Saia</option>
                             <option value="Conjunto">Conjunto</option>
                         </select>
                     </div>
@@ -294,8 +294,8 @@
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
                 </form>
                 
-                <h4 style="margin-top:30px; color:var(--primary);">🪄 Mágica (Teste)</h4>
-                <p style="font-size:0.85rem; color:#666;">Clique abaixo para encher a loja com produtos e vendas de exemplo.</p>
+                <h4 style="margin-top:30px; color:var(--primary);">🪄 Mágica (Exemplos)</h4>
+                <p style="font-size:0.85rem; color:#666;">Clique abaixo para encher a loja com produtos de várias categorias e vendas de exemplo.</p>
                 <button onclick="gerarDadosDeExemplo()" class="btn-add" style="background: #2ecc71; margin-top: 10px;">➕ Gerar Dados Falsos</button>
             </div>
         </div>
