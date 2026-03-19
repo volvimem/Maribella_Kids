@@ -80,12 +80,13 @@ function gerarAvaliacoes() {
     const comentarios = ["Qualidade incrível, amei o vestido!", "Chegou super rápido, recomendo muito.", "Tecido maravilhoso, minha filha amou.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "Atendimento nota 10.", "Virei cliente fiel.", "As cores são vivas, idêntico à foto.", "Preço e qualidade imbatíveis.", "Muito capricho na embalagem.", "Peças confortáveis e lindas.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente com certeza.", "Tudo perfeito, recomendo demais!"];
 
     for(let i=0; i < totalReviews; i++) {
+        let imgId = Math.floor(Math.random() * 70) + 1; // 70 fotos diferentes reais
         avaliacoesGeradas.push({
             nome: `${nomes[(i * 13) % nomes.length]} ${sobrenomes[(i * 7) % sobrenomes.length]} 🇧🇷 ${ufs[(i * 17) % ufs.length]}`,
             telefone: `(${11 + (i % 88)}) 9${Math.floor(Math.random()*9)}***-**${Math.floor(Math.random()*90)+10}`,
             texto: comentarios[(i * 23) % comentarios.length],
             estrelas: (i % 5 === 0) ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐",
-            foto: `https://i.pravatar.cc/100?img=${(i % 68) + 1}`
+            foto: `https://i.pravatar.cc/100?img=${imgId}`
         });
     }
     avaliacoesGeradas.sort(() => Math.random() - 0.5);
@@ -100,9 +101,16 @@ function renderizarReviewSidebar() {
 }
 
 window.abrirModalAvaliacoes = () => {
-    const modal = document.getElementById('modal-avaliacoes'); const lista = document.getElementById('lista-avaliacoes-modal');
-    document.getElementById('total-avaliacoes-count').innerText = avaliacoesGeradas.length; lista.innerHTML = "";
-    avaliacoesGeradas.forEach(r => { lista.innerHTML += `<div class="review-card" style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; box-shadow:none;"><img src="${r.foto}" alt="Cliente"><div><strong>${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.estrelas}</span><p style="font-size:0.9rem; margin-top:3px;">"${r.texto}"</p></div></div>`; });
+    const modal = document.getElementById('modal-avaliacoes'); 
+    const lista = document.getElementById('lista-avaliacoes-modal');
+    document.getElementById('total-avaliacoes-count').innerText = avaliacoesGeradas.length; 
+    
+    // Constrói o HTML de uma vez para abrir rápido (acaba com a lentidão!)
+    let htmlContent = "";
+    avaliacoesGeradas.forEach(r => { 
+        htmlContent += `<div class="review-card" style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; box-shadow:none;"><img src="${r.foto}" alt="Cliente"><div><strong>${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.estrelas}</span><p style="font-size:0.9rem; margin-top:3px;">"${r.texto}"</p></div></div>`; 
+    });
+    lista.innerHTML = htmlContent;
     window.fecharMenuLateral(); modal.classList.remove('hidden');
 };
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
@@ -149,7 +157,7 @@ window.carregarProdutosDoBanco = async () => {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
         if (snap.empty) { document.getElementById('vitrine-estacoes').innerHTML = '<p style="text-align:center;color:#aaa;">Nenhuma peça.</p>'; return; }
         snap.forEach(d => { let p = d.data(); p.id = d.id; 
-            if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}]; // Migração automática
+            if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}];
             listaDeProdutos.push(p); 
         });
         renderizarStories(); renderizarVitrinesCategorias(listaDeProdutos);
@@ -244,8 +252,6 @@ window.confirmarAdicaoCarrinho = () => {
     if(idxSelecionado === null) return window.mostrarNotificacao("Selecione um tamanho!", "erro");
 
     let varEscolhida = produtoParaAdicionarTamanho.variacoes[idxSelecionado];
-    
-    // Cria um ID único composto para o carrinho não misturar tamanhos
     let cartId = produtoParaAdicionarTamanho.id + "_" + idxSelecionado;
     let itemEx = carrinho.find(p => p.cartId === cartId);
     
@@ -255,14 +261,7 @@ window.confirmarAdicaoCarrinho = () => {
     if(itemEx) {
         itemEx.qtd++;
     } else {
-        carrinho.push({
-            ...produtoParaAdicionarTamanho, 
-            cartId: cartId, 
-            tamanhoSelecionado: varEscolhida.nome, 
-            idxVariacao: idxSelecionado, 
-            estoqueDisponivel: varEscolhida.qtd,
-            qtd: 1
-        });
+        carrinho.push({ ...produtoParaAdicionarTamanho, cartId: cartId, tamanhoSelecionado: varEscolhida.nome, idxVariacao: idxSelecionado, estoqueDisponivel: varEscolhida.qtd, qtd: 1 });
     }
     
     salvarCarrinhoNoLocal(); 
@@ -325,7 +324,6 @@ window.finalizarCheckout = async (e) => {
         let strItens = carrinho.map(i=> `${i.qtd||1}x ${i.nome} (${i.tamanhoSelecionado})`).join(", "); const dataH = new Date();
         await addDoc(collection(db, "pedidos"), { cliente: nome, cpf, cidade: cidade, bairro: document.getElementById('cliente-bairro').value, cep: document.getElementById('cliente-cep').value, estado: document.getElementById('cliente-estado').value, rua: document.getElementById('cliente-rua').value, numero: document.getElementById('cliente-numero').value, telefone: tel, endereco, itens: strItens, detalhes_itens: carrinho, total, data: dataH.toLocaleDateString('pt-BR'), hora: dataH.toLocaleTimeString('pt-BR'), timestamp: dataH.toISOString(), status: "Pendente" });
         
-        // Descontar Estoque Baseado nas Variações
         for(let item of carrinho) { 
             let pDoc = await getDoc(doc(db, "produtos", item.id));
             if(pDoc.exists()) {
@@ -402,11 +400,12 @@ window.atualizarVariacaoAdmin = (idx, campo, valor) => { variacoesAdminTemp[idx]
 function renderizarVariacoesAdmin() {
     const div = document.getElementById('lista-variacoes-admin');
     let total = 0;
+    // O flex-wrap: wrap e flex:1 evitam que a tela "quebre" na rolagem
     div.innerHTML = variacoesAdminTemp.map((v, i) => {
         total += parseInt(v.qtd||0);
-        return `<div style="display:flex; gap:5px; margin-bottom:5px;">
-            <input type="text" placeholder="Ex: PP, P Azul, 4 Anos..." value="${v.nome}" onchange="window.atualizarVariacaoAdmin(${i}, 'nome', this.value)" style="flex:2; padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <input type="number" placeholder="Qtd" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px;">
+        return `<div style="display:flex; gap:5px; margin-bottom:5px; flex-wrap:wrap;">
+            <input type="text" placeholder="Ex: PP, P Azul..." value="${v.nome}" onchange="window.atualizarVariacaoAdmin(${i}, 'nome', this.value)" style="flex:1; min-width:120px; padding:8px; border:1px solid #ccc; border-radius:5px;">
+            <input type="number" placeholder="Qtd" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="width:70px; padding:8px; border:1px solid #ccc; border-radius:5px;">
             <button type="button" onclick="window.removerVariacaoAdmin(${i})" style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">X</button>
         </div>`;
     }).join('');
@@ -416,7 +415,6 @@ function renderizarVariacoesAdmin() {
 window.salvarProdutoAdmin = async (e) => { 
     e.preventDefault(); 
     if(variacoesAdminTemp.length === 0) return window.mostrarNotificacao("Adicione pelo menos 1 variação (Tamanho/Qtd)!", "erro");
-    // Remove variações vazias que foram criadas sem querer
     let variacoesLimpas = variacoesAdminTemp.filter(v => v.nome.trim() !== "");
     if(variacoesLimpas.length === 0) return window.mostrarNotificacao("Dê nome para os tamanhos/cores!", "erro");
 
@@ -450,71 +448,12 @@ window.editarProdutoAdmin = (id) => {
 };
 window.excluirProdutoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar", "🗑️ Deseja apagar essa peça do estoque?"); if(sim) { await deleteDoc(doc(db, "produtos", id)); window.mostrarNotificacao("Peça apagada!", "info"); carregarListaAdminProdutosEditar(); window.carregarProdutosDoBanco(); } };
 
-// --- BALANÇO DE ESTOQUE EM PDF ---
 window.imprimirBalancoEstoque = () => {
-    const janela = window.open('', '_blank');
-    let linhasHtml = '';
-    let totalPecasGeral = 0;
-    
-    // Organiza alfabeticamente
-    let produtosOrdem = [...todosProdutosAdmin].sort((a,b) => a.nome.localeCompare(b.nome));
-
-    produtosOrdem.forEach(p => {
-        let totalProd = p.variacoes.reduce((s,v) => s + parseInt(v.qtd||0), 0);
-        totalPecasGeral += totalProd;
-        let strVars = p.variacoes.map(v => `${v.nome}: ${v.qtd} un.`).join('<br>');
-
-        linhasHtml += `
-            <tr>
-                <td style="padding: 8px; border: 1px solid #ddd;">${p.nome}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${p.categoria}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${strVars}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align:center; font-weight:bold;">${totalProd}</td>
-            </tr>
-        `;
-    });
-
-    janela.document.write(`
-        <html>
-            <head>
-                <title>Balanço de Estoque - Maribella Kids</title>
-                <style>
-                    body { font-family: sans-serif; padding: 20px; color: #333; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-                    th { background-color: #ffb6c1; color: #333; padding: 10px; border: 1px solid #ddd; text-align: left; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                    @media print { .btn-print { display: none; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h2>Balanço de Estoque - Maribella Kids</h2>
-                    <div>
-                        <button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir / Salvar PDF</button>
-                    </div>
-                </div>
-                <p><strong>Data da geração:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
-                <p><strong>Total Geral de Peças:</strong> ${totalPecasGeral} unidades</p>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Produto</th>
-                            <th>Categoria</th>
-                            <th>Tamanhos/Cores (Qtd)</th>
-                            <th style="text-align:center;">Total da Peça</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${linhasHtml}
-                    </tbody>
-                </table>
-            </body>
-        </html>
-    `);
+    const janela = window.open('', '_blank'); let linhasHtml = ''; let totalPecasGeral = 0; let produtosOrdem = [...todosProdutosAdmin].sort((a,b) => a.nome.localeCompare(b.nome));
+    produtosOrdem.forEach(p => { let totalProd = p.variacoes.reduce((s,v) => s + parseInt(v.qtd||0), 0); totalPecasGeral += totalProd; let strVars = p.variacoes.map(v => `${v.nome}: ${v.qtd} un.`).join('<br>'); linhasHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${p.nome}</td><td style="padding: 8px; border: 1px solid #ddd;">${p.categoria}</td><td style="padding: 8px; border: 1px solid #ddd;">${strVars}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center; font-weight:bold;">${totalProd}</td></tr>`; });
+    janela.document.write(`<html><head><title>Balanço de Estoque - Maribella Kids</title><style>body { font-family: sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; } th { background-color: #ffb6c1; color: #333; padding: 10px; border: 1px solid #ddd; text-align: left; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; } @media print { .btn-print { display: none; } }</style></head><body><div class="header"><h2>Balanço de Estoque - Maribella Kids</h2><div><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir / Salvar PDF</button></div></div><p><strong>Data da geração:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p><p><strong>Total Geral de Peças:</strong> ${totalPecasGeral} unidades</p><table><thead><tr><th>Produto</th><th>Categoria</th><th>Tamanhos/Cores (Qtd)</th><th style="text-align:center;">Total da Peça</th></tr></thead><tbody>${linhasHtml}</tbody></table></body></html>`);
     janela.document.close();
 };
-
 
 async function carregarListaAdminClientes() { const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "clientes")); todosClientesAdmin = []; snap.forEach(d => todosClientesAdmin.push(d.data())); window.filtrarClientesAdmin(); }
 window.filtrarClientesAdmin = () => { 
@@ -540,8 +479,38 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
+// --- LOGICA DA NOTIFICAÇÃO DO APP ---
+setTimeout(() => {
+    const dispensado = localStorage.getItem('maribella_app_banner_closed');
+    if(!dispensado) document.getElementById('install-app-banner').classList.remove('hidden');
+}, 3000); // 3 segundos antes de aparecer
+
+window.fecharBannerInstalacao = () => {
+    document.getElementById('install-app-banner').classList.add('hidden');
+    localStorage.setItem('maribella_app_banner_closed', 'true');
+};
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+});
+
+document.getElementById('btn-instalar-app').addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') window.fecharBannerInstalacao();
+        deferredPrompt = null;
+    } else {
+        window.mostrarNotificacao("No iPhone: Toque no ícone ⍗ (Compartilhar) e depois 'Adicionar à Tela de Início' 📱", 'info', true);
+    }
+});
+
+
 // Inicialização
 const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.cpf, logado.senha);
 carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarProdutosDoBanco();
 
-gerarAvaliacoes(); renderizarReviewSidebar(); setInterval(renderizarReviewSidebar, 45000);
+gerarAvaliacoes(); 
+renderizarReviewSidebar(); 
+setInterval(renderizarReviewSidebar, 30000); // A cada 30 segundos
