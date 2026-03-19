@@ -19,7 +19,6 @@ let clienteLogadoCpf = null; let clienteLogadoDados = null;
 let meusPedidosSalvos = []; let pedidoEmEdicao = null;
 let carouselIntervals = [];
 
-// Variáveis para estoque
 let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
 
@@ -29,8 +28,8 @@ window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\
 
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
-    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:15px; cursor:pointer; font-size:1.5rem; color:#666;">&times;</span>` : '';
-    toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🛍️":"✅"} ${msg}</span> ${fecharBtn}`; 
+    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.2rem; color:#666;">&times;</span>` : '';
+    toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🎀":"✅"} ${msg}</span> ${fecharBtn}`; 
     toast.className = `toast show ${t}`; 
     if(!fechavel) setTimeout(window.fecharToast, 3500); 
 };
@@ -49,10 +48,10 @@ function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-// --- VENDAS FAKES, PESSOAS ONLINE & AVALIAÇÕES ---
-const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia", "Carla", "Vanessa", "Bruna", "Aline", "Renata", "Larissa"];
-const cidadesFakes = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Recife, PE", "Salvador, BA", "Fortaleza, CE", "Curitiba, PR", "Manaus, AM", "Brasília, DF", "Goiânia, GO", "Belém, PA", "Porto Alegre, RS", "Campinas, SP", "São Luís, MA", "Maceió, AL", "Natal, RN", "Teresina, PI", "Florianópolis, SC", "Surubim, PE", "Caruaru, PE", "Campina Grande, PB", "Feira de Santana, BA", "Natal, RN", "Aracaju, AL"];
+// --- VENDAS FAKES E PESSOAS ONLINE (AJUSTE 2) ---
 function dispararVendaFalsa() {
+    const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia"];
+    const cidadesFakes = ["Recife, PE", "Caruaru, PE", "Surubim, PE", "São Paulo, SP", "Belo Horizonte, MG"];
     let n = nomesFakes[Math.floor(Math.random()*nomesFakes.length)]; let c = cidadesFakes[Math.floor(Math.random()*cidadesFakes.length)]; let v = (Math.random() * (250 - 50) + 50).toFixed(2);
     mostrarNotificacao(`${n} de ${c} comprou R$ ${v}!`, 'info', true);
     setTimeout(window.fecharToast, 10000); setTimeout(dispararVendaFalsa, Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000);
@@ -61,32 +60,52 @@ setTimeout(dispararVendaFalsa, Math.random() * 30000 + 30000);
 
 function atualizarPessoasOnline() {
     let el = document.getElementById('online-count'); if(!el) return;
-    let hora = new Date().getHours(); let minBase, maxBase;
-    if (hora >= 9 && hora <= 14) { minBase = 2000; maxBase = 4734; } else if (hora >= 18 && hora <= 22) { minBase = 2500; maxBase = 4734; } else if (hora >= 1 && hora <= 6) { minBase = 126; maxBase = 500; } else { minBase = 800; maxBase = 2000; } 
-    let atual = parseInt(el.innerText.replace('.', '')); if(isNaN(atual) || atual < minBase || atual > maxBase) atual = Math.floor(Math.random() * (maxBase - minBase)) + minBase;
+    let agora = new Date(); let minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
+    
+    // Regra: Entre 17:46 (1066m) e 22:29 (1349m) = Alta, Senão = Normal
+    let minBase, maxBase;
+    if (minutosAtuais >= 1066 && minutosAtuais <= 1349) {
+        minBase = 1367; maxBase = 4621;
+    } else {
+        minBase = 426; maxBase = 1367;
+    }
+    
+    let atual = parseInt(el.innerText.replace('.', '')); 
+    if(isNaN(atual) || atual < minBase || atual > maxBase) atual = Math.floor(Math.random() * (maxBase - minBase)) + minBase;
+    
     let variacao = Math.floor(Math.random() * 60) - 25; let novoValor = atual + variacao;
-    if(novoValor < minBase) novoValor = minBase + Math.floor(Math.random()*50); if(novoValor > maxBase) novoValor = maxBase - Math.floor(Math.random()*50);
-    el.innerText = novoValor.toLocaleString('pt-BR'); setTimeout(atualizarPessoasOnline, Math.random() * 4000 + 4000);
+    if(novoValor < minBase) novoValor = minBase + Math.floor(Math.random()*50); 
+    if(novoValor > maxBase) novoValor = maxBase - Math.floor(Math.random()*50);
+    
+    el.innerText = novoValor.toLocaleString('pt-BR'); 
+    setTimeout(atualizarPessoasOnline, Math.random() * 4000 + 4000);
 }
 setTimeout(atualizarPessoasOnline, 2000);
 
+// --- AVALIAÇÕES REALISTAS (AJUSTE 3) ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
-    const diasPassados = Math.floor((new Date().getTime() - new Date("2024-01-01").getTime()) / (1000 * 60 * 60 * 24));
-    const totalReviews = 160 + (diasPassados > 0 ? diasPassados : 0);
-    const nomes = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline", "Renata", "Larissa", "Patrícia", "Cláudia", "Silvia", "Simone", "Tatiana", "Michele"];
-    const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins", "Araújo", "Alves", "Rocha", "Dias"];
-    const ufs = ["SP", "RJ", "MG", "PE", "BA", "CE", "PR", "RS", "SC", "GO", "DF", "PA", "AM", "ES"];
-    const comentarios = ["Qualidade incrível, amei o vestido!", "Chegou super rápido, recomendo muito.", "Tecido maravilhoso, minha filha amou.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "Atendimento nota 10.", "Virei cliente fiel.", "As cores são vivas, idêntico à foto.", "Preço e qualidade imbatíveis.", "Muito capricho na embalagem.", "Peças confortáveis e lindas.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente com certeza.", "Tudo perfeito, recomendo demais!"];
+    const totalReviews = 160;
+    const nomesF = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline"];
+    const nomesM = ["Carlos", "Marcos", "João", "Pedro", "Lucas", "Mateus", "Rafael", "Felipe", "Bruno", "Thiago", "Eduardo"];
+    const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins"];
+    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; // 60% Pernambuco
+    const comentarios = ["Qualidade incrível, amei!", "Chegou super rápido, recomendo.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "As cores são vivas, idêntico à foto.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente.", "Tudo perfeito, recomendo!"];
 
     for(let i=0; i < totalReviews; i++) {
-        let imgId = Math.floor(Math.random() * 70) + 1; // 70 fotos diferentes reais
+        let isMulher = Math.random() > 0.2; // 80% Mulheres
+        let nomeBase = isMulher ? nomesF[(i * 13) % nomesF.length] : nomesM[(i * 11) % nomesM.length];
+        let nomeCompleto = `${nomeBase} ${sobrenomes[(i * 7) % sobrenomes.length]}`;
+        let ddd = dddBR[Math.floor(Math.random()*dddBR.length)];
+        let telefone = `(${ddd}) 9${Math.floor(Math.random()*9)}***-**${Math.floor(Math.random()*90)+10}`;
+        let generoFoto = isMulher ? "women" : "men";
+        
         avaliacoesGeradas.push({
-            nome: `${nomes[(i * 13) % nomes.length]} ${sobrenomes[(i * 7) % sobrenomes.length]} 🇧🇷 ${ufs[(i * 17) % ufs.length]}`,
-            telefone: `(${11 + (i % 88)}) 9${Math.floor(Math.random()*9)}***-**${Math.floor(Math.random()*90)+10}`,
+            nome: `${nomeCompleto} 🇧🇷`,
+            telefone: `${telefone} | ⭐⭐⭐⭐⭐`,
             texto: comentarios[(i * 23) % comentarios.length],
-            estrelas: (i % 5 === 0) ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐",
-            foto: `https://i.pravatar.cc/100?img=${imgId}`
+            estrelas: "⭐⭐⭐⭐⭐",
+            foto: `https://randomuser.me/api/portraits/${generoFoto}/${(i % 99) + 1}.jpg`
         });
     }
     avaliacoesGeradas.sort(() => Math.random() - 0.5);
@@ -96,7 +115,7 @@ function renderizarReviewSidebar() {
     if(avaliacoesGeradas.length === 0) return;
     const container = document.getElementById('review-destaque'); if(!container) return;
     let r = avaliacoesGeradas[indexAvaliacaoAtual];
-    container.innerHTML = `<div class="review-card" style="box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; transition: 0.5s ease-in-out;"><img src="${r.foto}" alt="Cliente"><div style="flex:1;"><strong style="color:var(--primary); font-size:0.9rem;">${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.telefone} | ${r.estrelas}</span><p style="font-size:0.85rem; margin-top:3px; font-style:italic;">"${r.texto}"</p><p style="font-size:0.75rem; color:var(--secondary); margin-top:5px; text-align:right; font-weight:bold;">Ver todas (${avaliacoesGeradas.length}) ➔</p></div></div>`;
+    container.innerHTML = `<div class="review-card" style="box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; transition: 0.5s ease-in-out;"><img src="${r.foto}" alt="Cliente"><div style="flex:1;"><strong style="color:var(--primary); font-size:0.9rem;">${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.telefone}</span><p style="font-size:0.85rem; margin-top:3px; font-style:italic;">"${r.texto}"</p><p style="font-size:0.75rem; color:var(--secondary); margin-top:5px; text-align:right; font-weight:bold;">Ver todas (${avaliacoesGeradas.length}) ➔</p></div></div>`;
     indexAvaliacaoAtual = (indexAvaliacaoAtual + 1) % avaliacoesGeradas.length;
 }
 
@@ -104,11 +123,9 @@ window.abrirModalAvaliacoes = () => {
     const modal = document.getElementById('modal-avaliacoes'); 
     const lista = document.getElementById('lista-avaliacoes-modal');
     document.getElementById('total-avaliacoes-count').innerText = avaliacoesGeradas.length; 
-    
-    // Constrói o HTML de uma vez para abrir rápido (acaba com a lentidão!)
     let htmlContent = "";
     avaliacoesGeradas.forEach(r => { 
-        htmlContent += `<div class="review-card" style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; box-shadow:none;"><img src="${r.foto}" alt="Cliente"><div><strong>${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.estrelas}</span><p style="font-size:0.9rem; margin-top:3px;">"${r.texto}"</p></div></div>`; 
+        htmlContent += `<div class="review-card" style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; box-shadow:none;"><img src="${r.foto}" alt="Cliente"><div><strong>${r.nome}</strong><br><span style="font-size:0.75rem; color:#888;">${r.telefone}</span><p style="font-size:0.9rem; margin-top:3px;">"${r.texto}"</p></div></div>`; 
     });
     lista.innerHTML = htmlContent;
     window.fecharMenuLateral(); modal.classList.remove('hidden');
@@ -116,7 +133,7 @@ window.abrirModalAvaliacoes = () => {
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
 
-// --- LUPA, MENU LATERAL E LIGHTBOX ---
+// --- LUPA, MENU E LIGHTBOX ---
 window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
 let lightboxCurrentProdId = null;
 window.abrirLightbox = (src, id = null) => { 
@@ -131,7 +148,7 @@ window.abrirMenuLateral = () => { document.getElementById('sidebar-menu').classL
 window.fecharMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('open'); setTimeout(() => { document.getElementById('sidebar-menu').classList.add('hidden'); }, 300); document.getElementById('sidebar-overlay').classList.add('hidden'); };
 window.filtrarCategoria = (cat) => { window.fecharMenuLateral(); const termo = removerAcentos(document.getElementById('busca-input').value); let filtrados = listaDeProdutos.filter(p => { let matchCat = (cat === 'Todas') || (p.categoria === cat) || (cat === 'Lançamento' && p.lancamento === true); let matchTermo = removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo); return matchCat && matchTermo; }); renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); };
 
-// --- CONFIGURAÇÕES DA LOJA ---
+// --- CONFIGURAÇÕES ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -151,7 +168,7 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- STORIES & VITRINE ---
+// --- VITRINE COM MÚLTIPLAS FOTOS (AJUSTE 5) ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -167,7 +184,10 @@ window.carregarProdutosDoBanco = async () => {
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
     let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
-    storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="window.abrirLightbox('${p.imagem}', '${p.id}')" title="${p.nome}">`; });
+    storyList.forEach(p => { 
+        let foto = p.imagens ? p.imagens[0] : p.imagem;
+        track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}')" title="${p.nome}">`; 
+    });
 }
 
 function renderizarVitrinesCategorias(lista, tituloUnico = null) {
@@ -195,11 +215,20 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     
     produtos.forEach(p => {
         let estoqueTotal = p.variacoes.reduce((sum, v) => sum + parseInt(v.qtd||0), 0);
-        let strTamanhos = p.variacoes.map(v => v.nome).join(', ');
+        let strTamanhos = p.variacoes.map(v => v.tamanho || v.nome.split('-')[0].trim()).join(', ');
         if(strTamanhos.length > 20) strTamanhos = strTamanhos.substring(0,20) + '...';
 
+        let imgHtml = '';
+        if(p.imagens && p.imagens.length > 1) {
+            imgHtml = `<img src="${p.imagens[0]}" data-fotos='${JSON.stringify(p.imagens)}' data-idx="0" class="vitrine-multifoto" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}')">
+                       <div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.map((_, i) => i+1).join(' - ')}</div>`;
+        } else {
+            let ft = p.imagens ? p.imagens[0] : p.imagem;
+            imgHtml = `<img src="${ft}" onclick="window.abrirLightbox('${ft}', '${p.id}')">`;
+        }
+
         let btnStatus = estoqueTotal > 0 ? `<button class="btn-add" onclick="window.abrirEscolherTamanho('${p.id}')">🛒 Quero</button>` : `<button class="btn-add esgotado">Esgotado</button>`;
-        carrossel.innerHTML += `<div class="card"><img src="${p.imagem}" onclick="window.abrirLightbox('${p.imagem}', '${p.id}')"><div class="card-info"><div><h3>${p.nome}</h3><p style="font-size:0.75rem;">Tam: ${strTamanhos}</p><p class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</p></div>${btnStatus}</div></div>`;
+        carrossel.innerHTML += `<div class="card">${imgHtml}<div class="card-info"><div><h3>${p.nome}</h3><p style="font-size:0.75rem;">Tam: ${strTamanhos}</p><p class="preco">R$ ${parseFloat(p.preco).toFixed(2)}</p></div>${btnStatus}</div></div>`;
     });
     containerMaster.appendChild(section);
 
@@ -220,22 +249,36 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
-// --- ESCOLHER TAMANHO (CARRINHO) ---
+// Motor de Rotação de Fotos (Ajuste 5)
+setInterval(() => {
+    document.querySelectorAll('.vitrine-multifoto').forEach(img => {
+        try {
+            let fotos = JSON.parse(img.getAttribute('data-fotos'));
+            let idx = parseInt(img.getAttribute('data-idx'));
+            idx = (idx + 1) % fotos.length;
+            img.style.opacity = 0.8;
+            setTimeout(() => { img.src = fotos[idx]; img.style.opacity = 1; }, 150);
+            img.setAttribute('data-idx', idx);
+        } catch(e){}
+    });
+}, 3500);
+
+// --- ESCOLHER MÚLTIPLAS QUANTIDADES E TAMANHOS (AJUSTE 10) ---
 window.abrirEscolherTamanho = (id) => {
     produtoParaAdicionarTamanho = listaDeProdutos.find(p => p.id === id);
     if(!produtoParaAdicionarTamanho) return;
+    let ft = produtoParaAdicionarTamanho.imagens ? produtoParaAdicionarTamanho.imagens[0] : produtoParaAdicionarTamanho.imagem;
 
-    document.getElementById('info-produto-tamanho').innerHTML = `<img src="${produtoParaAdicionarTamanho.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div><strong style="font-size:1rem;">${produtoParaAdicionarTamanho.nome}</strong><br><span style="color:var(--secondary); font-weight:bold;">R$ ${produtoParaAdicionarTamanho.preco}</span></div>`;
+    document.getElementById('info-produto-tamanho').innerHTML = `<img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div><strong style="font-size:1rem;">${produtoParaAdicionarTamanho.nome}</strong><br><span style="color:var(--secondary); font-weight:bold;">R$ ${parseFloat(produtoParaAdicionarTamanho.preco).toFixed(2)}</span></div>`;
     
     let htmlOpcoes = "";
     produtoParaAdicionarTamanho.variacoes.forEach((v, idx) => {
         let esgotado = v.qtd <= 0;
         let corSpan = esgotado ? 'color:#ccc; text-decoration:line-through;' : 'color:#333;';
-        let disabled = esgotado ? 'disabled' : '';
-        htmlOpcoes += `<label style="display:flex; justify-content:space-between; padding:10px; border:1px solid #eee; border-radius:8px; cursor:${esgotado?'not-allowed':'pointer'}; ${corSpan}">
-            <div><input type="radio" name="opcao_tamanho_carrinho" value="${idx}" ${disabled}> <strong>${v.nome}</strong></div>
-            <span style="font-size:0.85rem;">${esgotado ? 'Esgotado' : v.qtd + ' disp.'}</span>
-        </label>`;
+        htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; ${corSpan}">
+            <div><strong>${v.nome}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' em estoque'}</span></div>
+            <input type="number" id="qtd_var_${idx}" min="0" max="${v.qtd}" value="0" ${esgotado ? 'disabled' : ''} style="width:70px; padding:5px; border:1px solid #ccc; border-radius:5px; font-weight:bold; text-align:center;">
+        </div>`;
     });
     
     document.getElementById('lista-opcoes-tamanho').innerHTML = htmlOpcoes;
@@ -245,24 +288,26 @@ window.abrirEscolherTamanho = (id) => {
 window.fecharModalTamanho = () => document.getElementById('modal-escolher-tamanho').classList.add('hidden');
 
 window.confirmarAdicaoCarrinho = () => {
-    let radios = document.getElementsByName('opcao_tamanho_carrinho');
-    let idxSelecionado = null;
-    for(let i=0; i<radios.length; i++) if(radios[i].checked) idxSelecionado = i;
+    let adicionouAlgo = false;
+    produtoParaAdicionarTamanho.variacoes.forEach((v, idx) => {
+        let inputQtd = document.getElementById(`qtd_var_${idx}`);
+        if(inputQtd && parseInt(inputQtd.value) > 0) {
+            let qtdPedida = parseInt(inputQtd.value);
+            let cartId = produtoParaAdicionarTamanho.id + "_" + idx;
+            let itemEx = carrinho.find(p => p.cartId === cartId);
+            
+            if(itemEx) {
+                if(itemEx.qtd + qtdPedida > v.qtd) return window.mostrarNotificacao(`Estoque max atingido em ${v.nome}!`, 'erro');
+                itemEx.qtd += qtdPedida;
+            } else {
+                let imgCart = produtoParaAdicionarTamanho.imagens ? produtoParaAdicionarTamanho.imagens[0] : produtoParaAdicionarTamanho.imagem;
+                carrinho.push({ ...produtoParaAdicionarTamanho, imagem: imgCart, cartId: cartId, tamanhoSelecionado: v.nome, idxVariacao: idx, estoqueDisponivel: v.qtd, qtd: qtdPedida });
+            }
+            adicionouAlgo = true;
+        }
+    });
     
-    if(idxSelecionado === null) return window.mostrarNotificacao("Selecione um tamanho!", "erro");
-
-    let varEscolhida = produtoParaAdicionarTamanho.variacoes[idxSelecionado];
-    let cartId = produtoParaAdicionarTamanho.id + "_" + idxSelecionado;
-    let itemEx = carrinho.find(p => p.cartId === cartId);
-    
-    let qtdAtualNoCarrinho = itemEx ? itemEx.qtd : 0;
-    if(qtdAtualNoCarrinho + 1 > varEscolhida.qtd) return window.mostrarNotificacao("Estoque insuficiente para este tamanho!", 'erro'); 
-    
-    if(itemEx) {
-        itemEx.qtd++;
-    } else {
-        carrinho.push({ ...produtoParaAdicionarTamanho, cartId: cartId, tamanhoSelecionado: varEscolhida.nome, idxVariacao: idxSelecionado, estoqueDisponivel: varEscolhida.qtd, qtd: 1 });
-    }
+    if(!adicionouAlgo) return window.mostrarNotificacao("Informe a quantidade em pelo menos um tamanho!", "erro");
     
     salvarCarrinhoNoLocal(); 
     window.fecharModalTamanho();
@@ -283,9 +328,10 @@ function atualizarCarrinho() {
     const cartItems = document.getElementById('cart-items'); cartItems.innerHTML = ''; let total = 0;
     carrinho.forEach((item, index) => { 
         let qtd = item.qtd || 1; total += parseFloat(item.preco) * qtd; 
+        let ft = item.imagens ? item.imagens[0] : item.imagem;
         cartItems.innerHTML += `
         <div class="cart-item" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <img src="${item.imagem}" onclick="window.abrirLightbox('${item.imagem}', null)" style="width:50px; height:50px; border-radius:8px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" title="Ampliar">
+            <img src="${ft}" onclick="window.abrirLightbox('${ft}', null)" style="width:50px; height:50px; border-radius:8px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" title="Ampliar">
             <div style="flex:1;">
                 <span style="font-weight:bold; color:#555;">${item.nome}</span><br>
                 <span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${item.tamanhoSelecionado}</span><br>
@@ -367,13 +413,22 @@ window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.lengt
 window.atualizarPerfilCliente = async (e) => { e.preventDefault(); const sim = await window.confirmarAcao("Salvar Dados", "Deseja atualizar seu endereço?"); if(!sim) return; const cpf = document.getElementById('perfil-cpf').value; try { await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, cidade: document.getElementById('perfil-cidade').value, estado: document.getElementById('perfil-estado').value }); clienteLogadoDados.nome = document.getElementById('perfil-nome').value; atualizarHeaderLogado(); window.mostrarNotificacao("Atualizado!", "sucesso"); } catch (e) { } };
 window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoCpf = null; clienteLogadoDados = null; atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
 
-// --- ADMINISTRAÇÃO & CONTROLE DE ESTOQUE ---
+// --- ADMINISTRAÇÃO & CONTROLE ---
 window.abrirLoginAdmin = () => document.getElementById('admin-login-modal').classList.remove('hidden');
 window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
 window.realizarLoginAdmin = async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); window.mostrarNotificacao("Liberado!", "sucesso"); window.fecharLoginAdmin(); document.getElementById('admin-dashboard').classList.remove('hidden'); carregarListaAdminPedidos(); e.target.reset(); } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } };
 window.sairDoAdmin = async () => { await signOut(auth); document.getElementById('admin-dashboard').classList.add('hidden'); window.carregarProdutosDoBanco(); };
 
-window.mudarAbaAdmin = (abaId) => { document.querySelectorAll('.admin-aba').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa')); document.getElementById(abaId).classList.remove('hidden'); document.getElementById(`tab-${abaId}`).classList.add('ativa'); if(abaId==='admin-pedidos') carregarListaAdminPedidos(); if(abaId==='admin-produtos') carregarListaAdminProdutosEditar(); if(abaId==='admin-clientes') carregarListaAdminClientes(); };
+window.mudarAbaAdmin = (abaId) => { 
+    document.querySelectorAll('.admin-aba').forEach(el => el.classList.add('hidden')); 
+    document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa')); 
+    document.getElementById(abaId).classList.remove('hidden'); 
+    document.getElementById(`tab-${abaId}`).classList.add('ativa'); 
+    if(abaId==='admin-pedidos') carregarListaAdminPedidos(); 
+    if(abaId==='admin-produtos') carregarListaAdminProdutosEditar(); 
+    if(abaId==='admin-clientes') carregarListaAdminClientes(); 
+    if(abaId==='admin-relatorios') window.gerarRelatoriosAdmin();
+};
 
 async function carregarListaAdminPedidos() { const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "⏳ Puxando vendas..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); todosPedidosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosPedidosAdmin.push(p); }); window.filtrarPedidosAdmin(); }
 window.filtrarPedidosAdmin = () => {
@@ -393,20 +448,55 @@ window.voltarPendentePedido = async (id) => { const sim = await window.confirmar
 window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco || 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br>${pedido.endereco}<br><strong>CEP:</strong> ${pedido.cep || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
-// --- LÓGICA DE VARIAÇÕES (TAMANHO/COR) NO ADMIN ---
-window.adicionarVariacaoAdmin = (nome='', qtd=0) => { variacoesAdminTemp.push({nome, qtd}); renderizarVariacoesAdmin(); };
-window.removerVariacaoAdmin = (idx) => { variacoesAdminTemp.splice(idx, 1); renderizarVariacoesAdmin(); };
+// --- RELATÓRIOS INTELIGENTES (AJUSTE 4) ---
+window.gerarRelatoriosAdmin = () => {
+    let prodsVenda = {}; let clientesTop = {}; let faturamento = 0;
+    todosPedidosAdmin.forEach(p => {
+        if(p.status !== 'Cancelado') {
+            faturamento += parseFloat(p.total || 0);
+            clientesTop[p.cpf] = clientesTop[p.cpf] || {nome: p.cliente, gasto: 0, compras: 0};
+            clientesTop[p.cpf].gasto += parseFloat(p.total || 0);
+            clientesTop[p.cpf].compras += 1;
+            
+            if(p.detalhes_itens) {
+                p.detalhes_itens.forEach(item => {
+                    prodsVenda[item.id] = prodsVenda[item.id] || {nome: item.nome, qtd: 0};
+                    prodsVenda[item.id].qtd += (item.qtd || 1);
+                });
+            }
+        }
+    });
+
+    let html = `<div style="background:var(--success); color:white; padding:15px; border-radius:10px; text-align:center; margin-bottom:15px;"><h2>💰 Faturamento Limpo: R$ ${faturamento.toFixed(2)}</h2></div>`;
+    
+    let rankProds = Object.values(prodsVenda).sort((a,b) => b.qtd - a.qtd).slice(0, 5);
+    html += `<h4>🏆 Produtos Mais Vendidos</h4><ul style="margin-bottom:20px; padding-left:20px;">`;
+    rankProds.forEach(p => html += `<li>${p.nome} - <strong>${p.qtd} vendidos</strong></li>`);
+    html += `</ul>`;
+
+    let rankClientes = Object.values(clientesTop).sort((a,b) => b.gasto - a.gasto).slice(0, 5);
+    html += `<h4>👑 Top Clientes (Que mais gastam)</h4><ul style="padding-left:20px;">`;
+    rankClientes.forEach(c => html += `<li>${c.nome} - <strong>R$ ${c.gasto.toFixed(2)}</strong> (${c.compras} compras)</li>`);
+    html += `</ul>`;
+
+    document.getElementById('conteudo-relatorios').innerHTML = html;
+};
+
+// --- LÓGICA DE VARIAÇÕES E FOTOS NO ADMIN (AJUSTES 5 E 6) ---
+window.adicionarVariacaoAdmin = (tamanho='P', cor='', qtd=0) => { variacoesAdminTemp.push({tamanho, cor, qtd}); renderizarVariacoesAdmin(); };
 window.atualizarVariacaoAdmin = (idx, campo, valor) => { variacoesAdminTemp[idx][campo] = valor; renderizarVariacoesAdmin(); };
+window.removerVariacaoAdmin = (idx) => { variacoesAdminTemp.splice(idx, 1); renderizarVariacoesAdmin(); };
 function renderizarVariacoesAdmin() {
-    const div = document.getElementById('lista-variacoes-admin');
-    let total = 0;
-    // O flex-wrap: wrap e flex:1 evitam que a tela "quebre" na rolagem
+    const div = document.getElementById('lista-variacoes-admin'); let total = 0;
     div.innerHTML = variacoesAdminTemp.map((v, i) => {
         total += parseInt(v.qtd||0);
-        return `<div style="display:flex; gap:5px; margin-bottom:5px; flex-wrap:wrap;">
-            <input type="text" placeholder="Ex: PP, P Azul..." value="${v.nome}" onchange="window.atualizarVariacaoAdmin(${i}, 'nome', this.value)" style="flex:1; min-width:120px; padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <input type="number" placeholder="Qtd" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="width:70px; padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <button type="button" onclick="window.removerVariacaoAdmin(${i})" style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">X</button>
+        return `<div style="display:flex; gap:5px; align-items:center;">
+            <select onchange="window.atualizarVariacaoAdmin(${i}, 'tamanho', this.value)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                <option value="P" ${v.tamanho==='P'?'selected':''}>P</option><option value="M" ${v.tamanho==='M'?'selected':''}>M</option><option value="G" ${v.tamanho==='G'?'selected':''}>G</option><option value="GG" ${v.tamanho==='GG'?'selected':''}>GG</option>
+            </select>
+            <input type="text" placeholder="Cor (Ex: Azul/Estampa)" value="${v.cor}" onchange="window.atualizarVariacaoAdmin(${i}, 'cor', this.value)" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;">
+            <input type="number" placeholder="Qtd" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="width:70px; padding:10px; border:1px solid #ccc; border-radius:5px;">
+            <button type="button" onclick="window.removerVariacaoAdmin(${i})" style="background:#e74c3c; color:white; border:none; padding:10px 12px; border-radius:5px;">X</button>
         </div>`;
     }).join('');
     document.getElementById('total-pecas-admin').innerText = total;
@@ -415,21 +505,32 @@ function renderizarVariacoesAdmin() {
 window.salvarProdutoAdmin = async (e) => { 
     e.preventDefault(); 
     if(variacoesAdminTemp.length === 0) return window.mostrarNotificacao("Adicione pelo menos 1 variação (Tamanho/Qtd)!", "erro");
-    let variacoesLimpas = variacoesAdminTemp.filter(v => v.nome.trim() !== "");
-    if(variacoesLimpas.length === 0) return window.mostrarNotificacao("Dê nome para os tamanhos/cores!", "erro");
+    let variacoesLimpas = variacoesAdminTemp.map(v => ({ nome: `${v.tamanho} - ${v.cor||'S/ Cor'}`, tamanho: v.tamanho, cor: v.cor, qtd: v.qtd }));
 
     const sim = await window.confirmarAcao("Salvar Peça", "Salvar no sistema?"); if(!sim) return;
-    const btn = document.getElementById('btn-salvar-produto'); const img = document.getElementById('add-imagem-file').files[0]; const id = document.getElementById('edit-produto-id').value; btn.innerText = "⏳..."; btn.disabled = true; 
+    const btn = document.getElementById('btn-salvar-produto'); const imgs = document.getElementById('add-imagem-file').files; const id = document.getElementById('edit-produto-id').value; 
+    btn.innerText = "⏳..."; btn.disabled = true; 
     
     try { 
-        let urlFoto = null; if (img) { const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); await uploadBytes(sRef, img); urlFoto = await getDownloadURL(sRef); } 
+        let urlsFotos = [];
+        if (imgs && imgs.length > 0) {
+            for(let i=0; i<imgs.length; i++){
+                if(i > 3) break; // Máx 4 fotos
+                const sRef = ref(storage, 'produtos/' + Date.now() + '_' + imgs[i].name); 
+                await uploadBytes(sRef, imgs[i]); 
+                urlsFotos.push(await getDownloadURL(sRef));
+            }
+        } 
+
         const pData = { nome: document.getElementById('add-nome').value, preco: parseFloat(document.getElementById('add-preco').value), variacoes: variacoesLimpas, categoria: document.getElementById('add-categoria').value, lancamento: document.getElementById('add-lancamento').checked, material: document.getElementById('add-material').value }; 
-        if(urlFoto) pData.imagem = urlFoto; 
-        if (id) { await updateDoc(doc(db, "produtos", id), pData); } else { if(!urlFoto) { btn.disabled = false; btn.innerText = "💾 Salvar"; return window.mostrarNotificacao("Foto obrigatória!","erro"); } await addDoc(collection(db, "produtos"), pData); } 
+        if(urlsFotos.length > 0) { pData.imagens = urlsFotos; pData.imagem = urlsFotos[0]; } 
+        
+        if (id) { await updateDoc(doc(db, "produtos", id), pData); } else { if(!pData.imagem) { btn.disabled = false; btn.innerText = "💾 Salvar Produto"; return window.mostrarNotificacao("Foto obrigatória!","erro"); } await addDoc(collection(db, "produtos"), pData); } 
         window.limparFormProduto(); carregarListaAdminProdutosEditar(); window.mostrarNotificacao("Sucesso!","sucesso"); 
     } catch(e) {} 
     btn.innerText = "💾 Salvar Produto"; btn.disabled = false; 
 };
+
 window.limparFormProduto = () => { document.getElementById('form-add-produto').reset(); document.getElementById('edit-produto-id').value=''; variacoesAdminTemp=[]; renderizarVariacoesAdmin(); };
 
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}]; todosProdutosAdmin.push(p); }); window.filtrarProdutosAdmin(); }
@@ -437,13 +538,20 @@ window.filtrarProdutosAdmin = () => {
     const termo = removerAcentos(document.getElementById('busca-produto-admin').value); const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = ""; let res = todosProdutosAdmin.filter(p => removerAcentos(p.nome).includes(termo)); if(res.length === 0) lista.innerHTML = "<p>Nenhum produto.</p>"; 
     res.forEach(p => { 
         let estoqueTotal = p.variacoes.reduce((s,v)=> s + parseInt(v.qtd||0), 0);
-        lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${p.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-icon" style="background:#e74c3c; color:white;">🗑️</button></div></div>`; 
+        let ft = p.imagens ? p.imagens[0] : p.imagem;
+        lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-icon" style="background:#e74c3c; color:white;">🗑️</button></div></div>`; 
     }); 
 }
 window.editarProdutoAdmin = (id) => { 
     let p = todosProdutosAdmin.find(x => x.id === id); if(!p) return;
     document.getElementById('edit-produto-id').value=p.id; document.getElementById('add-nome').value=p.nome; document.getElementById('add-preco').value=p.preco; document.getElementById('add-categoria').value=p.categoria||'Vestido'; document.getElementById('add-lancamento').checked=p.lancamento===true; document.getElementById('add-material').value=p.material; 
-    variacoesAdminTemp = JSON.parse(JSON.stringify(p.variacoes)); renderizarVariacoesAdmin();
+    
+    variacoesAdminTemp = p.variacoes.map(v => {
+        let t = v.tamanho || (v.nome.split('-')[0] ? v.nome.split('-')[0].trim() : 'P');
+        let c = v.cor || (v.nome.split('-')[1] ? v.nome.split('-')[1].trim() : '');
+        return { tamanho: t, cor: c, qtd: v.qtd };
+    });
+    renderizarVariacoesAdmin();
     document.querySelector('.admin-content').scrollTo(0,0); 
 };
 window.excluirProdutoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar", "🗑️ Deseja apagar essa peça do estoque?"); if(sim) { await deleteDoc(doc(db, "produtos", id)); window.mostrarNotificacao("Peça apagada!", "info"); carregarListaAdminProdutosEditar(); window.carregarProdutosDoBanco(); } };
@@ -472,18 +580,17 @@ window.gerarDadosDeExemplo = async () => {
     const sim = await window.confirmarAcao("Criar Exemplos", "Isso vai adicionar roupas falsas no seu banco. Confirmar?"); if(!sim) return;
     window.mostrarNotificacao("Gerando produtos...", "info");
     const prods = [
-        {nome: "Vestido Floral Princesa", preco: 89.90, variacoes: [{nome:"PP", qtd: 10}, {nome:"P", qtd:5}], categoria: "Vestido", lancamento: false, material: "Algodão", imagem: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500"},
-        {nome: "Blusa Babado Luxo", preco: 45.00, variacoes: [{nome:"M", qtd: 15}, {nome:"G", qtd:30}], categoria: "Blusa/Cropped/Body", lancamento: false, material: "Algodão", imagem: "https://images.unsplash.com/photo-1618828665011-0abd973f7bb8?w=500"}
+        {nome: "Vestido Floral Princesa", preco: 89.90, variacoes: [{nome:"P - Rosa", tamanho:"P", cor:"Rosa", qtd: 10}, {nome:"M - Azul", tamanho:"M", cor:"Azul", qtd:5}], categoria: "Vestido", lancamento: false, material: "Algodão", imagem: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500"},
     ];
     for(let p of prods) await addDoc(collection(db, "produtos"), p);
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LOGICA DA NOTIFICAÇÃO DO APP ---
+// --- LOGICA DA NOTIFICAÇÃO DO APP (AJUSTE 1) ---
 setTimeout(() => {
     const dispensado = localStorage.getItem('maribella_app_banner_closed');
     if(!dispensado) document.getElementById('install-app-banner').classList.remove('hidden');
-}, 3000); // 3 segundos antes de aparecer
+}, 3000); 
 
 window.fecharBannerInstalacao = () => {
     document.getElementById('install-app-banner').classList.add('hidden');
@@ -502,7 +609,12 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
         if (outcome === 'accepted') window.fecharBannerInstalacao();
         deferredPrompt = null;
     } else {
-        window.mostrarNotificacao("No iPhone: Toque no ícone ⍗ (Compartilhar) e depois 'Adicionar à Tela de Início' 📱", 'info', true);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            window.mostrarNotificacao("No iPhone: Toque no ícone ⍗ (Compartilhar) e depois 'Adicionar à Tela de Início' 📱", 'info', true);
+        } else {
+            window.mostrarNotificacao("Abra as opções do seu navegador (⋮) e procure por 'Adicionar à Tela Inicial' ou 'Instalar App' 📱", 'info', true);
+        }
     }
 });
 
