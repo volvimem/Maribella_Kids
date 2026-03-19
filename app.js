@@ -93,7 +93,6 @@ window.abrirLightbox = (src, id = null) => {
     document.getElementById('lightbox-img').src = src; 
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
-    // Se clicou de um produto válido, exibe o botão adicionar ao carrinho
     let ctrl = document.getElementById('lightbox-controls');
     if(id && ctrl) {
         ctrl.style.display = 'block';
@@ -113,13 +112,18 @@ window.adicionarAoCarrinhoLightbox = () => {
     }
 };
 
-// --- MENU LATERAL (RESOLVIDO E 100% FUNCIONAL) ---
+// --- MENU LATERAL (CORRIGIDO) ---
 window.abrirMenuLateral = () => {
+    document.getElementById('sidebar-menu').classList.remove('hidden'); // Remove bloqueio de visibilidade
     document.getElementById('sidebar-menu').classList.add('open');
     document.getElementById('sidebar-overlay').classList.remove('hidden');
 };
 window.fecharMenuLateral = () => {
     document.getElementById('sidebar-menu').classList.remove('open');
+    // Adiciona o hidden de volta com atraso para a animação funcionar
+    setTimeout(() => {
+        document.getElementById('sidebar-menu').classList.add('hidden');
+    }, 300);
     document.getElementById('sidebar-overlay').classList.add('hidden');
 };
 window.filtrarCategoria = (cat) => {
@@ -172,7 +176,6 @@ window.carregarProdutosDoBanco = async () => {
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
     let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
-    // Manda o ID junto para habilitar o carrinho no Lightbox
     storyList.forEach(p => { track.innerHTML += `<img src="${p.imagem}" class="story-circle" onclick="window.abrirLightbox('${p.imagem}', '${p.id}')" title="${p.nome}">`; });
 }
 
@@ -319,6 +322,50 @@ window.filtrarPedidosAdmin = () => {
 window.aprovarPedido = async (id) => { const sim = await window.confirmarAcao("Aprovar Pagamento", "O valor já caiu na conta?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Aprovado" }); carregarListaAdminPedidos(); } };
 window.voltarPendentePedido = async (id) => { const sim = await window.confirmarAcao("Reverter Status", "Voltar o pedido para Pendente?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Pendente" }); carregarListaAdminPedidos(); } };
 window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
+
+// --- FUNÇÃO PARA IMPRIMIR ETIQUETA ADICIONADA ---
+window.imprimirEtiqueta = (id) => {
+    const pedido = todosPedidosAdmin.find(p => p.id === id);
+    if(!pedido) return window.mostrarNotificacao("Pedido não encontrado", "erro");
+
+    const janela = window.open('', '_blank', 'width=600,height=600');
+    
+    janela.document.write(`
+        <html>
+            <head>
+                <title>Etiqueta - ${pedido.cliente}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; }
+                    .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; }
+                    .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; }
+                    .destinatario { font-size: 1.1rem; line-height: 1.5; }
+                    @media print { .btn-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div style="text-align:center; margin-bottom: 20px;">
+                    <button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button>
+                </div>
+                <div class="etiqueta">
+                    <div class="remetente">
+                        <strong>REMETENTE:</strong><br>
+                        Maribella Kids<br>
+                        ${configLoja.endereco || 'Seu Endereço Aqui'}<br>
+                        Cel: ${configLoja.telefone || ''}
+                    </div>
+                    <div class="destinatario">
+                        <strong>DESTINATÁRIO:</strong><br>
+                        ${pedido.cliente}<br>
+                        ${pedido.endereco}<br>
+                        <strong>CEP:</strong> ${pedido.cep || 'Não informado'}<br>
+                        <strong>Tel:</strong> ${pedido.telefone}
+                    </div>
+                </div>
+            </body>
+        </html>
+    `);
+    janela.document.close();
+};
 
 window.salvarProdutoAdmin = async (e) => { 
     e.preventDefault(); 
