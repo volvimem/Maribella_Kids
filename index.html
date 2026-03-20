@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="toast-notificacao" class="toast hidden"></div>
@@ -44,7 +45,7 @@
             <li onclick="window.filtrarCategoria('Todas')">🎀 Todas as Peças</li>
             <li onclick="window.filtrarCategoria('Vestido')">👗 Vestidos</li>
             <li onclick="window.filtrarCategoria('Blusa/Cropped/Body')">👚 Blusas / Cropped / Body</li>
-            <li onclick="window.filtrarCategoria('Short/Saia')">👖 Shorts e Saias</li>
+            <li onclick="window.filtrarCategoria('Short/Saia')">🩳/👗 Shorts e Saias</li>
             <li onclick="window.filtrarCategoria('Conjunto')">👯‍♀️ Conjuntos</li>
             <li onclick="window.filtrarCategoria('Macacão/Macaquito')">🩱 Macacões / Macaquitos</li>
             <li onclick="window.filtrarCategoria('Acessório')">🎀 Acessórios</li>
@@ -91,13 +92,13 @@
     <header id="main-header">
         <div class="header-top">
             <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn-icon" onclick="window.abrirMenuLateral()" style="font-size:1.5rem; padding:5px 10px; z-index: 1001;">☰</button>
+                <button class="btn-icon" onclick="window.abrirMenuLateral()" style="font-size:1.5rem; padding:0 10px; height: 35px; z-index: 1001;">☰</button>
                 <div class="logo"><span>Maribella Kids</span></div>
             </div>
             <div class="menu-botoes">
-                <button class="btn-icon" onclick="window.toggleBusca()">🔍</button>
-                <button class="btn-icon" id="btn-header-pedidos" onclick="window.verificarLoginCliente()">📦 Entrar</button>
-                <button id="cart-btn" onclick="window.toggleCart()">🛒 (<span id="cart-count">0</span>)</button>
+                <button class="btn-icon header-btn" onclick="window.toggleBusca()">🔍</button>
+                <button class="btn-icon header-btn" id="btn-header-pedidos" onclick="window.verificarLoginCliente()">👤 Perfil</button>
+                <button class="btn-icon header-btn" id="cart-btn" onclick="window.toggleCart()">🛒 <span id="cart-count">0</span></button>
             </div>
         </div>
         <div id="busca-container" class="hidden" style="margin-top:10px; width:100%;">
@@ -148,7 +149,7 @@
             <h4>Baixe o App! 🎀</h4>
             <p>Compre mais rápido e fácil.</p>
         </div>
-        <button id="btn-instalar-app" class="btn-install">Instalar</button>
+        <button id="btn-instalar-app" class="btn-install">Instalar Agora</button>
     </div>
     
     <div id="cliente-login-modal" class="modal hidden"><div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;"><span class="close" onclick="window.fecharLoginCliente()">&times;</span><h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2><form id="form-login-cliente" onsubmit="window.realizarLoginCliente(event)"><input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="window.mascaraCPF(this)"><input type="password" id="login-senha-cliente" placeholder="Sua Senha" required><div style="display:flex; align-items:center; gap:5px; margin-top:5px; justify-content:center;"><input type="checkbox" id="lembrar-senha" style="width:auto;"><label for="lembrar-senha" style="font-size:0.9rem; color:#555;">Manter conectado</label></div><button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Entrar na Minha Conta</button></form></div></div>
@@ -181,7 +182,7 @@
             </div>
 
             <div id="admin-relatorios" class="admin-aba hidden">
-                <h3>📊 Relatórios e Ranking</h3>
+                <h3>📊 Relatórios e Gráfico de Vendas</h3>
                 <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">
                     <select id="filtro-mes-rel" style="flex:1; min-width:120px; padding: 10px; border-radius: 10px; border:1px solid #ddd;">
                         <option value="Todos">Todos os Meses</option> <option value="01">Janeiro</option> <option value="02">Fevereiro</option> <option value="03">Março</option> <option value="04">Abril</option> <option value="05">Maio</option> <option value="06">Junho</option> <option value="07">Julho</option> <option value="08">Agosto</option> <option value="09">Setembro</option> <option value="10">Outubro</option> <option value="11">Novembro</option> <option value="12">Dezembro</option>
@@ -190,6 +191,9 @@
                         <option value="Todos">Todos os Anos</option> <option value="2024">2024</option> <option value="2025">2025</option> <option value="2026">2026</option> <option value="2027">2027</option>
                     </select>
                     <button onclick="window.gerarRelatoriosAdmin()" class="btn-whatsapp" style="margin:0; padding:10px 15px; border-radius:10px;">🔍 Filtrar</button>
+                </div>
+                <div style="background:white; padding:15px; border-radius:10px; border:1px solid #ddd; margin-bottom:20px;">
+                    <canvas id="graficoVendas" style="width:100%; max-height:300px;"></canvas>
                 </div>
                 <div id="conteudo-relatorios">
                     <p style="color:#666;">Selecione os filtros e clique em Filtrar.</p>
@@ -233,8 +237,21 @@
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
                     <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="window.limparFormProduto()">Limpar / Cancelar Edição</button>
                 </form>
+                
                 <h3 style="margin-top: 30px;">Catálogo</h3>
-                <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto..." oninput="window.filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:white; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <strong style="color:var(--primary);">Total: <span id="admin-total-prods-count">0</span> modelos</strong>
+                    <select id="admin-filtro-cat" onchange="window.filtrarProdutosAdmin()" style="padding:8px; border-radius:8px; border:1px solid #ddd; outline:none;">
+                        <option value="Todos">Todas as Peças</option>
+                        <option value="Vestido">Vestido</option>
+                        <option value="Blusa/Cropped/Body">Blusa / Cropped / Body</option>
+                        <option value="Short/Saia">Short / Saia</option>
+                        <option value="Conjunto">Conjunto</option>
+                        <option value="Macacão/Macaquito">Macacão / Macaquito</option>
+                        <option value="Acessório">Acessório</option>
+                    </select>
+                </div>
+                <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto por nome..." oninput="window.filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-produtos-cadastrados" style="display: flex; flex-direction:column; gap: 10px;"></div>
             </div>
 
