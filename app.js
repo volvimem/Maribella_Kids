@@ -21,7 +21,7 @@ let carouselIntervals = [];
 
 let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
-let graficoVendasApp = null;
+let graficoVendasApp = null; // Para o Gráfico Inteligente do Chart.js
 
 window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
@@ -63,6 +63,7 @@ function atualizarPessoasOnline() {
     let el = document.getElementById('online-count'); if(!el) return;
     let agora = new Date(); let minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
     let minBase, maxBase;
+    // Horário de pico (17:46 até 22:29)
     if (minutosAtuais >= 1066 && minutosAtuais <= 1349) {
         minBase = 1367; maxBase = 4621;
     } else {
@@ -85,7 +86,7 @@ function gerarAvaliacoes() {
     const nomesF = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline"];
     const nomesM = ["Carlos", "Marcos", "João", "Pedro", "Lucas", "Mateus", "Rafael", "Felipe", "Bruno", "Thiago", "Eduardo"];
     const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins"];
-    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; 
+    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; // Focado em PE
     const comentarios = ["Qualidade incrível, amei!", "Chegou super rápido, recomendo.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "As cores são vivas, idêntico à foto.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente.", "Tudo perfeito, recomendo!"];
 
     for(let i=0; i < totalReviews; i++) {
@@ -183,7 +184,7 @@ window.filtrarCategoria = (cat) => {
     renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); 
 };
 
-// --- CONFIGURAÇÕES ---
+// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -241,7 +242,7 @@ function renderizarVitrinesCategorias(lista, tituloUnico = null) {
         let conjuntos = lista.filter(p => p.categoria === 'Conjunto');
 
         if(lancamentos.length > 0) criarSecaoCarrossel('Lançamentos 🌟', lancamentos, container, indexFila++);
-        if(shorts.length > 0) criarSecaoCarrossel('Shorts e Saias 🩳👗', shorts, container, indexFila++); // Ícone alterado
+        if(shorts.length > 0) criarSecaoCarrossel('Shorts e Saias 🩳👗', shorts, container, indexFila++);
         if(blusas.length > 0) criarSecaoCarrossel('Blusas e Bodies 👚', blusas, container, indexFila++);
         if(vestidos.length > 0) criarSecaoCarrossel('Vestidos 👗', vestidos, container, indexFila++);
         if(conjuntos.length > 0) criarSecaoCarrossel('Conjuntos 👯‍♀️', conjuntos, container, indexFila++);
@@ -277,6 +278,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     let direcao = (indexFila % 2 === 0) ? 1 : -1;
     if(direcao === -1 && produtos.length > 2) setTimeout(() => carrossel.scrollLeft = carrossel.scrollWidth, 300);
 
+    // Lógica do Carrossel de Vitrine com Loop Infinito
     let autoScroll = setInterval(() => {
         if(!carrossel.querySelector('.card') || produtos.length <= 2) return;
         
@@ -299,6 +301,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
+// Lógica de Deslizar Fotos (Slider) nos produtos que tem várias fotos
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
@@ -309,7 +312,7 @@ setInterval(() => {
     });
 }, 3000);
 
-// --- ESCOLHER MÚLTIPLAS QUANTIDADES ---
+// --- ESCOLHER MÚLTIPLAS QUANTIDADES E TAMANHOS ---
 window.abrirEscolherTamanho = (id) => {
     produtoParaAdicionarTamanho = listaDeProdutos.find(p => p.id === id);
     if(!produtoParaAdicionarTamanho) return;
@@ -437,22 +440,26 @@ window.finalizarCheckout = async (e) => {
 function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; } }
 window.loginRapidoCheckout = async () => { const cpf = document.getElementById('checkout-cpf-rapido').value.replace(/\D/g,''); const senha = document.getElementById('checkout-senha-rapida').value; if(cpf.length !== 11 || !senha) return window.mostrarNotificacao("Preencha CPF e Senha.", "erro"); const d = await getDoc(doc(db, "clientes", cpf)); if (d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); prepararCheckoutLogado(); window.mostrarNotificacao("Preenchido!", "sucesso"); } else { window.mostrarNotificacao("Incorretos.", "erro"); } };
 
-// --- LOGIN DO CLIENTE E PERFIL ---
+// --- LOGIN DO CLIENTE E PERFIL (COM CORREÇÃO DO BOTÃO DE ABRIR) ---
 window.verificarLoginCliente = () => { 
-    const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); 
-    if(logado) autoLogin(logado.cpf, logado.senha); 
-    else document.getElementById('cliente-login-modal').classList.remove('hidden'); 
+    if (clienteLogadoDados) {
+        abrirPainelCliente(clienteLogadoDados);
+    } else {
+        const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); 
+        if(logado) autoLogin(logado.cpf, logado.senha, true); 
+        else document.getElementById('cliente-login-modal').classList.remove('hidden'); 
+    }
 }
 window.fecharLoginCliente = () => document.getElementById('cliente-login-modal').classList.add('hidden');
 window.fecharPerfil = () => { 
     document.getElementById('perfil-cliente-modal').classList.add('hidden'); 
     localStorage.removeItem('maribella_tela_perfil_aberta');
 };
-async function autoLogin(cpf, senha) { 
+async function autoLogin(cpf, senha, forcarAbertura = false) { 
     const d = await getDoc(doc(db, "clientes", cpf)); 
     if(d.exists() && d.data().senha === senha) { 
         clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); atualizarHeaderLogado(); 
-        if(localStorage.getItem('maribella_tela_perfil_aberta')) abrirPainelCliente(d.data()); 
+        if(forcarAbertura || localStorage.getItem('maribella_tela_perfil_aberta')) abrirPainelCliente(d.data()); 
     } else { 
         localStorage.removeItem('maribella_auth_cliente'); document.getElementById('cliente-login-modal').classList.remove('hidden'); 
     } 
@@ -477,7 +484,7 @@ window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.lengt
 window.atualizarPerfilCliente = async (e) => { e.preventDefault(); const sim = await window.confirmarAcao("Salvar Dados", "Deseja atualizar seu endereço?"); if(!sim) return; const cpf = document.getElementById('perfil-cpf').value; try { await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, cidade: document.getElementById('perfil-cidade').value, estado: document.getElementById('perfil-estado').value }); clienteLogadoDados.nome = document.getElementById('perfil-nome').value; atualizarHeaderLogado(); window.mostrarNotificacao("Atualizado!", "sucesso"); } catch (e) { } };
 window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoCpf = null; clienteLogadoDados = null; atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
 
-// --- ADMINISTRAÇÃO E CONTROLE (Persistência Ajuste 1) ---
+// --- ADMINISTRAÇÃO E CONTROLE (Persistência no Recarregamento) ---
 window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); }
 window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
 window.realizarLoginAdmin = async (e) => { 
@@ -649,7 +656,7 @@ window.salvarProdutoAdmin = async (e) => {
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
             for(let i=0; i<imgs.length; i++){
-                if(i > 3) break; 
+                if(i > 3) break; // Máx 4 fotos
                 const sRef = ref(storage, 'produtos/' + Date.now() + '_' + imgs[i].name); 
                 await uploadBytes(sRef, imgs[i]); 
                 urlsFotos.push(await getDownloadURL(sRef));
@@ -669,7 +676,7 @@ window.limparFormProduto = () => { document.getElementById('form-add-produto').r
 
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}]; todosProdutosAdmin.push(p); }); window.filtrarProdutosAdmin(); }
 
-// Filtro e Botões Modernos (Ajuste 2)
+// Filtro e Botões Modernos do Catálogo
 window.filtrarProdutosAdmin = () => { 
     const termo = removerAcentos(document.getElementById('busca-produto-admin').value); 
     const cat = document.getElementById('admin-filtro-cat').value;
@@ -687,7 +694,6 @@ window.filtrarProdutosAdmin = () => {
     res.forEach(p => { 
         let estoqueTotal = p.variacoes.reduce((s,v)=> s + parseInt(v.qtd||0), 0);
         let ft = p.imagens ? p.imagens[0] : p.imagem;
-        // Botões Modernos aplicados aqui
         lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-action-adm btn-edit">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-action-adm btn-delete">🗑️</button></div></div>`; 
     }); 
 }
@@ -736,7 +742,7 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LÓGICA DO INSTALADOR DO APP FORÇADO (AJUSTE 3) ---
+// --- LÓGICA DO INSTALADOR DO APP FORÇADO E ROBUSTO ---
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
@@ -775,7 +781,7 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
     }
 });
 
-// Inicialização
+// Inicialização de Dados Básicos
 const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.cpf, logado.senha);
 carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarProdutosDoBanco();
 
@@ -783,7 +789,7 @@ gerarAvaliacoes();
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
 
-// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (AJUSTE 1) ---
+// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (Persistência) ---
 const adminLogado = localStorage.getItem('maribella_admin_auth');
 if(adminLogado === 'true') {
     document.getElementById('admin-dashboard').classList.remove('hidden');
