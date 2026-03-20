@@ -6,8 +6,10 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 .header-top { display: flex; justify-content: space-between; align-items: center; }
 .logo { display: flex; align-items: center; color: white; }
 .logo span { font-size: 1.15rem; font-family: 'Georgia', serif; font-style: italic; font-weight: 500; letter-spacing: 0.5px; }
+
+/* Ajuste 4: Botões do Cabeçalho Padronizados (Mesmo tamanho e alinhamento) */
 .menu-botoes { display: flex; gap: 8px; align-items: center; }
-.btn-icon, #cart-btn { background: white; border: none; padding: 8px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.85rem; transition: 0.3s; }
+.header-btn { background: white; border: none; height: 35px; padding: 0 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; white-space: nowrap; }
 
 .stories-wrapper { background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
 .stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 45s linear infinite; }
@@ -34,10 +36,15 @@ header { background-color: var(--primary); padding: 10px 15px; position: fixed; 
 
 .estacao-section { margin-top: 20px; margin-bottom: 30px; }
 .estacao-titulo { margin-left: 15px; margin-bottom: 10px; color: var(--primary); font-size: 1.3rem; font-weight: 800; text-transform: uppercase;}
-.carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; padding: 0 15px 20px 15px; scroll-behavior: smooth; }
+.carousel-container { display: flex; overflow-x: auto; gap: 10px; padding: 0 15px 20px 15px; } /* Ajuste 2: Removido snap e scrollbar para o JS fluido funcionar */
 .carousel-container::-webkit-scrollbar { display: none; }
-.card { flex: 0 0 calc(50% - 5px); scroll-snap-align: start; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-.card img { width: 100%; height: 160px; object-fit: cover; image-rendering: crisp-edges; cursor: zoom-in; transition: opacity 0.3s; }
+.card { flex: 0 0 calc(50% - 5px); background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+
+/* Ajuste 1: Container de Slider das Fotos */
+.slider-viewport { position: relative; width: 100%; height: 160px; overflow: hidden; background: #f0f0f0; }
+.prod-slider { display: flex; height: 100%; transition: transform 0.4s ease-in-out; }
+.prod-slider img { height: 100%; object-fit: cover; cursor: zoom-in; }
+
 .card-info { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
 .card-info h3 { font-size: 0.95rem; color: #333; margin-bottom: 5px; line-height: 1.2;}
 .card-info p { font-size: 0.75rem; color: #666; margin-bottom: 2px; }
@@ -71,16 +78,16 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-.app-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; padding: 15px; display: flex; align-items: center; gap: 15px; border: 2px solid var(--primary); transition: transform 0.4s ease, opacity 0.4s; opacity: 1; }
+/* Ajuste 5: Botão de App Mais Visível e Robusto */
+.app-banner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 100000; padding: 15px; display: flex; align-items: center; gap: 15px; border: 2px solid var(--primary); transition: transform 0.4s ease, opacity 0.4s; opacity: 1; }
 .app-banner.hidden { transform: translate(-50%, 150px); opacity: 0; pointer-events: none; }
 .app-banner-icon { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
 .app-banner-text { flex: 1; }
 .app-banner-text h4 { margin: 0; color: var(--primary); font-size: 1.1rem; line-height: 1.2;}
 .app-banner-text p { margin: 0; font-size: 0.8rem; color: #666; }
-.btn-install { background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); }
+.btn-install { background: #2ecc71; color: white; border: none; padding: 10px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4); }
 .close-banner { position: absolute; top: -10px; right: -10px; background: white; color: #aaa; border-radius: 50%; width: 25px; height: 25px; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 1.2rem; line-height:1; }
 
-/* SETAS DO LIGHTBOX (AJUSTE 1) */
 .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 2rem; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 10001; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
 .lightbox-nav:hover { background: rgba(0,0,0,0.9); }
 #lightbox-prev { left: 15px; }
