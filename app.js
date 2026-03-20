@@ -687,3 +687,11 @@ carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarPro
 gerarAvaliacoes(); 
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000); // A cada 30 segundos
+// --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('✅ Service Worker ativado com sucesso!', reg.scope))
+            .catch(err => console.error('❌ Falha ao ativar o Service Worker:', err));
+    });
+}
