@@ -48,7 +48,7 @@ function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-// --- VENDAS FAKES E PESSOAS ONLINE (AJUSTE 2) ---
+// --- VENDAS FAKES E PESSOAS ONLINE ---
 function dispararVendaFalsa() {
     const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia"];
     const cidadesFakes = ["Recife, PE", "Caruaru, PE", "Surubim, PE", "São Paulo, SP", "Belo Horizonte, MG"];
@@ -61,39 +61,34 @@ setTimeout(dispararVendaFalsa, Math.random() * 30000 + 30000);
 function atualizarPessoasOnline() {
     let el = document.getElementById('online-count'); if(!el) return;
     let agora = new Date(); let minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
-    
-    // Regra: Entre 17:46 (1066m) e 22:29 (1349m) = Alta, Senão = Normal
     let minBase, maxBase;
     if (minutosAtuais >= 1066 && minutosAtuais <= 1349) {
         minBase = 1367; maxBase = 4621;
     } else {
         minBase = 426; maxBase = 1367;
     }
-    
     let atual = parseInt(el.innerText.replace('.', '')); 
     if(isNaN(atual) || atual < minBase || atual > maxBase) atual = Math.floor(Math.random() * (maxBase - minBase)) + minBase;
-    
     let variacao = Math.floor(Math.random() * 60) - 25; let novoValor = atual + variacao;
     if(novoValor < minBase) novoValor = minBase + Math.floor(Math.random()*50); 
     if(novoValor > maxBase) novoValor = maxBase - Math.floor(Math.random()*50);
-    
     el.innerText = novoValor.toLocaleString('pt-BR'); 
     setTimeout(atualizarPessoasOnline, Math.random() * 4000 + 4000);
 }
 setTimeout(atualizarPessoasOnline, 2000);
 
-// --- AVALIAÇÕES REALISTAS (AJUSTE 3) ---
+// --- AVALIAÇÕES REALISTAS ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
     const totalReviews = 160;
     const nomesF = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline"];
     const nomesM = ["Carlos", "Marcos", "João", "Pedro", "Lucas", "Mateus", "Rafael", "Felipe", "Bruno", "Thiago", "Eduardo"];
     const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins"];
-    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; // 60% Pernambuco
+    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; 
     const comentarios = ["Qualidade incrível, amei!", "Chegou super rápido, recomendo.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "As cores são vivas, idêntico à foto.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente.", "Tudo perfeito, recomendo!"];
 
     for(let i=0; i < totalReviews; i++) {
-        let isMulher = Math.random() > 0.2; // 80% Mulheres
+        let isMulher = Math.random() > 0.2; 
         let nomeBase = isMulher ? nomesF[(i * 13) % nomesF.length] : nomesM[(i * 11) % nomesM.length];
         let nomeCompleto = `${nomeBase} ${sobrenomes[(i * 7) % sobrenomes.length]}`;
         let ddd = dddBR[Math.floor(Math.random()*dddBR.length)];
@@ -133,20 +128,59 @@ window.abrirModalAvaliacoes = () => {
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
 
-// --- LUPA, MENU E LIGHTBOX ---
+// --- LUPA, MENU E LIGHTBOX C/ NAVEGAÇÃO ---
 window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
+
 let lightboxCurrentProdId = null;
-window.abrirLightbox = (src, id = null) => { 
-    lightboxCurrentProdId = id; document.getElementById('lightbox-img').src = src; document.getElementById('lightbox-modal').classList.remove('hidden'); 
-    let ctrl = document.getElementById('lightbox-controls'); if(id && ctrl) ctrl.style.display = 'block'; else if(ctrl) ctrl.style.display = 'none';
+let lightboxImgsArray = [];
+let lightboxCurrentIndex = 0;
+
+window.abrirLightbox = (src, id = null, arrayFotosStr = null) => { 
+    lightboxCurrentProdId = id; 
+    document.getElementById('lightbox-img').src = src; 
+    document.getElementById('lightbox-modal').classList.remove('hidden'); 
+    
+    if(arrayFotosStr) {
+        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
+        lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
+        if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
+        document.getElementById('lightbox-prev').classList.remove('hidden');
+        document.getElementById('lightbox-next').classList.remove('hidden');
+    } else {
+        lightboxImgsArray = [];
+        document.getElementById('lightbox-prev').classList.add('hidden');
+        document.getElementById('lightbox-next').classList.add('hidden');
+    }
+
+    let ctrl = document.getElementById('lightbox-controls'); 
+    if(id && ctrl) ctrl.style.display = 'block'; else if(ctrl) ctrl.style.display = 'none';
 };
+
+window.navegarLightbox = (dir) => {
+    if(lightboxImgsArray.length <= 1) return;
+    lightboxCurrentIndex += dir;
+    if(lightboxCurrentIndex < 0) lightboxCurrentIndex = lightboxImgsArray.length - 1;
+    if(lightboxCurrentIndex >= lightboxImgsArray.length) lightboxCurrentIndex = 0;
+    document.getElementById('lightbox-img').src = lightboxImgsArray[lightboxCurrentIndex];
+};
+
 window.fecharLightbox = () => { document.getElementById('lightbox-modal').classList.add('hidden'); lightboxCurrentProdId = null; };
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 window.abrirOpcoesLightbox = () => { if(lightboxCurrentProdId) { window.abrirEscolherTamanho(lightboxCurrentProdId); window.fecharLightbox(); } };
 
 window.abrirMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('hidden'); document.getElementById('sidebar-menu').classList.add('open'); document.getElementById('sidebar-overlay').classList.remove('hidden'); };
 window.fecharMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('open'); setTimeout(() => { document.getElementById('sidebar-menu').classList.add('hidden'); }, 300); document.getElementById('sidebar-overlay').classList.add('hidden'); };
-window.filtrarCategoria = (cat) => { window.fecharMenuLateral(); const termo = removerAcentos(document.getElementById('busca-input').value); let filtrados = listaDeProdutos.filter(p => { let matchCat = (cat === 'Todas') || (p.categoria === cat) || (cat === 'Lançamento' && p.lancamento === true); let matchTermo = removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo); return matchCat && matchTermo; }); renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); };
+
+window.filtrarCategoria = (cat) => { 
+    window.fecharMenuLateral(); 
+    const termo = removerAcentos(document.getElementById('busca-input').value); 
+    let filtrados = listaDeProdutos.filter(p => { 
+        let matchCat = (cat === 'Todas') || (p.categoria === cat) || (p.categoria === 'Short/Calça/Saia' && cat === 'Short/Saia') || (cat === 'Lançamento' && p.lancamento === true); 
+        let matchTermo = removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo); 
+        return matchCat && matchTermo; 
+    }); 
+    renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); 
+};
 
 // --- CONFIGURAÇÕES ---
 async function carregarConfiguracoes() { 
@@ -168,7 +202,7 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- VITRINE COM MÚLTIPLAS FOTOS (AJUSTE 5) ---
+// --- VITRINE COM FOTOS EM LOOP ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -186,7 +220,7 @@ function renderizarStories() {
     let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
     storyList.forEach(p => { 
         let foto = p.imagens ? p.imagens[0] : p.imagem;
-        track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}')" title="${p.nome}">`; 
+        track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}', null)" title="${p.nome}">`; 
     });
 }
 
@@ -199,7 +233,12 @@ function renderizarVitrinesCategorias(lista, tituloUnico = null) {
     let indexFila = 0; 
     if(tituloUnico) { criarSecaoCarrossel(tituloUnico, lista, container, indexFila); } 
     else {
-        let lancamentos = lista.filter(p => p.lancamento === true); let vestidos = lista.filter(p => p.categoria === 'Vestido'); let shorts = lista.filter(p => p.categoria === 'Short/Calça/Saia'); let blusas = lista.filter(p => p.categoria === 'Blusa/Cropped/Body'); let conjuntos = lista.filter(p => p.categoria === 'Conjunto');
+        let lancamentos = lista.filter(p => p.lancamento === true); 
+        let vestidos = lista.filter(p => p.categoria === 'Vestido'); 
+        let shorts = lista.filter(p => p.categoria === 'Short/Saia' || p.categoria === 'Short/Calça/Saia'); 
+        let blusas = lista.filter(p => p.categoria === 'Blusa/Cropped/Body'); 
+        let conjuntos = lista.filter(p => p.categoria === 'Conjunto');
+
         if(lancamentos.length > 0) criarSecaoCarrossel('Lançamentos 🌟', lancamentos, container, indexFila++);
         if(shorts.length > 0) criarSecaoCarrossel('Shorts e Saias 👖', shorts, container, indexFila++);
         if(blusas.length > 0) criarSecaoCarrossel('Blusas e Bodies 👚', blusas, container, indexFila++);
@@ -220,11 +259,12 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            imgHtml = `<img src="${p.imagens[0]}" data-fotos='${JSON.stringify(p.imagens)}' data-idx="0" class="vitrine-multifoto" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}')">
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
+            imgHtml = `<img src="${p.imagens[0]}" data-fotos='${fotosStr}' data-idx="0" class="vitrine-multifoto" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')">
                        <div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.map((_, i) => i+1).join(' - ')}</div>`;
         } else {
             let ft = p.imagens ? p.imagens[0] : p.imagem;
-            imgHtml = `<img src="${ft}" onclick="window.abrirLightbox('${ft}', '${p.id}')">`;
+            imgHtml = `<img src="${ft}" onclick="window.abrirLightbox('${ft}', '${p.id}', null)">`;
         }
 
         let btnStatus = estoqueTotal > 0 ? `<button class="btn-add" onclick="window.abrirEscolherTamanho('${p.id}')">🛒 Quero</button>` : `<button class="btn-add esgotado">Esgotado</button>`;
@@ -249,11 +289,11 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
-// Motor de Rotação de Fotos (Ajuste 5)
+// Motor de Rotação de Fotos 
 setInterval(() => {
     document.querySelectorAll('.vitrine-multifoto').forEach(img => {
         try {
-            let fotos = JSON.parse(img.getAttribute('data-fotos'));
+            let fotos = JSON.parse(img.getAttribute('data-fotos').replace(/&quot;/g, '"'));
             let idx = parseInt(img.getAttribute('data-idx'));
             idx = (idx + 1) % fotos.length;
             img.style.opacity = 0.8;
@@ -263,7 +303,7 @@ setInterval(() => {
     });
 }, 3500);
 
-// --- ESCOLHER MÚLTIPLAS QUANTIDADES E TAMANHOS (AJUSTE 10) ---
+// --- ESCOLHER MÚLTIPLAS QUANTIDADES ---
 window.abrirEscolherTamanho = (id) => {
     produtoParaAdicionarTamanho = listaDeProdutos.find(p => p.id === id);
     if(!produtoParaAdicionarTamanho) return;
@@ -448,12 +488,30 @@ window.voltarPendentePedido = async (id) => { const sim = await window.confirmar
 window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco || 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br>${pedido.endereco}<br><strong>CEP:</strong> ${pedido.cep || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
-// --- RELATÓRIOS INTELIGENTES (AJUSTE 4) ---
+// --- RELATÓRIOS INTELIGENTES (FILTROS E TOP 10) ---
 window.gerarRelatoriosAdmin = () => {
-    let prodsVenda = {}; let clientesTop = {}; let faturamento = 0;
+    let mesFiltro = document.getElementById('filtro-mes-rel') ? document.getElementById('filtro-mes-rel').value : 'Todos';
+    let anoFiltro = document.getElementById('filtro-ano-rel') ? document.getElementById('filtro-ano-rel').value : 'Todos';
+
+    let prodsVenda = {}; let clientesTop = {}; let faturamento = 0; let totalVendas = 0;
+
     todosPedidosAdmin.forEach(p => {
         if(p.status !== 'Cancelado') {
+            let mesPedido, anoPedido;
+            if(p.timestamp) {
+                anoPedido = p.timestamp.substring(0,4);
+                mesPedido = p.timestamp.substring(5,7);
+            } else {
+                let partes = p.data.split('/');
+                mesPedido = partes[1]; anoPedido = partes[2];
+            }
+
+            if (mesFiltro !== 'Todos' && mesPedido !== mesFiltro) return;
+            if (anoFiltro !== 'Todos' && anoPedido !== anoFiltro) return;
+
             faturamento += parseFloat(p.total || 0);
+            totalVendas++;
+            
             clientesTop[p.cpf] = clientesTop[p.cpf] || {nome: p.cliente, gasto: 0, compras: 0};
             clientesTop[p.cpf].gasto += parseFloat(p.total || 0);
             clientesTop[p.cpf].compras += 1;
@@ -467,22 +525,24 @@ window.gerarRelatoriosAdmin = () => {
         }
     });
 
-    let html = `<div style="background:var(--success); color:white; padding:15px; border-radius:10px; text-align:center; margin-bottom:15px;"><h2>💰 Faturamento Limpo: R$ ${faturamento.toFixed(2)}</h2></div>`;
+    let html = `<div style="background:var(--success); color:white; padding:15px; border-radius:10px; text-align:center; margin-bottom:15px;"><h2>💰 R$ ${faturamento.toFixed(2)}</h2><p>Total de Vendas: ${totalVendas}</p></div>`;
     
-    let rankProds = Object.values(prodsVenda).sort((a,b) => b.qtd - a.qtd).slice(0, 5);
-    html += `<h4>🏆 Produtos Mais Vendidos</h4><ul style="margin-bottom:20px; padding-left:20px;">`;
-    rankProds.forEach(p => html += `<li>${p.nome} - <strong>${p.qtd} vendidos</strong></li>`);
+    let rankProds = Object.values(prodsVenda).sort((a,b) => b.qtd - a.qtd).slice(0, 10);
+    html += `<h4>🏆 Top 10 Produtos Mais Vendidos</h4><ul style="margin-bottom:20px; padding-left:20px; background:white; padding:15px; border-radius:8px; border:1px solid #ddd;">`;
+    if(rankProds.length === 0) html += `<li>Nenhum dado no período.</li>`;
+    rankProds.forEach((p, idx) => html += `<li style="margin-bottom:5px;"><strong>${idx+1}º</strong> ${p.nome} - <span style="color:var(--primary); font-weight:bold;">${p.qtd} un.</span></li>`);
     html += `</ul>`;
 
-    let rankClientes = Object.values(clientesTop).sort((a,b) => b.gasto - a.gasto).slice(0, 5);
-    html += `<h4>👑 Top Clientes (Que mais gastam)</h4><ul style="padding-left:20px;">`;
-    rankClientes.forEach(c => html += `<li>${c.nome} - <strong>R$ ${c.gasto.toFixed(2)}</strong> (${c.compras} compras)</li>`);
+    let rankClientes = Object.values(clientesTop).sort((a,b) => b.gasto - a.gasto).slice(0, 10);
+    html += `<h4>👑 Top 10 Clientes</h4><ul style="padding-left:20px; background:white; padding:15px; border-radius:8px; border:1px solid #ddd;">`;
+    if(rankClientes.length === 0) html += `<li>Nenhum dado no período.</li>`;
+    rankClientes.forEach((c, idx) => html += `<li style="margin-bottom:5px;"><strong>${idx+1}º</strong> ${c.nome} - <span style="color:var(--success); font-weight:bold;">R$ ${c.gasto.toFixed(2)}</span> (${c.compras} compras)</li>`);
     html += `</ul>`;
 
     document.getElementById('conteudo-relatorios').innerHTML = html;
 };
 
-// --- LÓGICA DE VARIAÇÕES E FOTOS NO ADMIN (AJUSTES 5 E 6) ---
+// --- LÓGICA DE VARIAÇÕES E FOTOS NO ADMIN ---
 window.adicionarVariacaoAdmin = (tamanho='P', cor='', qtd=0) => { variacoesAdminTemp.push({tamanho, cor, qtd}); renderizarVariacoesAdmin(); };
 window.atualizarVariacaoAdmin = (idx, campo, valor) => { variacoesAdminTemp[idx][campo] = valor; renderizarVariacoesAdmin(); };
 window.removerVariacaoAdmin = (idx) => { variacoesAdminTemp.splice(idx, 1); renderizarVariacoesAdmin(); };
@@ -586,7 +646,7 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LOGICA DA NOTIFICAÇÃO DO APP (AJUSTE 1) ---
+// --- LOGICA DA NOTIFICAÇÃO DO APP ---
 setTimeout(() => {
     const dispensado = localStorage.getItem('maribella_app_banner_closed');
     if(!dispensado) document.getElementById('install-app-banner').classList.remove('hidden');
@@ -611,10 +671,11 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
     } else {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS) {
-            window.mostrarNotificacao("No iPhone: Toque no ícone ⍗ (Compartilhar) e depois 'Adicionar à Tela de Início' 📱", 'info', true);
+            window.confirmarAcao("Instalar no iPhone 🍏", "1. Toque no ícone de [Compartilhar] (o quadrado com a seta pra cima) no menu inferior.\n\n2. Role um pouco para baixo e toque em 'Adicionar à Tela de Início'.\n\nPronto! Vai virar um App na sua tela! 🎀");
         } else {
-            window.mostrarNotificacao("Abra as opções do seu navegador (⋮) e procure por 'Adicionar à Tela Inicial' ou 'Instalar App' 📱", 'info', true);
+            window.confirmarAcao("Instalar o App 📱", "1. Clique nos 3 pontinhos (⋮) no canto superior direito do seu navegador.\n\n2. Clique em 'Adicionar à Tela Inicial' ou 'Instalar Aplicativo'.\n\nPronto! O App estará na sua tela inicial! 🎀");
         }
+        window.fecharBannerInstalacao();
     }
 });
 
