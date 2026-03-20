@@ -21,7 +21,7 @@ let carouselIntervals = [];
 
 let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
-let graficoVendasApp = null; // Para o Gráfico Inteligente (Ajuste 8)
+let graficoVendasApp = null;
 
 window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
@@ -203,7 +203,7 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- VITRINE COM LOOP INFINITO (AJUSTES 1 E 2) ---
+// --- VITRINE COM LOOP INFINITO E ICONES NOVOS ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -241,7 +241,7 @@ function renderizarVitrinesCategorias(lista, tituloUnico = null) {
         let conjuntos = lista.filter(p => p.categoria === 'Conjunto');
 
         if(lancamentos.length > 0) criarSecaoCarrossel('Lançamentos 🌟', lancamentos, container, indexFila++);
-        if(shorts.length > 0) criarSecaoCarrossel('Shorts e Saias 👖', shorts, container, indexFila++);
+        if(shorts.length > 0) criarSecaoCarrossel('Shorts e Saias 🩳👗', shorts, container, indexFila++); // Ícone alterado
         if(blusas.length > 0) criarSecaoCarrossel('Blusas e Bodies 👚', blusas, container, indexFila++);
         if(vestidos.length > 0) criarSecaoCarrossel('Vestidos 👗', vestidos, container, indexFila++);
         if(conjuntos.length > 0) criarSecaoCarrossel('Conjuntos 👯‍♀️', conjuntos, container, indexFila++);
@@ -261,7 +261,6 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
             let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
-            // Ajuste 1: Estrutura HTML para o Slider (Passar para o lado)
             imgHtml = `<div class="slider-viewport" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')"><div class="prod-slider" data-idx="0" data-count="${p.imagens.length}">`;
             p.imagens.forEach(img => imgHtml += `<img src="${img}" style="width:100%; flex-shrink:0;">`);
             imgHtml += `</div></div><div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.length} Fotos</div>`;
@@ -275,7 +274,6 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     });
     containerMaster.appendChild(section);
 
-    // Ajuste 2: Carrossel com Ciclo Infinito Real
     let direcao = (indexFila % 2 === 0) ? 1 : -1;
     if(direcao === -1 && produtos.length > 2) setTimeout(() => carrossel.scrollLeft = carrossel.scrollWidth, 300);
 
@@ -301,7 +299,6 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
-// Motor de Rotação de Fotos estilo Slide (Ajuste 1)
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
@@ -440,7 +437,7 @@ window.finalizarCheckout = async (e) => {
 function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; } }
 window.loginRapidoCheckout = async () => { const cpf = document.getElementById('checkout-cpf-rapido').value.replace(/\D/g,''); const senha = document.getElementById('checkout-senha-rapida').value; if(cpf.length !== 11 || !senha) return window.mostrarNotificacao("Preencha CPF e Senha.", "erro"); const d = await getDoc(doc(db, "clientes", cpf)); if (d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); prepararCheckoutLogado(); window.mostrarNotificacao("Preenchido!", "sucesso"); } else { window.mostrarNotificacao("Incorretos.", "erro"); } };
 
-// --- LOGIN DO CLIENTE E PERFIL (AJUSTE 3 - Não fecha tela ao recarregar) ---
+// --- LOGIN DO CLIENTE E PERFIL ---
 window.verificarLoginCliente = () => { 
     const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); 
     if(logado) autoLogin(logado.cpf, logado.senha); 
@@ -467,7 +464,7 @@ window.fecharRecuperacao = () => document.getElementById('recuperacao-modal').cl
 window.recuperarSenhaCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); const tel = document.getElementById('rec-tel').value; const novaSenha = document.getElementById('rec-senha').value; const docRef = doc(db, "clientes", cpf); const d = await getDoc(docRef); if(d.exists() && d.data().telefone === tel) { await updateDoc(docRef, {senha: novaSenha}); window.mostrarNotificacao("Senha alterada!", "sucesso"); window.fecharRecuperacao(); document.getElementById('cliente-login-modal').classList.remove('hidden'); e.target.reset(); } else { window.mostrarNotificacao("Dados não conferem.", "erro"); } };
 window.mudarAbaCliente = (idAba) => { document.getElementById('aba-historico').classList.add('hidden'); document.getElementById('aba-dados').classList.add('hidden'); document.getElementById('btn-aba-historico').classList.remove('ativa'); document.getElementById('btn-aba-historico').style.color='#aaa'; document.getElementById('btn-aba-dados').classList.remove('ativa'); document.getElementById('btn-aba-dados').style.color='#aaa'; document.getElementById(idAba).classList.remove('hidden'); document.getElementById('btn-'+idAba).classList.add('ativa'); document.getElementById('btn-'+idAba).style.color='var(--primary)'; }
 async function abrirPainelCliente(dados) { 
-    localStorage.setItem('maribella_tela_perfil_aberta', 'true'); // Ajuste 3
+    localStorage.setItem('maribella_tela_perfil_aberta', 'true'); 
     document.getElementById('perfil-cliente-modal').classList.remove('hidden'); document.getElementById('titulo-painel-cliente').innerText = `👤 Oi, ${dados.nome.split(' ')[0]}`; document.getElementById('perfil-cpf').value = dados.cpf; document.getElementById('perfil-nome').value = dados.nome; document.getElementById('perfil-telefone').value = dados.telefone; document.getElementById('perfil-cep').value = dados.cep; document.getElementById('perfil-estado').value = dados.estado; document.getElementById('perfil-rua').value = dados.rua; document.getElementById('perfil-numero').value = dados.numero; document.getElementById('perfil-bairro').value = dados.bairro; document.getElementById('perfil-cidade').value = dados.cidade || ''; window.carregarMeusPedidosPainel(dados.cpf); 
 }
 window.carregarMeusPedidosPainel = async (cpf) => { const lista = document.getElementById('lista-meus-pedidos'); lista.innerHTML = "⏳ Carregando..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); meusPedidosSalvos = []; lista.innerHTML = ""; let tem = false; snap.forEach(d => { let p = d.data(); p.id = d.id; if(p.cpf === cpf) { tem = true; meusPedidosSalvos.push(p); let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; let botoesAcao = p.status === 'Pendente' ? `<div style="display:flex; gap:10px; margin-top:10px;"><button onclick="window.abrirEdicaoPedido('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:5px 10px; border-radius:5px;">✏️ Editar Pedido</button> <button onclick="window.cancelarMeuPedido('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:5px;">🗑️ Cancelar</button></div>` : ''; lista.innerHTML += `<div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid ${cor};"><strong style="font-size:1.1rem;">📅 ${p.data} às ${p.hora}</strong><br><div style="margin:5px 0; color:#555; font-size:0.9rem;"><strong>Itens:</strong> ${p.itens}</div><strong style="color:var(--primary); font-size:1.1rem;">💰 R$ ${p.total}</strong><br><span style="font-size:0.9rem; font-weight:bold; color:${cor};">● Status: ${p.status}</span>${botoesAcao}</div>`; } }); if(!tem) lista.innerHTML = "<p>Nenhuma compra.</p>"; }
@@ -480,13 +477,31 @@ window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.lengt
 window.atualizarPerfilCliente = async (e) => { e.preventDefault(); const sim = await window.confirmarAcao("Salvar Dados", "Deseja atualizar seu endereço?"); if(!sim) return; const cpf = document.getElementById('perfil-cpf').value; try { await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, cidade: document.getElementById('perfil-cidade').value, estado: document.getElementById('perfil-estado').value }); clienteLogadoDados.nome = document.getElementById('perfil-nome').value; atualizarHeaderLogado(); window.mostrarNotificacao("Atualizado!", "sucesso"); } catch (e) { } };
 window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoCpf = null; clienteLogadoDados = null; atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
 
-// --- ADMINISTRAÇÃO E CONTROLE ---
-window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); } // Ajuste 7 (Fecha menu ao clicar)
+// --- ADMINISTRAÇÃO E CONTROLE (Persistência Ajuste 1) ---
+window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); }
 window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
-window.realizarLoginAdmin = async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); window.mostrarNotificacao("Liberado!", "sucesso"); window.fecharLoginAdmin(); document.getElementById('admin-dashboard').classList.remove('hidden'); carregarListaAdminPedidos(); e.target.reset(); } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } };
-window.sairDoAdmin = async () => { await signOut(auth); document.getElementById('admin-dashboard').classList.add('hidden'); window.carregarProdutosDoBanco(); };
+window.realizarLoginAdmin = async (e) => { 
+    e.preventDefault(); 
+    try { 
+        await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); 
+        localStorage.setItem('maribella_admin_auth', 'true');
+        window.mostrarNotificacao("Liberado!", "sucesso"); 
+        window.fecharLoginAdmin(); 
+        document.getElementById('admin-dashboard').classList.remove('hidden'); 
+        carregarListaAdminPedidos(); 
+        e.target.reset(); 
+    } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } 
+};
+window.sairDoAdmin = async () => { 
+    await signOut(auth); 
+    localStorage.removeItem('maribella_admin_auth');
+    localStorage.removeItem('maribella_admin_tab');
+    document.getElementById('admin-dashboard').classList.add('hidden'); 
+    window.carregarProdutosDoBanco(); 
+};
 
 window.mudarAbaAdmin = (abaId) => { 
+    localStorage.setItem('maribella_admin_tab', abaId);
     document.querySelectorAll('.admin-aba').forEach(el => el.classList.add('hidden')); 
     document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('ativa')); 
     document.getElementById(abaId).classList.remove('hidden'); 
@@ -515,13 +530,13 @@ window.voltarPendentePedido = async (id) => { const sim = await window.confirmar
 window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco || 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br>${pedido.endereco}<br><strong>CEP:</strong> ${pedido.cep || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
-// --- RELATÓRIOS INTELIGENTES COM GRÁFICO (AJUSTE 8) ---
+// --- RELATÓRIOS INTELIGENTES COM GRÁFICO ---
 window.gerarRelatoriosAdmin = () => {
     let mesFiltro = document.getElementById('filtro-mes-rel') ? document.getElementById('filtro-mes-rel').value : 'Todos';
     let anoFiltro = document.getElementById('filtro-ano-rel') ? document.getElementById('filtro-ano-rel').value : 'Todos';
 
     let prodsVenda = {}; let clientesTop = {}; let faturamento = 0; let totalVendas = 0;
-    let vendasPorData = {}; // Para o gráfico
+    let vendasPorData = {}; 
 
     todosPedidosAdmin.forEach(p => {
         if(p.status !== 'Cancelado') {
@@ -543,7 +558,6 @@ window.gerarRelatoriosAdmin = () => {
             faturamento += valorTotal;
             totalVendas++;
             
-            // Agrupando pro Gráfico
             vendasPorData[dataAgrupamento] = (vendasPorData[dataAgrupamento] || 0) + valorTotal;
 
             clientesTop[p.cpf] = clientesTop[p.cpf] || {nome: p.cliente, gasto: 0, compras: 0};
@@ -575,7 +589,6 @@ window.gerarRelatoriosAdmin = () => {
 
     document.getElementById('conteudo-relatorios').innerHTML = html;
 
-    // Gerar o Gráfico Chart.js
     if(window.Chart) {
         let ctx = document.getElementById('graficoVendas').getContext('2d');
         if(graficoVendasApp) graficoVendasApp.destroy();
@@ -636,7 +649,7 @@ window.salvarProdutoAdmin = async (e) => {
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
             for(let i=0; i<imgs.length; i++){
-                if(i > 3) break; // Máx 4 fotos
+                if(i > 3) break; 
                 const sRef = ref(storage, 'produtos/' + Date.now() + '_' + imgs[i].name); 
                 await uploadBytes(sRef, imgs[i]); 
                 urlsFotos.push(await getDownloadURL(sRef));
@@ -656,7 +669,7 @@ window.limparFormProduto = () => { document.getElementById('form-add-produto').r
 
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}]; todosProdutosAdmin.push(p); }); window.filtrarProdutosAdmin(); }
 
-// Filtro e Contador de Produtos (Ajuste 9)
+// Filtro e Botões Modernos (Ajuste 2)
 window.filtrarProdutosAdmin = () => { 
     const termo = removerAcentos(document.getElementById('busca-produto-admin').value); 
     const cat = document.getElementById('admin-filtro-cat').value;
@@ -674,7 +687,8 @@ window.filtrarProdutosAdmin = () => {
     res.forEach(p => { 
         let estoqueTotal = p.variacoes.reduce((s,v)=> s + parseInt(v.qtd||0), 0);
         let ft = p.imagens ? p.imagens[0] : p.imagem;
-        lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-icon" style="background:var(--secondary); color:white;">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-icon" style="background:#e74c3c; color:white;">🗑️</button></div></div>`; 
+        // Botões Modernos aplicados aqui
+        lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-action-adm btn-edit">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-action-adm btn-delete">🗑️</button></div></div>`; 
     }); 
 }
 
@@ -722,21 +736,27 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LÓGICA DO INSTALADOR DO APP (AJUSTE 5) ---
+// --- LÓGICA DO INSTALADOR DO APP FORÇADO (AJUSTE 3) ---
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); 
+    deferredPrompt = e;
+    if (!localStorage.getItem('maribella_app_banner_closed')) {
+        document.getElementById('install-app-banner').classList.remove('hidden');
+    }
+});
+
 setTimeout(() => {
-    const dispensado = localStorage.getItem('maribella_app_banner_closed');
-    if(!dispensado) document.getElementById('install-app-banner').classList.remove('hidden');
-}, 3000); 
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (!isStandalone && !localStorage.getItem('maribella_app_banner_closed')) {
+        document.getElementById('install-app-banner').classList.remove('hidden');
+    }
+}, 5000);
 
 window.fecharBannerInstalacao = () => {
     document.getElementById('install-app-banner').classList.add('hidden');
     localStorage.setItem('maribella_app_banner_closed', 'true');
 };
-
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-});
 
 document.getElementById('btn-instalar-app').addEventListener('click', async () => {
     if (deferredPrompt) {
@@ -762,6 +782,14 @@ carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarPro
 gerarAvaliacoes(); 
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
+
+// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (AJUSTE 1) ---
+const adminLogado = localStorage.getItem('maribella_admin_auth');
+if(adminLogado === 'true') {
+    document.getElementById('admin-dashboard').classList.remove('hidden');
+    const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
+    window.mudarAbaAdmin(ultimaAba);
+}
 
 // --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
 if ('serviceWorker' in navigator) {
