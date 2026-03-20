@@ -44,7 +44,7 @@
             <li onclick="window.filtrarCategoria('Todas')">🎀 Todas as Peças</li>
             <li onclick="window.filtrarCategoria('Vestido')">👗 Vestidos</li>
             <li onclick="window.filtrarCategoria('Blusa/Cropped/Body')">👚 Blusas / Cropped / Body</li>
-            <li onclick="window.filtrarCategoria('Short/Calça/Saia')">👖 Shorts / Calças / Saias</li>
+            <li onclick="window.filtrarCategoria('Short/Saia')">👖 Shorts e Saias</li>
             <li onclick="window.filtrarCategoria('Conjunto')">👯‍♀️ Conjuntos</li>
             <li onclick="window.filtrarCategoria('Macacão/Macaquito')">🩱 Macacões / Macaquitos</li>
             <li onclick="window.filtrarCategoria('Acessório')">🎀 Acessórios</li>
@@ -131,10 +131,12 @@
         </footer>
     </main>
 
-    <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto;">
-        <span class="close" onclick="window.fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed; z-index: 10000;">&times;</span>
-        <img id="lightbox-img" src="" onclick="window.toggleZoom()" alt="Zoom" style="max-height: 70vh; width: auto; max-width: 95vw; object-fit: contain; border-radius: 10px; transition: 0.3s ease;">
-        <div id="lightbox-controls" style="margin-top: 20px; text-align: center; display: none;">
+    <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: fixed;">
+        <span class="close" onclick="window.fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed; z-index: 10002;">&times;</span>
+        <button id="lightbox-prev" class="lightbox-nav hidden" onclick="window.navegarLightbox(-1)">&#10094;</button>
+        <img id="lightbox-img" src="" onclick="window.toggleZoom()" alt="Zoom" style="max-height: 70vh; width: auto; max-width: 95vw; object-fit: contain; border-radius: 10px; transition: 0.3s ease; position: relative; z-index: 10000;">
+        <button id="lightbox-next" class="lightbox-nav hidden" onclick="window.navegarLightbox(1)">&#10095;</button>
+        <div id="lightbox-controls" style="margin-top: 20px; text-align: center; display: none; z-index: 10001;">
             <button class="btn-whatsapp" onclick="window.abrirOpcoesLightbox()" style="padding: 15px 30px; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border-radius: 30px;">🛒 Adicionar ao Carrinho</button>
         </div>
     </div>
@@ -180,8 +182,17 @@
 
             <div id="admin-relatorios" class="admin-aba hidden">
                 <h3>📊 Relatórios e Ranking</h3>
-                <div id="conteudo-relatorios" style="margin-top: 15px;">
-                    <p style="color:#666;">Carregando dados...</p>
+                <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <select id="filtro-mes-rel" style="flex:1; min-width:120px; padding: 10px; border-radius: 10px; border:1px solid #ddd;">
+                        <option value="Todos">Todos os Meses</option> <option value="01">Janeiro</option> <option value="02">Fevereiro</option> <option value="03">Março</option> <option value="04">Abril</option> <option value="05">Maio</option> <option value="06">Junho</option> <option value="07">Julho</option> <option value="08">Agosto</option> <option value="09">Setembro</option> <option value="10">Outubro</option> <option value="11">Novembro</option> <option value="12">Dezembro</option>
+                    </select>
+                    <select id="filtro-ano-rel" style="flex:1; min-width:120px; padding: 10px; border-radius: 10px; border:1px solid #ddd;">
+                        <option value="Todos">Todos os Anos</option> <option value="2024">2024</option> <option value="2025">2025</option> <option value="2026">2026</option> <option value="2027">2027</option>
+                    </select>
+                    <button onclick="window.gerarRelatoriosAdmin()" class="btn-whatsapp" style="margin:0; padding:10px 15px; border-radius:10px;">🔍 Filtrar</button>
+                </div>
+                <div id="conteudo-relatorios">
+                    <p style="color:#666;">Selecione os filtros e clique em Filtrar.</p>
                 </div>
             </div>
 
@@ -206,7 +217,7 @@
                         <select id="add-categoria" required style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
                             <option value="Vestido">Vestido</option>
                             <option value="Blusa/Cropped/Body">Blusa / Cropped / Body</option>
-                            <option value="Short/Calça/Saia">Short / Calça / Saia</option>
+                            <option value="Short/Saia">Short / Saia</option>
                             <option value="Conjunto">Conjunto</option>
                             <option value="Macacão/Macaquito">Macacão / Macaquito</option>
                             <option value="Acessório">Acessório</option>
