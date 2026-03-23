@@ -96,11 +96,11 @@
             <div style="width: 40px;"></div> 
         </div>
         <div class="header-sub">
-            <button class="header-btn" onclick="window.toggleBusca()">🔍 Buscar</button>
-            <button class="header-btn" id="btn-header-pedidos" onclick="window.verificarLoginCliente()">👤 Perfil</button>
-        </div>
-        <div id="busca-container" class="hidden">
-            <input type="text" id="busca-input" placeholder="🔍 Digite modelo, cor ou tecido..." oninput="window.filtrarProdutos()" style="width:100%; padding:10px; border-radius:20px; border:none; outline:none; font-size:1rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="flex: 2; position: relative; display: flex; align-items: center;">
+                <span style="position: absolute; left: 12px; font-size: 0.9rem; color: #888;">🔍</span>
+                <input type="text" id="busca-input" placeholder="Buscar modelos..." oninput="window.filtrarProdutos()" style="width:100%; height:34px; padding:0 15px 0 32px; border-radius:20px; border:none; outline:none; font-size:0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            </div>
+            <button class="header-btn" id="btn-header-pedidos" onclick="window.verificarLoginCliente()" style="flex: 1; height: 34px;">👤 Perfil</button>
         </div>
     </header>
 
@@ -168,12 +168,13 @@
 
     <div id="admin-dashboard" class="hidden">
         <div class="admin-sidebar">
+            <h2 style="margin-right: 15px; color:var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 5px;">⚙️ Admin</h2>
             <button onclick="window.mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn ativa" id="tab-admin-pedidos">🛍️ Pedidos</button>
             <button onclick="window.mudarAbaAdmin('admin-produtos')" class="admin-tab-btn" id="tab-admin-produtos">📦 Produtos</button>
             <button onclick="window.mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
             <button onclick="window.mudarAbaAdmin('admin-relatorios')" class="admin-tab-btn" id="tab-admin-relatorios">📊 Relatórios</button>
             <button onclick="window.mudarAbaAdmin('admin-config')" class="admin-tab-btn" id="tab-admin-config">🔧 Ajustes</button>
-            <button onclick="window.sairDoAdmin()" class="btn-sair-adm">❌ Sair</button>
+            <button onclick="window.sairDoAdmin()" class="btn-sair-adm" style="margin-left:auto;">❌ Sair</button>
         </div>
         
         <div class="admin-content">
