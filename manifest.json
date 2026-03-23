@@ -2,7 +2,7 @@
   "name": "Maribella Kids",
   "short_name": "Maribella",
   "description": "Nossa coleção semanal de roupas infantis",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f9f9f9",
