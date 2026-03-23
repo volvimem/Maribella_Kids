@@ -21,11 +21,21 @@ let carouselIntervals = [];
 
 let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
-let graficoVendasApp = null; // Para o Gráfico Inteligente do Chart.js
+let graficoVendasApp = null; 
 
 window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d)/,"$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2"); i.value = v; };
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
+
+function esconderCarrinhoFlutuante() {
+    const c = document.getElementById('cart-btn-floating');
+    if(c) c.classList.add('oculto');
+}
+function mostrarCarrinhoFlutuante() {
+    const c = document.getElementById('cart-btn-floating');
+    const isAdm = !document.getElementById('admin-dashboard').classList.contains('hidden');
+    if(c && !isAdm) c.classList.remove('oculto');
+}
 
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
@@ -49,31 +59,6 @@ function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-// --- FUNÇÃO PARA O NOVO SELETOR DE QUANTIDADE +/- ---
-window.alterarQuantidade = (inputId, delta, max) => {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    
-    let currentVal = parseInt(input.value) || 0;
-    let newVal = currentVal + delta;
-    
-    // Lógica de limites
-    if (newVal < 1) newVal = 1;
-    if (newVal > max) {
-        newVal = max;
-        window.mostrarNotificacao(`Estoque máximo atingido (${max} unidades).`, 'erro');
-    }
-    
-    input.value = newVal;
-    
-    // Desabilitar botões nos limites (opcional, mas bom para UX)
-    // const btnMinus = document.getElementById(`btn_minus_${inputId}`);
-    // const btnPlus = document.getElementById(`btn_plus_${inputId}`);
-    // if(btnMinus) btnMinus.disabled = newVal <= 1;
-    // if(btnPlus) btnPlus.disabled = newVal >= max;
-};
-
-// --- VENDAS FAKES E PESSOAS ONLINE ---
 function dispararVendaFalsa() {
     const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia"];
     const cidadesFakes = ["Recife, PE", "Caruaru, PE", "Surubim, PE", "São Paulo, SP", "Belo Horizonte, MG"];
@@ -87,7 +72,6 @@ function atualizarPessoasOnline() {
     let el = document.getElementById('online-count'); if(!el) return;
     let agora = new Date(); let minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
     let minBase, maxBase;
-    // Horário de pico (17:46 até 22:29)
     if (minutosAtuais >= 1066 && minutosAtuais <= 1349) {
         minBase = 1367; maxBase = 4621;
     } else {
@@ -103,14 +87,13 @@ function atualizarPessoasOnline() {
 }
 setTimeout(atualizarPessoasOnline, 2000);
 
-// --- AVALIAÇÕES REALISTAS ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
     const totalReviews = 160;
     const nomesF = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline"];
     const nomesM = ["Carlos", "Marcos", "João", "Pedro", "Lucas", "Mateus", "Rafael", "Felipe", "Bruno", "Thiago", "Eduardo"];
     const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins"];
-    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; // Focado em PE
+    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"]; 
     const comentarios = ["Qualidade incrível, amei!", "Chegou super rápido, recomendo.", "Perfeito, tamanho certinho.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "As cores são vivas, idêntico à foto.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente.", "Tudo perfeito, recomendo!"];
 
     for(let i=0; i < totalReviews; i++) {
@@ -153,8 +136,6 @@ window.abrirModalAvaliacoes = () => {
 };
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
-
-// --- LUPA, MENU E LIGHTBOX C/ NAVEGAÇÃO ---
 window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
 
 let lightboxCurrentProdId = null;
@@ -207,8 +188,8 @@ window.filtrarCategoria = (cat) => {
     }); 
     renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); 
 };
+window.filtrarProdutos = () => { window.filtrarCategoria('Todas'); };
 
-// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -228,7 +209,6 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- VITRINE COM LOOP INFINITO E ICONES NOVOS ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -302,20 +282,14 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     let direcao = (indexFila % 2 === 0) ? 1 : -1;
     if(direcao === -1 && produtos.length > 2) setTimeout(() => carrossel.scrollLeft = carrossel.scrollWidth, 300);
 
-    // Lógica do Carrossel de Vitrine com Loop Infinito
     let autoScroll = setInterval(() => {
         if(!carrossel.querySelector('.card') || produtos.length <= 2) return;
-        
         let firstCard = carrossel.firstElementChild;
         let lastCard = carrossel.lastElementChild;
         let cardWidth = firstCard.clientWidth + 10;
-        
         if(direcao === 1) { 
             carrossel.scrollBy({left: cardWidth, behavior:'smooth'});
-            setTimeout(() => {
-                carrossel.appendChild(firstCard);
-                carrossel.scrollBy({left: -cardWidth, behavior:'instant'});
-            }, 400);
+            setTimeout(() => { carrossel.appendChild(firstCard); carrossel.scrollBy({left: -cardWidth, behavior:'instant'}); }, 400);
         } else { 
             carrossel.prepend(lastCard);
             carrossel.scrollBy({left: cardWidth, behavior:'instant'});
@@ -325,7 +299,6 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
-// Lógica de Deslizar Fotos (Slider) nos produtos que tem várias fotos
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
@@ -336,7 +309,19 @@ setInterval(() => {
     });
 }, 3000);
 
-// --- ESCOLHER MÚLTIPLAS QUANTIDADES E TAMANHOS ---
+// --- ESCOLHER MÚLTIPLAS QUANTIDADES COM BOTÕES + E - ---
+window.mudarQtdModal = (idx, delta, max) => {
+    let input = document.getElementById(`qtd_var_${idx}`);
+    if(!input) return;
+    let val = parseInt(input.value) + delta;
+    if(val < 0) val = 0;
+    if(val > max) {
+        window.mostrarNotificacao(`Estoque máximo: ${max}`, 'erro');
+        val = max;
+    }
+    input.value = val;
+};
+
 window.abrirEscolherTamanho = (id) => {
     produtoParaAdicionarTamanho = listaDeProdutos.find(p => p.id === id);
     if(!produtoParaAdicionarTamanho) return;
@@ -344,24 +329,25 @@ window.abrirEscolherTamanho = (id) => {
 
     document.getElementById('info-produto-tamanho').innerHTML = `<img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div><strong style="font-size:1rem;">${produtoParaAdicionarTamanho.nome}</strong><br><span style="color:var(--secondary); font-weight:bold;">R$ ${parseFloat(produtoParaAdicionarTamanho.preco).toFixed(2)}</span></div>`;
     
+    // Descobre o primeiro que tem estoque
+    let firstAvailableIdx = -1;
+    produtoParaAdicionarTamanho.variacoes.forEach((v, i) => { 
+        if (v.qtd > 0 && firstAvailableIdx === -1) firstAvailableIdx = i; 
+    });
+
     let htmlOpcoes = "";
     produtoParaAdicionarTamanho.variacoes.forEach((v, idx) => {
         let esgotado = v.qtd <= 0;
         let corSpan = esgotado ? 'color:#ccc; text-decoration:line-through;' : 'color:#333;';
-        let inputId = `qtd_var_${idx}`;
+        let isDefault = (idx === firstAvailableIdx);
         
-        // Nova implementação com botões +/-
-        let seletorHtml = esgotado ? '<span style="color:red; font-weight:bold; font-size:0.9rem;">ESGOTADO</span>' : `
-            <div class="seletor-qtd">
-                <button type="button" onclick="window.alterarQuantidade('${inputId}', -1, ${v.qtd})" id="btn_minus_${inputId}">-</button>
-                <input type="text" id="${inputId}" value="1" readonly style="font-size:1.1rem; color:var(--primary);">
-                <button type="button" onclick="window.alterarQuantidade('${inputId}', 1, ${v.qtd})" id="btn_plus_${inputId}">+</button>
+        htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; margin-bottom:5px; ${corSpan}">
+            <div><strong>${v.nome}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' em estoque'}</span></div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button onclick="window.mudarQtdModal(${idx}, -1, ${v.qtd})" style="border:none; background:#eee; width:30px; height:30px; border-radius:5px; font-weight:bold; cursor:pointer; color:#333;" ${esgotado ? 'disabled' : ''}>-</button>
+                <input type="number" id="qtd_var_${idx}" min="0" max="${v.qtd}" value="${esgotado ? 0 : (isDefault ? 1 : 0)}" readonly style="width:40px; padding:5px; border:1px solid #eee; border-radius:5px; font-weight:bold; text-align:center; background:#fff; color:#333;">
+                <button onclick="window.mudarQtdModal(${idx}, 1, ${v.qtd})" style="border:none; background:#eee; width:30px; height:30px; border-radius:5px; font-weight:bold; cursor:pointer; color:#333;" ${esgotado ? 'disabled' : ''}>+</button>
             </div>
-        `;
-
-        htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:1px solid #eee; ${corSpan}">
-            <div style="flex:1;"><strong>${v.nome}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Nenhuma unidade em estoque' : v.qtd + ' em estoque'}</span></div>
-            <div>${seletorHtml}</div>
         </div>`;
     });
     
@@ -375,14 +361,12 @@ window.confirmarAdicaoCarrinho = () => {
     let adicionouAlgo = false;
     produtoParaAdicionarTamanho.variacoes.forEach((v, idx) => {
         let inputQtd = document.getElementById(`qtd_var_${idx}`);
-        // Verifica se o input existe e se o valor é maior que 0 (itens esgotados não têm input)
         if(inputQtd && parseInt(inputQtd.value) > 0) {
             let qtdPedida = parseInt(inputQtd.value);
             let cartId = produtoParaAdicionarTamanho.id + "_" + idx;
             let itemEx = carrinho.find(p => p.cartId === cartId);
             
             if(itemEx) {
-                // Se já tem no carrinho, verifica se a nova soma respeita o estoque
                 if(itemEx.qtd + qtdPedida > v.qtd) return window.mostrarNotificacao(`Estoque max atingido em ${v.nome}!`, 'erro');
                 itemEx.qtd += qtdPedida;
             } else {
@@ -393,7 +377,7 @@ window.confirmarAdicaoCarrinho = () => {
         }
     });
     
-    if(!adicionouAlgo) return window.mostrarNotificacao("Informe a quantidade em pelo menos um tamanho!", "erro");
+    if(!adicionouAlgo) return window.mostrarNotificacao("Adicione pelo menos 1 unidade usando o botão +", "erro");
     
     salvarCarrinhoNoLocal(); 
     window.fecharModalTamanho();
@@ -477,8 +461,9 @@ window.finalizarCheckout = async (e) => {
 function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; } }
 window.loginRapidoCheckout = async () => { const cpf = document.getElementById('checkout-cpf-rapido').value.replace(/\D/g,''); const senha = document.getElementById('checkout-senha-rapida').value; if(cpf.length !== 11 || !senha) return window.mostrarNotificacao("Preencha CPF e Senha.", "erro"); const d = await getDoc(doc(db, "clientes", cpf)); if (d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); prepararCheckoutLogado(); window.mostrarNotificacao("Preenchido!", "sucesso"); } else { window.mostrarNotificacao("Incorretos.", "erro"); } };
 
-// --- LOGIN DO CLIENTE E PERFIL (COM CORREÇÃO DO BOTÃO DE ABRIR) ---
+// --- LOGIN DO CLIENTE E PERFIL ---
 window.verificarLoginCliente = () => { 
+    esconderCarrinhoFlutuante();
     if (clienteLogadoDados) {
         abrirPainelCliente(clienteLogadoDados);
     } else {
@@ -487,10 +472,11 @@ window.verificarLoginCliente = () => {
         else document.getElementById('cliente-login-modal').classList.remove('hidden'); 
     }
 }
-window.fecharLoginCliente = () => document.getElementById('cliente-login-modal').classList.add('hidden');
+window.fecharLoginCliente = () => { document.getElementById('cliente-login-modal').classList.add('hidden'); mostrarCarrinhoFlutuante(); };
 window.fecharPerfil = () => { 
     document.getElementById('perfil-cliente-modal').classList.add('hidden'); 
     localStorage.removeItem('maribella_tela_perfil_aberta');
+    mostrarCarrinhoFlutuante();
 };
 async function autoLogin(cpf, senha, forcarAbertura = false) { 
     const d = await getDoc(doc(db, "clientes", cpf)); 
@@ -502,12 +488,13 @@ async function autoLogin(cpf, senha, forcarAbertura = false) {
     } 
 }
 function atualizarHeaderLogado() { document.getElementById('btn-header-pedidos').innerText = clienteLogadoDados ? `👤 ${clienteLogadoDados.nome.split(' ')[0]}` : `👤 Perfil`; }
-window.realizarLoginCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('login-cpf-cliente').value.replace(/\D/g,''); const senha = document.getElementById('login-senha-cliente').value; const manter = document.getElementById('lembrar-senha').checked; window.mostrarNotificacao("Verificando...", "info"); const d = await getDoc(doc(db, "clientes", cpf)); if(d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); if(manter) localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); window.fecharLoginCliente(); abrirPainelCliente(d.data()); e.target.reset(); } else window.mostrarNotificacao("CPF/Senha incorretos.", "erro"); };
-window.abrirRecuperacaoSenha = () => { window.fecharLoginCliente(); document.getElementById('recuperacao-modal').classList.remove('hidden'); };
-window.fecharRecuperacao = () => document.getElementById('recuperacao-modal').classList.add('hidden');
-window.recuperarSenhaCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); const tel = document.getElementById('rec-tel').value; const novaSenha = document.getElementById('rec-senha').value; const docRef = doc(db, "clientes", cpf); const d = await getDoc(docRef); if(d.exists() && d.data().telefone === tel) { await updateDoc(docRef, {senha: novaSenha}); window.mostrarNotificacao("Senha alterada!", "sucesso"); window.fecharRecuperacao(); document.getElementById('cliente-login-modal').classList.remove('hidden'); e.target.reset(); } else { window.mostrarNotificacao("Dados não conferem.", "erro"); } };
+window.realizarLoginCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('login-cpf-cliente').value.replace(/\D/g,''); const senha = document.getElementById('login-senha-cliente').value; const manter = document.getElementById('lembrar-senha').checked; window.mostrarNotificacao("Verificando...", "info"); const d = await getDoc(doc(db, "clientes", cpf)); if(d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); if(manter) localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); document.getElementById('cliente-login-modal').classList.add('hidden'); abrirPainelCliente(d.data()); e.target.reset(); } else window.mostrarNotificacao("CPF/Senha incorretos.", "erro"); };
+window.abrirRecuperacaoSenha = () => { window.fecharLoginCliente(); document.getElementById('recuperacao-modal').classList.remove('hidden'); esconderCarrinhoFlutuante(); };
+window.fecharRecuperacao = () => { document.getElementById('recuperacao-modal').classList.add('hidden'); mostrarCarrinhoFlutuante(); };
+window.recuperarSenhaCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); const tel = document.getElementById('rec-tel').value; const novaSenha = document.getElementById('rec-senha').value; const docRef = doc(db, "clientes", cpf); const d = await getDoc(docRef); if(d.exists() && d.data().telefone === tel) { await updateDoc(docRef, {senha: novaSenha}); window.mostrarNotificacao("Senha alterada!", "sucesso"); document.getElementById('recuperacao-modal').classList.add('hidden'); document.getElementById('cliente-login-modal').classList.remove('hidden'); e.target.reset(); } else { window.mostrarNotificacao("Dados não conferem.", "erro"); } };
 window.mudarAbaCliente = (idAba) => { document.getElementById('aba-historico').classList.add('hidden'); document.getElementById('aba-dados').classList.add('hidden'); document.getElementById('btn-aba-historico').classList.remove('ativa'); document.getElementById('btn-aba-historico').style.color='#aaa'; document.getElementById('btn-aba-dados').classList.remove('ativa'); document.getElementById('btn-aba-dados').style.color='#aaa'; document.getElementById(idAba).classList.remove('hidden'); document.getElementById('btn-'+idAba).classList.add('ativa'); document.getElementById('btn-'+idAba).style.color='var(--primary)'; }
 async function abrirPainelCliente(dados) { 
+    esconderCarrinhoFlutuante();
     localStorage.setItem('maribella_tela_perfil_aberta', 'true'); 
     document.getElementById('perfil-cliente-modal').classList.remove('hidden'); document.getElementById('titulo-painel-cliente').innerText = `👤 Oi, ${dados.nome.split(' ')[0]}`; document.getElementById('perfil-cpf').value = dados.cpf; document.getElementById('perfil-nome').value = dados.nome; document.getElementById('perfil-telefone').value = dados.telefone; document.getElementById('perfil-cep').value = dados.cep; document.getElementById('perfil-estado').value = dados.estado; document.getElementById('perfil-rua').value = dados.rua; document.getElementById('perfil-numero').value = dados.numero; document.getElementById('perfil-bairro').value = dados.bairro; document.getElementById('perfil-cidade').value = dados.cidade || ''; window.carregarMeusPedidosPainel(dados.cpf); 
 }
@@ -521,17 +508,18 @@ window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.lengt
 window.atualizarPerfilCliente = async (e) => { e.preventDefault(); const sim = await window.confirmarAcao("Salvar Dados", "Deseja atualizar seu endereço?"); if(!sim) return; const cpf = document.getElementById('perfil-cpf').value; try { await updateDoc(doc(db, "clientes", cpf), { nome: document.getElementById('perfil-nome').value, telefone: document.getElementById('perfil-telefone').value, cep: document.getElementById('perfil-cep').value, rua: document.getElementById('perfil-rua').value, numero: document.getElementById('perfil-numero').value, bairro: document.getElementById('perfil-bairro').value, cidade: document.getElementById('perfil-cidade').value, estado: document.getElementById('perfil-estado').value }); clienteLogadoDados.nome = document.getElementById('perfil-nome').value; atualizarHeaderLogado(); window.mostrarNotificacao("Atualizado!", "sucesso"); } catch (e) { } };
 window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoCpf = null; clienteLogadoDados = null; atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
 
-// --- ADMINISTRAÇÃO E CONTROLE (Persistência no Recarregamento) ---
-window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); }
-window.fecharLoginAdmin = () => document.getElementById('admin-login-modal').classList.add('hidden');
+// --- ADMINISTRAÇÃO E CONTROLE ---
+window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); esconderCarrinhoFlutuante(); }
+window.fecharLoginAdmin = () => { document.getElementById('admin-login-modal').classList.add('hidden'); mostrarCarrinhoFlutuante(); }
 window.realizarLoginAdmin = async (e) => { 
     e.preventDefault(); 
     try { 
         await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); 
         localStorage.setItem('maribella_admin_auth', 'true');
         window.mostrarNotificacao("Liberado!", "sucesso"); 
-        window.fecharLoginAdmin(); 
+        document.getElementById('admin-login-modal').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden'); 
+        esconderCarrinhoFlutuante();
         carregarListaAdminPedidos(); 
         e.target.reset(); 
     } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } 
@@ -542,6 +530,7 @@ window.sairDoAdmin = async () => {
     localStorage.removeItem('maribella_admin_tab');
     document.getElementById('admin-dashboard').classList.add('hidden'); 
     window.carregarProdutosDoBanco(); 
+    mostrarCarrinhoFlutuante();
 };
 
 window.mudarAbaAdmin = (abaId) => { 
@@ -660,7 +649,6 @@ window.gerarRelatoriosAdmin = () => {
     }
 };
 
-// --- LÓGICA DE VARIAÇÕES E FOTOS NO ADMIN ---
 window.adicionarVariacaoAdmin = (tamanho='P', cor='', qtd=0) => { variacoesAdminTemp.push({tamanho, cor, qtd}); renderizarVariacoesAdmin(); };
 window.atualizarVariacaoAdmin = (idx, campo, valor) => { variacoesAdminTemp[idx][campo] = valor; renderizarVariacoesAdmin(); };
 window.removerVariacaoAdmin = (idx) => { variacoesAdminTemp.splice(idx, 1); renderizarVariacoesAdmin(); };
@@ -693,7 +681,7 @@ window.salvarProdutoAdmin = async (e) => {
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
             for(let i=0; i<imgs.length; i++){
-                if(i > 3) break; // Máx 4 fotos
+                if(i > 3) break; 
                 const sRef = ref(storage, 'produtos/' + Date.now() + '_' + imgs[i].name); 
                 await uploadBytes(sRef, imgs[i]); 
                 urlsFotos.push(await getDownloadURL(sRef));
@@ -713,11 +701,17 @@ window.limparFormProduto = () => { document.getElementById('form-add-produto').r
 
 async function carregarListaAdminProdutosEditar() { const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "produtos")); todosProdutosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; if(!p.variacoes) p.variacoes = [{nome: p.tamanho || 'Único', qtd: p.estoque || 0}]; todosProdutosAdmin.push(p); }); window.filtrarProdutosAdmin(); }
 
-// Filtro e Botões Modernos do Catálogo
 window.filtrarProdutosAdmin = () => { 
-    const termo = removerAcentos(document.getElementById('busca-produto-admin').value); 
-    const cat = document.getElementById('admin-filtro-cat').value;
-    const lista = document.getElementById('lista-admin-produtos-cadastrados'); lista.innerHTML = ""; 
+    const inputBusca = document.getElementById('busca-produto-admin');
+    const inputFiltro = document.getElementById('admin-filtro-cat');
+    const counterTotal = document.getElementById('admin-total-prods-count');
+    const lista = document.getElementById('lista-admin-produtos-cadastrados'); 
+    
+    if (!lista) return; 
+    lista.innerHTML = ""; 
+    
+    const termo = inputBusca ? removerAcentos(inputBusca.value) : ""; 
+    const cat = inputFiltro ? inputFiltro.value : 'Todos';
     
     let res = todosProdutosAdmin.filter(p => {
         let matchCat = cat === 'Todos' || p.categoria === cat || (p.categoria === 'Short/Calça/Saia' && cat === 'Short/Saia');
@@ -725,12 +719,12 @@ window.filtrarProdutosAdmin = () => {
         return matchCat && matchTermo;
     }); 
     
-    document.getElementById('admin-total-prods-count').innerText = res.length;
+    if(counterTotal) counterTotal.innerText = res.length;
     
     if(res.length === 0) { lista.innerHTML = "<p>Nenhum produto encontrado nesta categoria.</p>"; return; } 
     res.forEach(p => { 
         let estoqueTotal = p.variacoes.reduce((s,v)=> s + parseInt(v.qtd||0), 0);
-        let ft = p.imagens ? p.imagens[0] : p.imagem;
+        let ft = p.imagens && p.imagens.length > 0 ? p.imagens[0] : (p.imagem || '');
         lista.innerHTML += `<div class="admin-card" style="display:flex; align-items:center; gap:15px; padding:10px;"><img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div style="flex:1;"><strong>${p.nome}</strong><br>Total Estq: ${estoqueTotal} | R$ ${parseFloat(p.preco).toFixed(2)}</div><div style="display:flex; gap:5px;"><button onclick="window.editarProdutoAdmin('${p.id}')" class="btn-action-adm btn-edit">✏️</button> <button onclick="window.excluirProdutoAdmin('${p.id}')" class="btn-action-adm btn-delete">🗑️</button></div></div>`; 
     }); 
 }
@@ -779,7 +773,7 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LÓGICA DO INSTALADOR DO APP FORÇADO E ROBUSTO ---
+// --- LÓGICA DO INSTALADOR DO APP FORÇADO ---
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
@@ -818,7 +812,6 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
     }
 });
 
-// Inicialização de Dados Básicos
 const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.cpf, logado.senha);
 carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarProdutosDoBanco();
 
@@ -826,15 +819,14 @@ gerarAvaliacoes();
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
 
-// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (Persistência) ---
 const adminLogado = localStorage.getItem('maribella_admin_auth');
 if(adminLogado === 'true') {
     document.getElementById('admin-dashboard').classList.remove('hidden');
+    esconderCarrinhoFlutuante();
     const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
     window.mudarAbaAdmin(ultimaAba);
 }
 
-// --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
