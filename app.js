@@ -59,6 +59,7 @@ function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
+// --- VENDAS FAKES E PESSOAS ONLINE ---
 function dispararVendaFalsa() {
     const nomesFakes = ["Ana", "Maria", "Juliana", "Camila", "Fernanda", "Beatriz", "Amanda", "Letícia"];
     const cidadesFakes = ["Recife, PE", "Caruaru, PE", "Surubim, PE", "São Paulo, SP", "Belo Horizonte, MG"];
@@ -87,6 +88,7 @@ function atualizarPessoasOnline() {
 }
 setTimeout(atualizarPessoasOnline, 2000);
 
+// --- AVALIAÇÕES REALISTAS ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
     const totalReviews = 160;
@@ -384,10 +386,16 @@ window.confirmarAdicaoCarrinho = () => {
 };
 
 
+// --- CARRINHO BÁSICO E CHECKOUT ---
 window.alterarQtdCarrinho = (index, delta) => { let novoQtd = (carrinho[index].qtd || 1) + delta; if(novoQtd > carrinho[index].estoqueDisponivel) return window.mostrarNotificacao("Estoque máximo atingido para este tamanho!", 'erro'); carrinho[index].qtd = novoQtd; if(carrinho[index].qtd <= 0) carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 window.removerDoCarrinho = async (index) => { const sim = await window.confirmarAcao("Remover item", "Tirar do carrinho?"); if(sim) { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); } };
 function salvarCarrinhoNoLocal() { localStorage.setItem('maribella_carrinho', JSON.stringify(carrinho)); atualizarCarrinho(); }
-window.toggleCart = () => { document.getElementById('cart-modal').classList.toggle('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); document.getElementById('etapa-cadastro').classList.add('hidden'); };
+
+window.toggleCart = () => { 
+    document.getElementById('cart-modal').classList.toggle('hidden'); 
+    document.getElementById('etapa-carrinho').classList.remove('hidden'); 
+    document.getElementById('etapa-cadastro').classList.add('hidden'); 
+};
 window.irParaCadastro = () => { if(carrinho.length===0) return window.mostrarNotificacao("Carrinho vazio!",'erro'); document.getElementById('etapa-carrinho').classList.add('hidden'); document.getElementById('etapa-cadastro').classList.remove('hidden'); prepararCheckoutLogado(); };
 window.voltarParaCarrinho = () => { document.getElementById('etapa-cadastro').classList.add('hidden'); document.getElementById('etapa-carrinho').classList.remove('hidden'); };
 
@@ -771,45 +779,51 @@ window.gerarDadosDeExemplo = async () => {
     window.mostrarNotificacao("Pronto! Recarregando...", "sucesso"); setTimeout(()=>window.location.reload(), 2000);
 };
 
-// --- LÓGICA DO INSTALADOR DO APP FORÇADO ---
+// --- LÓGICA DO INSTALADOR DO APP FORÇADO E PERSISTENTE ---
 let deferredPrompt;
+
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
     deferredPrompt = e;
-    if (!localStorage.getItem('maribella_app_fechado_novo')) {
+    if (!isStandalone) {
         document.getElementById('install-app-banner').classList.remove('hidden');
     }
 });
 
-// Fallback robusto
 setTimeout(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (!isStandalone && !localStorage.getItem('maribella_app_fechado_novo')) {
+    if (!isStandalone && !document.getElementById('install-app-banner').classList.contains('hidden') === false) {
         document.getElementById('install-app-banner').classList.remove('hidden');
     }
-}, 2000);
+}, 3000);
 
 window.fecharBannerInstalacao = () => {
     document.getElementById('install-app-banner').classList.add('hidden');
-    localStorage.setItem('maribella_app_fechado_novo', 'true');
 };
 
 document.getElementById('btn-instalar-app').addEventListener('click', async () => {
     if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') window.fecharBannerInstalacao();
+        if (outcome === 'accepted') {
+            window.fecharBannerInstalacao();
+        }
         deferredPrompt = null;
     } else {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS) {
-            window.confirmarAcao("Instalar no iPhone 🍏", "1. Toque no ícone de [Compartilhar] (o quadrado com a seta pra cima) no menu inferior.\n\n2. Role um pouco para baixo e toque em 'Adicionar à Tela de Início'.\n\nPronto! Vai virar um App na sua tela! 🎀");
+            window.confirmarAcao("Instalar no iPhone 🍏", "1. Toque no ícone de [Compartilhar] (o quadrado com a seta pra cima) no menu inferior.\n\n2. Role para baixo e toque em 'Adicionar à Tela de Início'.\n\nPronto! Vai virar um App! 🎀");
         } else {
-            window.confirmarAcao("Instalar o App 📱", "1. Clique nos 3 pontinhos (⋮) no menu do navegador.\n\n2. Clique em 'Adicionar à Tela Inicial' ou 'Instalar Aplicativo'.\n\nPronto! O App estará na sua tela inicial! 🎀");
+            window.confirmarAcao("Instalar o App 📱", "Para instalar:\n\n1. Clique nos 3 pontinhos (⋮) no navegador.\n2. Clique em 'Instalar Aplicativo' ou 'Adicionar à Tela Inicial'.\n\n🎀");
         }
         window.fecharBannerInstalacao();
     }
+});
+
+window.addEventListener('appinstalled', () => {
+    window.fecharBannerInstalacao();
+    window.mostrarNotificacao("App instalado com sucesso! 🎀", "sucesso");
 });
 
 const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.cpf, logado.senha);
