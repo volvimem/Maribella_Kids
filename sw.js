@@ -1,11 +1,10 @@
-const CACHE_NAME = "maribella-kids-v6";
+const CACHE_NAME = "maribella-kids-v7";
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
     "./style.css",
     "./app.js",
-    "./manifest.json",
-    "./logo.png"
+    "./manifest.json"
 ];
 
 // Ouve o evento de instalação e faz o cache dos arquivos vitais
