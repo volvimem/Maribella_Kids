@@ -1,10 +1,11 @@
-const CACHE_NAME = "maribella-kids-v8";
+const CACHE_NAME = "maribella-kids-v9";
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
     "./style.css",
     "./app.js",
-    "./manifest.json"
+    "./manifest.json",
+    "./logo.png" // Obrigatório estar no cache para o Chrome aprovar a instalação!
 ];
 
 self.addEventListener('install', (e) => {
@@ -26,8 +27,14 @@ self.addEventListener('activate', (e) => {
     );
 });
 
+// REDE DE SEGURANÇA OFFLINE (Isso força o Chrome a aceitar como App!)
 self.addEventListener('fetch', (e) => {
     e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
+        fetch(e.request).catch(() => {
+            return caches.match(e.request).then((response) => {
+                // Se não achar o arquivo específico, joga a página inicial
+                return response || caches.match("./index.html");
+            });
+        })
     );
 });
