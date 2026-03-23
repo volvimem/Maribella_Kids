@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Maribella Kids | Coleção Semanal</title>
-    
     <meta name="theme-color" content="#ffb6c1">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -94,10 +91,10 @@
 
     <header id="main-header">
         <div class="header-top">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn-icon-menu" onclick="window.abrirMenuLateral()">☰</button>
-                <div class="logo"><span style="font-size: 1.4rem;">Maribella Kids</span></div>
-            </div>
+            <button class="btn-icon-menu" onclick="window.abrirMenuLateral()">☰</button>
+            
+            <div class="logo"><span>Maribella Kids</span></div>
+            
             <div class="menu-botoes">
                 <button class="btn-icon header-btn" onclick="window.toggleBusca()">🔍</button>
                 <button class="btn-icon header-btn" id="btn-header-pedidos" onclick="window.verificarLoginCliente()">👤 Perfil</button>
@@ -169,13 +166,12 @@
 
     <div id="admin-dashboard" class="hidden">
         <div class="admin-sidebar">
-            <h2 style="margin-right: 15px; color:var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 5px;">⚙️ Admin</h2>
             <button onclick="window.mudarAbaAdmin('admin-pedidos')" class="admin-tab-btn ativa" id="tab-admin-pedidos">🛍️ Pedidos</button>
             <button onclick="window.mudarAbaAdmin('admin-produtos')" class="admin-tab-btn" id="tab-admin-produtos">📦 Produtos</button>
             <button onclick="window.mudarAbaAdmin('admin-clientes')" class="admin-tab-btn" id="tab-admin-clientes">👥 Clientes</button>
             <button onclick="window.mudarAbaAdmin('admin-relatorios')" class="admin-tab-btn" id="tab-admin-relatorios">📊 Relatórios</button>
             <button onclick="window.mudarAbaAdmin('admin-config')" class="admin-tab-btn" id="tab-admin-config">🔧 Ajustes</button>
-            <button onclick="window.sairDoAdmin()" class="btn-sair-adm" style="margin-left:auto;">❌ Sair</button>
+            <button onclick="window.sairDoAdmin()" class="btn-sair-adm">❌ Sair</button>
         </div>
         
         <div class="admin-content">
