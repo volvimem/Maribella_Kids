@@ -329,7 +329,6 @@ window.abrirEscolherTamanho = (id) => {
 
     document.getElementById('info-produto-tamanho').innerHTML = `<img src="${ft}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;"><div><strong style="font-size:1rem;">${produtoParaAdicionarTamanho.nome}</strong><br><span style="color:var(--secondary); font-weight:bold;">R$ ${parseFloat(produtoParaAdicionarTamanho.preco).toFixed(2)}</span></div>`;
     
-    // Descobre o primeiro que tem estoque
     let firstAvailableIdx = -1;
     produtoParaAdicionarTamanho.variacoes.forEach((v, i) => { 
         if (v.qtd > 0 && firstAvailableIdx === -1) firstAvailableIdx = i; 
@@ -385,7 +384,6 @@ window.confirmarAdicaoCarrinho = () => {
 };
 
 
-// --- CARRINHO BÁSICO E CHECKOUT ---
 window.alterarQtdCarrinho = (index, delta) => { let novoQtd = (carrinho[index].qtd || 1) + delta; if(novoQtd > carrinho[index].estoqueDisponivel) return window.mostrarNotificacao("Estoque máximo atingido para este tamanho!", 'erro'); carrinho[index].qtd = novoQtd; if(carrinho[index].qtd <= 0) carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 window.removerDoCarrinho = async (index) => { const sim = await window.confirmarAcao("Remover item", "Tirar do carrinho?"); if(sim) { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); } };
 function salvarCarrinhoNoLocal() { localStorage.setItem('maribella_carrinho', JSON.stringify(carrinho)); atualizarCarrinho(); }
@@ -775,24 +773,26 @@ window.gerarDadosDeExemplo = async () => {
 
 // --- LÓGICA DO INSTALADOR DO APP FORÇADO ---
 let deferredPrompt;
+
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
     deferredPrompt = e;
-    if (!localStorage.getItem('maribella_app_banner_closed')) {
+    if (!localStorage.getItem('maribella_app_fechado_novo')) {
         document.getElementById('install-app-banner').classList.remove('hidden');
     }
 });
 
+// Fallback robusto
 setTimeout(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (!isStandalone && !localStorage.getItem('maribella_app_banner_closed')) {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (!isStandalone && !localStorage.getItem('maribella_app_fechado_novo')) {
         document.getElementById('install-app-banner').classList.remove('hidden');
     }
-}, 5000);
+}, 2000);
 
 window.fecharBannerInstalacao = () => {
     document.getElementById('install-app-banner').classList.add('hidden');
-    localStorage.setItem('maribella_app_banner_closed', 'true');
+    localStorage.setItem('maribella_app_fechado_novo', 'true');
 };
 
 document.getElementById('btn-instalar-app').addEventListener('click', async () => {
@@ -806,7 +806,7 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
         if (isIOS) {
             window.confirmarAcao("Instalar no iPhone 🍏", "1. Toque no ícone de [Compartilhar] (o quadrado com a seta pra cima) no menu inferior.\n\n2. Role um pouco para baixo e toque em 'Adicionar à Tela de Início'.\n\nPronto! Vai virar um App na sua tela! 🎀");
         } else {
-            window.confirmarAcao("Instalar o App 📱", "1. Clique nos 3 pontinhos (⋮) no canto superior direito do seu navegador.\n\n2. Clique em 'Adicionar à Tela Inicial' ou 'Instalar Aplicativo'.\n\nPronto! O App estará na sua tela inicial! 🎀");
+            window.confirmarAcao("Instalar o App 📱", "1. Clique nos 3 pontinhos (⋮) no menu do navegador.\n\n2. Clique em 'Adicionar à Tela Inicial' ou 'Instalar Aplicativo'.\n\nPronto! O App estará na sua tela inicial! 🎀");
         }
         window.fecharBannerInstalacao();
     }
