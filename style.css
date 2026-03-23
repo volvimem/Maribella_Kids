@@ -2,49 +2,27 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text); overflow-x: hidden; }
 
-/* CABEÇALHO FININHO COM LOGO CENTRALIZADA ABSOLUTA */
-header { background-color: var(--primary); padding: 5px 15px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
-.header-top { display: flex; justify-content: space-between; align-items: center; position: relative; width: 100%; padding-bottom: 5px; }
+header { background-color: var(--primary); padding: 10px 15px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.logo { display: flex; align-items: center; color: white; }
+.logo span { font-size: 1.15rem; font-family: 'Georgia', serif; font-style: italic; font-weight: 500; letter-spacing: 0.5px; }
 
-.logo { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; color: white; pointer-events: none; z-index: 0; }
-.logo span { font-size: 1.4rem; font-family: 'Georgia', serif; font-style: italic; font-weight: bold; letter-spacing: 0.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+/* Botões do Cabeçalho e Menu Modernizados */
+.menu-botoes { display: flex; gap: 8px; align-items: center; }
+.btn-icon { background: #fff; border: 1px solid #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: var(--primary); cursor: pointer; font-weight: bold; }
+.header-btn { height: 35px; padding: 0 12px; font-size: 0.9rem; white-space: nowrap; }
 
-.btn-icon-menu { z-index: 1; background: #ffffff; border: none; height: 35px; width: 40px; border-radius: 10px; cursor: pointer; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-/* SEGUNDO CABEÇALHO: Busca Fixa e Perfil */
-.header-sub { display: flex; gap: 10px; width: 100%; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.4); justify-content: space-between; }
-.header-btn { background: #ffffff; border: none; height: 34px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap; }
-
-/* Ajuste do Margin-Top por causa dos 2 cabeçalhos */
-.stories-wrapper { margin-top: 105px; background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
+.stories-wrapper { background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; position: relative; }
 .stories-track { display: inline-flex; gap: 15px; padding: 0 15px; animation: scrollStories 45s linear infinite; }
 .story-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid var(--primary); padding: 2px; object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
 @keyframes scrollStories { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-/* CARRINHO FLUTUANTE MENOR E DINÂMICO */
-.floating-cart {
-    position: fixed; bottom: 25px; right: 20px;
-    background: linear-gradient(135deg, var(--primary) 0%, #ff6b81 100%);
-    color: white; border: 2px solid white; border-radius: 30px;
-    padding: 8px 18px; font-size: 1rem; font-weight: bold;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 4px 15px rgba(255, 107, 129, 0.4);
-    cursor: pointer; z-index: 99990; 
-    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.2s;
-}
-.floating-cart:active { transform: scale(0.95); }
-.floating-cart.oculto { transform: scale(0) !important; opacity: 0 !important; pointer-events: none; }
-.floating-cart span {
-    background: white; color: #ff6b81; border-radius: 50px;
-    padding: 2px 8px; font-size: 0.85rem;
-}
 
 .info-banner { background: var(--secondary); color: white; padding: 10px 15px; font-weight: bold; font-size: 0.9rem; text-align: center; line-height: 1.5; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .online-counter { margin: 15px 15px 0 15px; background: #eef2f5; padding: 10px; border-radius: 12px; text-align: center; font-weight: bold; color: #444; font-size: 0.95rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .ponto-verde { color: #2ecc71; animation: pulse 1.5s infinite; display: inline-block; }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-.site-footer { text-align: center; padding: 30px 20px; background: white; margin-top: 30px; border-top: 1px solid #eee; padding-bottom: 90px; }
+.site-footer { text-align: center; padding: 30px 20px; background: white; margin-top: 30px; border-top: 1px solid #eee; }
 .btn-instagram { display: inline-block; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; margin: 10px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
 .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 99999; box-shadow: 2px 0 10px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; padding: 20px; display: flex; flex-direction: column;}
@@ -94,18 +72,25 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 
 #admin-dashboard { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f4f4f9; z-index: 3000; display: flex; flex-direction: column; }
 .admin-sidebar { background: white; padding: 10px 15px; display: flex; flex-direction: row; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; white-space: nowrap; align-items: center; }
-.admin-sidebar h2 { font-size: 1.2rem; color: var(--primary); margin: 0; flex-shrink: 0; display: flex; align-items: center; gap: 5px;}
+
+/* Botão Sair do Perfil do Cliente - Outline Mais Sutil */
+.btn-sair { background: none; border: 2px solid #ff4d4d; color: #ff4d4d; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;}
+.btn-sair:hover { background: #ff4d4d; color: white; }
+
 .admin-content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 120px; }
 .admin-tab-btn { background: none; border: none; text-align: center; padding: 10px 15px; font-size: 0.95rem; cursor: pointer; border-radius: 8px; color: #555; flex: 0 0 auto; }
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-.btn-action-adm { width: 35px; height: 35px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+/* Novos Botões de Ação do Admin */
+.btn-action-adm { width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: 0.2s; }
 .btn-edit { background: #e3f2fd; color: #1976d2; }
 .btn-delete { background: #ffebee; color: #d32f2f; }
-.btn-sair-adm { background: #ff4d4d; color: white !important; border-radius: 8px; padding: 8px 15px; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; border: none; display: flex; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0; margin-left: auto; box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3);}
+/* Botão Sair do Admin - Outline Vermelho e Ícone */
+.btn-sair-adm { background: none; border: 2px solid #ff4d4d; color: #ff4d4d; border-radius: 8px; padding: 8px 15px; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s; }
+.btn-sair-adm:hover { background: #ff4d4d; color: white; }
 
-.app-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 100000; padding: 15px; display: flex; align-items: center; gap: 15px; border: 2px solid var(--primary); transition: transform 0.4s ease, opacity 0.4s; opacity: 1; }
+.app-banner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 100000; padding: 15px; display: flex; align-items: center; gap: 15px; border: 2px solid var(--primary); transition: transform 0.4s ease, opacity 0.4s; opacity: 1; }
 .app-banner.hidden { transform: translate(-50%, 150px); opacity: 0; pointer-events: none; }
 .app-banner-icon { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
 .app-banner-text { flex: 1; }
@@ -123,3 +108,13 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
     #lightbox-prev { left: 5px; } 
     #lightbox-next { right: 5px; } 
 }
+
+/* Estilos para o Seletor de Quantidade com +/- */
+.seletor-qtd { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 20px; overflow: hidden; height: 36px; background: white;}
+.seletor-qtd button { border: none; background: none; color: #555; width: 36px; height: 100%; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.seletor-qtd button:hover:not(:disabled) { background: #f0f0f0; }
+.seletor-qtd button:active:not(:disabled) { background: #e0e0e0; }
+.seletor-qtd button:disabled { color: #ccc; cursor: not-allowed; }
+.seletor-qtd input { border: none; border-left: 1px solid #eee; border-right: 1px solid #eee; background: none; text-align: center; width: 40px; height: 100%; padding: 0; font-weight: bold; font-size: 1rem; color: #333; outline: none; -moz-appearance: textfield; }
+.seletor-qtd input::-webkit-outer-spin-button,
+.seletor-qtd input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
