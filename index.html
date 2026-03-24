@@ -178,14 +178,16 @@
         </div>
     </div>
     
+    <!-- ALTERAÇÃO 2: Modal de recuperação alterado para usar Frase de Segurança -->
     <div id="recuperacao-modal" class="modal hidden">
         <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
             <span class="close" onclick="window.fecharRecuperacao()">&times;</span>
-            <h2 style="color:var(--primary); margin-bottom:10px;">🔄 Nova Senha</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Confirme seus dados para criar uma nova senha.</p>
+            <h2 style="color:var(--primary); margin-bottom:10px;">🔄 Recuperar Senha</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Informe seu CPF e sua frase de segurança para criar uma nova senha.</p>
             <form id="form-recuperacao" onsubmit="window.recuperarSenhaCliente(event)">
                 <input type="text" id="rec-cpf" placeholder="Seu CPF cadastrado" maxlength="14" required oninput="window.mascaraCPF(this)">
-                <input type="tel" id="rec-tel" placeholder="Telefone (Ex: 81 90000-0000)" maxlength="15" required oninput="window.mascaraTelefone(this)">
+                <!-- ALTERADO: Campo de telefone trocado para frase de segurança -->
+                <input type="text" id="rec-frase" placeholder="Sua Frase de Segurança" required>
                 <input type="password" id="rec-senha" placeholder="Digite a nova senha" required>
                 <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Salvar Nova Senha</button>
             </form>
@@ -223,10 +225,17 @@
                 <form id="checkout-form" onsubmit="window.finalizarCheckout(event)">
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="window.salvarFormulario()">
                     <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="window.mascaraCPF(this); window.salvarFormulario()">
+                    
+                    <!-- ALTERAÇÃO 1: Campo de Frase de Segurança adicionado -->
                     <div id="area-senha-nova" style="background:#f0fff4; padding:10px; border-radius:8px; border:1px solid var(--success); margin:5px 0;">
                         <label style="font-size:0.85rem; font-weight:bold; color:var(--success);">Crie uma senha para acessar seus pedidos:</label>
                         <input type="password" id="cliente-senha" placeholder="Senha" required>
+                        
+                        <!-- NOVO CAMPO: Frase de Segurança -->
+                        <input type="text" id="cliente-frase" placeholder="Frase de Segurança (ex: nome do primeiro cachorro)" required style="margin-top:8px; border-color:#ffb6c1;">
+                        <small style="font-size:0.75rem; color:#666; display:block; margin-top:4px;">Guarde esta frase! Ela será necessária para recuperar sua senha.</small>
                     </div>
+
                     <input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="window.mascaraTelefone(this); window.salvarFormulario()">
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="cliente-cep" placeholder="CEP" style="flex:1;" required onblur="window.buscarCep(this.value, 'cliente')" oninput="window.salvarFormulario()">
