@@ -27,6 +27,7 @@ window.mascaraCPF = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/(
 window.mascaraTelefone = (i) => { let v = i.value.replace(/\D/g,""); v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); v = v.replace(/(\d)(\d{4})$/,"$1-$2"); i.value = v; };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
+// --- CONTROLE DO CARRINHO FLUTUANTE ---
 function esconderCarrinhoFlutuante() {
     const c = document.getElementById('cart-btn-floating');
     if(c) c.classList.add('oculto');
@@ -138,8 +139,29 @@ window.abrirModalAvaliacoes = () => {
 };
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
-window.toggleBusca = () => { let b = document.getElementById('busca-container'); b.classList.toggle('hidden'); if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); };
+// --- LUPA E SIDEBAR ---
+window.toggleBusca = () => { 
+    let b = document.getElementById('busca-container'); 
+    b.classList.toggle('hidden'); 
+    if(!b.classList.contains('hidden')) document.getElementById('busca-input').focus(); 
+};
 
+window.abrirMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('hidden'); document.getElementById('sidebar-menu').classList.add('open'); document.getElementById('sidebar-overlay').classList.remove('hidden'); };
+window.fecharMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('open'); setTimeout(() => { document.getElementById('sidebar-menu').classList.add('hidden'); }, 300); document.getElementById('sidebar-overlay').classList.add('hidden'); };
+
+window.filtrarCategoria = (cat) => { 
+    window.fecharMenuLateral(); 
+    const termo = removerAcentos(document.getElementById('busca-input').value); 
+    let filtrados = listaDeProdutos.filter(p => { 
+        let matchCat = (cat === 'Todas') || (p.categoria === cat) || (p.categoria === 'Short/Calça/Saia' && cat === 'Short/Saia') || (cat === 'Lançamento' && p.lancamento === true); 
+        let matchTermo = removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo); 
+        return matchCat && matchTermo; 
+    }); 
+    renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); 
+};
+window.filtrarProdutos = () => { window.filtrarCategoria('Todas'); };
+
+// --- LIGHTBOX COM SETAS ---
 let lightboxCurrentProdId = null;
 let lightboxImgsArray = [];
 let lightboxCurrentIndex = 0;
@@ -177,21 +199,7 @@ window.fecharLightbox = () => { document.getElementById('lightbox-modal').classL
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 window.abrirOpcoesLightbox = () => { if(lightboxCurrentProdId) { window.abrirEscolherTamanho(lightboxCurrentProdId); window.fecharLightbox(); } };
 
-window.abrirMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('hidden'); document.getElementById('sidebar-menu').classList.add('open'); document.getElementById('sidebar-overlay').classList.remove('hidden'); };
-window.fecharMenuLateral = () => { document.getElementById('sidebar-menu').classList.remove('open'); setTimeout(() => { document.getElementById('sidebar-menu').classList.add('hidden'); }, 300); document.getElementById('sidebar-overlay').classList.add('hidden'); };
-
-window.filtrarCategoria = (cat) => { 
-    window.fecharMenuLateral(); 
-    const termo = removerAcentos(document.getElementById('busca-input').value); 
-    let filtrados = listaDeProdutos.filter(p => { 
-        let matchCat = (cat === 'Todas') || (p.categoria === cat) || (p.categoria === 'Short/Calça/Saia' && cat === 'Short/Saia') || (cat === 'Lançamento' && p.lancamento === true); 
-        let matchTermo = removerAcentos(p.nome).includes(termo) || removerAcentos(p.material).includes(termo); 
-        return matchCat && matchTermo; 
-    }); 
-    renderizarVitrinesCategorias(filtrados, cat !== 'Todas' ? cat : null); 
-};
-window.filtrarProdutos = () => { window.filtrarCategoria('Todas'); };
-
+// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -211,6 +219,7 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
+// --- CARREGAMENTO E VITRINE (LOOP INFINITO) ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -301,6 +310,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
+// Slider das imagens do produto (Passando sozinhas)
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
@@ -311,7 +321,7 @@ setInterval(() => {
     });
 }, 3000);
 
-// --- ESCOLHER MÚLTIPLAS QUANTIDADES COM BOTÕES + E - ---
+// --- ESCOLHA DE TAMANHOS (BOTÕES + E -) ---
 window.mudarQtdModal = (idx, delta, max) => {
     let input = document.getElementById(`qtd_var_${idx}`);
     if(!input) return;
@@ -467,7 +477,7 @@ window.finalizarCheckout = async (e) => {
 function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; } }
 window.loginRapidoCheckout = async () => { const cpf = document.getElementById('checkout-cpf-rapido').value.replace(/\D/g,''); const senha = document.getElementById('checkout-senha-rapida').value; if(cpf.length !== 11 || !senha) return window.mostrarNotificacao("Preencha CPF e Senha.", "erro"); const d = await getDoc(doc(db, "clientes", cpf)); if (d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); prepararCheckoutLogado(); window.mostrarNotificacao("Preenchido!", "sucesso"); } else { window.mostrarNotificacao("Incorretos.", "erro"); } };
 
-// --- LOGIN DO CLIENTE E PERFIL ---
+// --- LOGIN DO CLIENTE E PERFIL (C/ ESQUECI A SENHA) ---
 window.verificarLoginCliente = () => { 
     esconderCarrinhoFlutuante();
     if (clienteLogadoDados) {
@@ -495,9 +505,34 @@ async function autoLogin(cpf, senha, forcarAbertura = false) {
 }
 function atualizarHeaderLogado() { document.getElementById('btn-header-pedidos').innerText = clienteLogadoDados ? `👤 ${clienteLogadoDados.nome.split(' ')[0]}` : `👤 Perfil`; }
 window.realizarLoginCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('login-cpf-cliente').value.replace(/\D/g,''); const senha = document.getElementById('login-senha-cliente').value; const manter = document.getElementById('lembrar-senha').checked; window.mostrarNotificacao("Verificando...", "info"); const d = await getDoc(doc(db, "clientes", cpf)); if(d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); if(manter) localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); document.getElementById('cliente-login-modal').classList.add('hidden'); abrirPainelCliente(d.data()); e.target.reset(); } else window.mostrarNotificacao("CPF/Senha incorretos.", "erro"); };
-window.abrirRecuperacaoSenha = () => { window.fecharLoginCliente(); document.getElementById('recuperacao-modal').classList.remove('hidden'); esconderCarrinhoFlutuante(); };
-window.fecharRecuperacao = () => { document.getElementById('recuperacao-modal').classList.add('hidden'); mostrarCarrinhoFlutuante(); };
-window.recuperarSenhaCliente = async (e) => { e.preventDefault(); const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); const tel = document.getElementById('rec-tel').value; const novaSenha = document.getElementById('rec-senha').value; const docRef = doc(db, "clientes", cpf); const d = await getDoc(docRef); if(d.exists() && d.data().telefone === tel) { await updateDoc(docRef, {senha: novaSenha}); window.mostrarNotificacao("Senha alterada!", "sucesso"); document.getElementById('recuperacao-modal').classList.add('hidden'); document.getElementById('cliente-login-modal').classList.remove('hidden'); e.target.reset(); } else { window.mostrarNotificacao("Dados não conferem.", "erro"); } };
+
+window.abrirRecuperacaoSenha = () => { 
+    window.fecharLoginCliente(); 
+    document.getElementById('recuperacao-modal').classList.remove('hidden'); 
+    esconderCarrinhoFlutuante(); 
+};
+window.fecharRecuperacao = () => { 
+    document.getElementById('recuperacao-modal').classList.add('hidden'); 
+    mostrarCarrinhoFlutuante(); 
+};
+window.recuperarSenhaCliente = async (e) => { 
+    e.preventDefault(); 
+    const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); 
+    const tel = document.getElementById('rec-tel').value; 
+    const novaSenha = document.getElementById('rec-senha').value; 
+    const docRef = doc(db, "clientes", cpf); 
+    const d = await getDoc(docRef); 
+    if(d.exists() && d.data().telefone === tel) { 
+        await updateDoc(docRef, {senha: novaSenha}); 
+        window.mostrarNotificacao("Senha alterada com sucesso!", "sucesso"); 
+        window.fecharRecuperacao(); 
+        document.getElementById('cliente-login-modal').classList.remove('hidden'); 
+        e.target.reset(); 
+    } else { 
+        window.mostrarNotificacao("CPF ou Telefone não conferem com o cadastro.", "erro"); 
+    } 
+};
+
 window.mudarAbaCliente = (idAba) => { document.getElementById('aba-historico').classList.add('hidden'); document.getElementById('aba-dados').classList.add('hidden'); document.getElementById('btn-aba-historico').classList.remove('ativa'); document.getElementById('btn-aba-historico').style.color='#aaa'; document.getElementById('btn-aba-dados').classList.remove('ativa'); document.getElementById('btn-aba-dados').style.color='#aaa'; document.getElementById(idAba).classList.remove('hidden'); document.getElementById('btn-'+idAba).classList.add('ativa'); document.getElementById('btn-'+idAba).style.color='var(--primary)'; }
 async function abrirPainelCliente(dados) { 
     esconderCarrinhoFlutuante();
@@ -815,7 +850,7 @@ document.getElementById('btn-instalar-app').addEventListener('click', async () =
         if (isIOS) {
             window.confirmarAcao("Instalar no iPhone 🍏", "1. Toque no ícone de [Compartilhar] (o quadrado com a seta pra cima) no menu inferior.\n\n2. Role para baixo e toque em 'Adicionar à Tela de Início'.\n\nPronto! Vai virar um App! 🎀");
         } else {
-            window.confirmarAcao("Instalar o App 📱", "Para instalar:\n\n1. Clique nos 3 pontinhos (⋮) no navegador.\n2. Clique em 'Instalar Aplicativo' ou 'Adicionar à Tela Inicial'.\n\n🎀");
+            window.confirmarAcao("Instalar o App 📱", "Para instalar:\n\n1. Clique nos 3 pontinhos (⋮) no navegador.\n2. Clique em 'Instalar Aplicativo'.\n\n🎀");
         }
         window.fecharBannerInstalacao();
     }
@@ -826,6 +861,7 @@ window.addEventListener('appinstalled', () => {
     window.mostrarNotificacao("App instalado com sucesso! 🎀", "sucesso");
 });
 
+// Inicialização de Dados Básicos
 const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.cpf, logado.senha);
 carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarProdutosDoBanco();
 
@@ -833,6 +869,7 @@ gerarAvaliacoes();
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
 
+// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (Persistência) ---
 const adminLogado = localStorage.getItem('maribella_admin_auth');
 if(adminLogado === 'true') {
     document.getElementById('admin-dashboard').classList.remove('hidden');
@@ -841,6 +878,7 @@ if(adminLogado === 'true') {
     window.mudarAbaAdmin(ultimaAba);
 }
 
+// --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
