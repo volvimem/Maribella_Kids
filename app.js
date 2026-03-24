@@ -449,7 +449,20 @@ window.finalizarCheckout = async (e) => {
     const cpf = document.getElementById('cliente-cpf').value.replace(/\D/g,''); const nome = document.getElementById('cliente-nome').value; const tel = document.getElementById('cliente-telefone').value; const cidade = document.getElementById('cliente-cidade').value; const endereco = `${document.getElementById('cliente-rua').value}, ${document.getElementById('cliente-numero').value} - ${document.getElementById('cliente-bairro').value} / ${cidade}`; const total = document.getElementById('total-price').innerText;
 
     try {
-        let dadosC = { nome, cpf, telefone: tel, cep: document.getElementById('cliente-cep').value, rua: document.getElementById('cliente-rua').value, numero: document.getElementById('cliente-numero').value, bairro: document.getElementById('cliente-bairro').value, cidade: cidade, estado: document.getElementById('cliente-estado').value, ref: document.getElementById('cliente-ref').value };
+        // ALTERAÇÃO 1: Adicionado fraseSeguranca no objeto dadosC
+        let dadosC = { 
+            nome, 
+            cpf, 
+            telefone: tel, 
+            cep: document.getElementById('cliente-cep').value, 
+            rua: document.getElementById('cliente-rua').value, 
+            numero: document.getElementById('cliente-numero').value, 
+            bairro: document.getElementById('cliente-bairro').value, 
+            cidade: cidade, 
+            estado: document.getElementById('cliente-estado').value, 
+            ref: document.getElementById('cliente-ref').value,
+            fraseSeguranca: document.getElementById('cliente-frase').value // NOVO CAMPO
+        };
         if(!clienteLogadoCpf) dadosC.senha = document.getElementById('cliente-senha').value;
         await setDoc(doc(db, "clientes", cpf), dadosC, { merge: true });
         
@@ -474,7 +487,7 @@ window.finalizarCheckout = async (e) => {
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); window.toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; window.carregarProdutosDoBanco();
 };
 
-function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; } }
+function prepararCheckoutLogado() { if(clienteLogadoCpf && clienteLogadoDados) { document.getElementById('checkout-login-box').style.display = 'none'; document.getElementById('area-senha-nova').style.display = 'none'; document.getElementById('cliente-senha').required = false; document.getElementById('cliente-frase').required = false; document.getElementById('cliente-nome').value = clienteLogadoDados.nome; document.getElementById('cliente-cpf').value = clienteLogadoDados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone; document.getElementById('cliente-cep').value = clienteLogadoDados.cep; document.getElementById('cliente-estado').value = clienteLogadoDados.estado; document.getElementById('cliente-rua').value = clienteLogadoDados.rua; document.getElementById('cliente-numero').value = clienteLogadoDados.numero; document.getElementById('cliente-bairro').value = clienteLogadoDados.bairro; document.getElementById('cliente-cidade').value = clienteLogadoDados.cidade || ''; document.getElementById('cliente-ref').value = clienteLogadoDados.ref || ''; } else { document.getElementById('checkout-login-box').style.display = 'block'; document.getElementById('area-senha-nova').style.display = 'block'; document.getElementById('cliente-senha').required = true; document.getElementById('cliente-frase').required = true; } }
 window.loginRapidoCheckout = async () => { const cpf = document.getElementById('checkout-cpf-rapido').value.replace(/\D/g,''); const senha = document.getElementById('checkout-senha-rapida').value; if(cpf.length !== 11 || !senha) return window.mostrarNotificacao("Preencha CPF e Senha.", "erro"); const d = await getDoc(doc(db, "clientes", cpf)); if (d.exists() && d.data().senha === senha) { clienteLogadoCpf = cpf; clienteLogadoDados = d.data(); localStorage.setItem('maribella_auth_cliente', JSON.stringify({cpf, senha})); atualizarHeaderLogado(); prepararCheckoutLogado(); window.mostrarNotificacao("Preenchido!", "sucesso"); } else { window.mostrarNotificacao("Incorretos.", "erro"); } };
 
 // --- LOGIN DO CLIENTE E PERFIL (C/ ESQUECI A SENHA) ---
@@ -515,21 +528,30 @@ window.fecharRecuperacao = () => {
     document.getElementById('recuperacao-modal').classList.add('hidden'); 
     mostrarCarrinhoFlutuante(); 
 };
+
+// ALTERAÇÃO 2: Função atualizada para usar frase de segurança ao invés de telefone
 window.recuperarSenhaCliente = async (e) => { 
     e.preventDefault(); 
     const cpf = document.getElementById('rec-cpf').value.replace(/\D/g,''); 
-    const tel = document.getElementById('rec-tel').value; 
+    const frase = document.getElementById('rec-frase').value.trim().toLowerCase(); // normaliza
     const novaSenha = document.getElementById('rec-senha').value; 
     const docRef = doc(db, "clientes", cpf); 
     const d = await getDoc(docRef); 
-    if(d.exists() && d.data().telefone === tel) { 
-        await updateDoc(docRef, {senha: novaSenha}); 
-        window.mostrarNotificacao("Senha alterada com sucesso!", "sucesso"); 
-        window.fecharRecuperacao(); 
-        document.getElementById('cliente-login-modal').classList.remove('hidden'); 
-        e.target.reset(); 
+    
+    if(d.exists()) {
+        const dados = d.data();
+        // Verifica se a frase confere (comparando em minúsculas e trim)
+        if(dados.fraseSeguranca && dados.fraseSeguranca.toLowerCase().trim() === frase) { 
+            await updateDoc(docRef, {senha: novaSenha}); 
+            window.mostrarNotificacao("Senha alterada com sucesso!", "sucesso"); 
+            window.fecharRecuperacao(); 
+            document.getElementById('cliente-login-modal').classList.remove('hidden'); 
+            e.target.reset(); 
+        } else {
+            window.mostrarNotificacao("Frase de segurança incorreta.", "erro"); 
+        }
     } else { 
-        window.mostrarNotificacao("CPF ou Telefone não conferem com o cadastro.", "erro"); 
+        window.mostrarNotificacao("CPF não encontrado no sistema.", "erro"); 
     } 
 };
 
