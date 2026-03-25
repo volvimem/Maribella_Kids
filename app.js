@@ -153,8 +153,9 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-img').src = src; 
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
+    // CORREÇÃO: Lê as fotos corretamente substituindo &quot; por aspas normais
     if(arrayFotosStr && arrayFotosStr !== 'null') {
-        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/"/g, '"'));
+        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
         if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
         document.getElementById('lightbox-prev').classList.remove('hidden');
@@ -239,9 +240,10 @@ window.carregarProdutosDoBanco = async () => {
     } catch (e) {}
 }
 
+// CORREÇÃO: Stories agora tem a lista normal para o cliente poder rolar livremente
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
-    let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
+    let storyList = listaDeProdutos; // Lista padrão para scroll manual
     storyList.forEach(p => { 
         let foto = p.imagens ? p.imagens[0] : p.imagem;
         track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}', null)" title="${p.nome}">`; 
@@ -281,7 +283,8 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '"');
+            // CORREÇÃO: Usando &quot; para o array ser repassado corretamente como string
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
             imgHtml = `<div class="slider-viewport" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')"><div class="prod-slider" data-idx="0" data-count="${p.imagens.length}">`;
             p.imagens.forEach(img => imgHtml += `<img src="${img}" style="width:100%; flex-shrink:0;">`);
             imgHtml += `</div></div><div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.length} Fotos</div>`;
