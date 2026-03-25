@@ -55,7 +55,9 @@
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <div class="store-info">
             <h3>Nossa Loja</h3>
-            <p id="menu-endereco-info">Enviamos para todo o Brasil com muito carinho e qualidade.</p>
+            <a id="menu-endereco-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">
+                <p id="menu-endereco-info" style="line-height: 1.4; display: flex; align-items: center; gap: 5px;">📍 Enviamos para todo o Brasil.</p>
+            </a>
         </div>
         
         <div class="fake-reviews" onclick="window.abrirModalAvaliacoes()" style="cursor: pointer; margin-top: 20px;">
@@ -123,7 +125,9 @@
 
         <footer class="site-footer">
             <h3 style="color:var(--primary); margin-bottom:5px;">Maribella Kids</h3>
-            <p id="footer-endereco-texto" style="font-size:0.9rem; color:#666; margin-bottom:15px;">⏳...</p>
+            <a id="footer-endereco-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">
+                <p id="footer-endereco-texto" style="font-size:0.9rem; color:#666; margin-bottom:15px; line-height: 1.4;">📍 Carregando localização...</p>
+            </a>
             <a id="footer-instagram-link" href="#" target="_blank" class="btn-instagram">📸 Siga nosso Instagram</a>
             <div style="margin-top: 25px;">
                 <img src="https://img.shields.io/badge/Site%20Seguro-100%25%20SSL-success?style=for-the-badge&logo=appveyor" alt="Site Seguro" style="height: 30px;">
@@ -205,6 +209,7 @@
 
                     <div class="pagamento-info" style="margin-top: 15px;">
                         <h4>Pagamento via PIX</h4>
+                        <p style="margin-bottom: 5px;">Nome: <strong id="pix-nome-display">Carregando...</strong></p>
                         <p>Chave: <strong id="pix-display">Carregando...</strong></p>
                         <button type="button" class="btn-pix" onclick="window.tentarCopiarPix()">📋 Copiar Chave PIX</button>
                     </div>
@@ -272,10 +277,9 @@
                     
                     <div style="background: #eef2f5; padding: 15px; border-radius: 10px; margin-top:10px; border: 1px solid #ddd;">
                         <label style="font-weight:bold; color:var(--primary);">📏 Controle de Grades (10 Peças):</label>
-                        <p style="font-size: 0.8rem; color: #666;">Indique a Cor e a Quantidade de GRADES disponíveis.</p>
                         <div id="lista-variacoes-admin" style="display:flex; flex-direction:column; gap:8px; margin-top: 10px;"></div>
-                        <button type="button" onclick="window.adicionarVariacaoAdmin()" style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">➕ Adicionar Cor de Grade</button>
-                        <div style="margin-top:10px; font-weight:bold;">Total de Grades: <span id="total-pecas-admin" style="color:var(--primary);">0</span></div>
+                        <button type="button" onclick="window.adicionarVariacaoAdmin()" style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">➕ Adicionar Estoque (Grade)</button>
+                        <div style="margin-top:10px; font-weight:bold;">Total de Grades Disp: <span id="total-pecas-admin" style="color:var(--primary);">0</span></div>
                     </div>
 
                     <div style="display:flex; gap:10px; width: 100%; align-items:center; margin-top:10px;">
@@ -315,7 +319,7 @@
 
             <div id="admin-clientes" class="admin-aba hidden">
                 <h3>Clientes Cadastrados</h3>
-                <input type="text" id="busca-cliente-admin" placeholder="🔍 Buscar por nome..." oninput="window.filtrarClientesAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
+                <input type="text" id="busca-cliente-admin" placeholder="🔍 Buscar por nome ou telefone..." oninput="window.filtrarClientesAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-clientes"></div>
             </div>
 
@@ -324,14 +328,25 @@
                 <form id="form-config-loja" class="admin-form" onsubmit="window.salvarConfiguracoes(event)">
                     <label style="font-weight:bold;">Aviso no Topo do Site (Aperte Enter para pular linha):</label>
                     <textarea id="config-aviso" placeholder="Ex: Apenas atacado. \nPedido mínimo..." rows="3" required></textarea>
+                    
+                    <label style="font-weight:bold; margin-top:10px;">Nome do Titular do PIX:</label>
+                    <input type="text" id="config-pix-nome" placeholder="Ex: Maria José da Silva" required>
+                    
                     <label style="font-weight:bold; margin-top:10px;">Chave PIX:</label>
                     <input type="text" id="config-pix" required>
+                    
                     <label style="font-weight:bold; margin-top:10px;">WhatsApp Vendas (Com DDD):</label>
                     <input type="text" id="config-telefone" placeholder="Ex: 81 999999999" maxlength="15" required oninput="window.mascaraTelefone(this)">
+                    
                     <label style="font-weight:bold; margin-top:10px;">Link do Instagram:</label>
                     <input type="url" id="config-instagram" placeholder="Ex: https://instagram.com/maribella" required>
-                    <label style="font-weight:bold; margin-top:10px;">Endereço Físico / Cidade:</label>
-                    <input type="text" id="config-endereco" placeholder="Sua cidade e estado" required>
+                    
+                    <label style="font-weight:bold; margin-top:10px;">Endereço Físico (Pressione Enter para pular linha):</label>
+                    <textarea id="config-endereco" placeholder="Ex: Setor Amarelo\nRua N, Box 1 e 3\nSanta Cruz" rows="3" required></textarea>
+                    
+                    <label style="font-weight:bold; margin-top:10px;">Link do Google Maps (Localização):</label>
+                    <input type="url" id="config-link-maps" placeholder="Ex: https://maps.app.goo.gl/..." required>
+                    
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
                 </form>
             </div>
