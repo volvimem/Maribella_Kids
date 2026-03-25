@@ -160,9 +160,8 @@
         <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
             <span class="close" onclick="window.fecharLoginCliente()">×</span>
             <h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Acesse seu histórico de compras informando seus dados.</p>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Acesse seu histórico informando seu número de WhatsApp.</p>
             <form id="form-login-cliente" onsubmit="window.realizarLoginCliente(event)">
-                <input type="text" id="login-nome-cliente" placeholder="Seu Nome Completo" required>
                 <input type="tel" id="login-telefone-cliente" placeholder="Telefone: (**)* ****-****" maxlength="15" required oninput="window.mascaraTelefone(this)">
                 <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Acessar Histórico</button>
             </form>
