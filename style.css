@@ -2,11 +2,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text); overflow-x: hidden; }
 
-/* Remove setas padrão de botões de números */
 input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
-/* CABEÇALHO FININHO COM LOGO CENTRALIZADA ABSOLUTA */
 header { background-color: var(--primary); padding: 5px 15px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
 .header-top { display: flex; justify-content: space-between; align-items: center; position: relative; width: 100%; padding-bottom: 5px; }
 
@@ -15,18 +13,16 @@ header { background-color: var(--primary); padding: 5px 15px; position: fixed; t
 
 .btn-icon-menu { z-index: 1; background: #ffffff; border: none; height: 35px; width: 40px; border-radius: 10px; cursor: pointer; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-/* SEGUNDO CABEÇALHO: Busca Fixa e Perfil */
 .header-sub { display: flex; gap: 10px; width: 100%; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.4); justify-content: space-between; }
 .header-btn { background: #ffffff; border: none; height: 34px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex: 1; gap: 5px; }
 #busca-container { padding-top: 10px; }
 
-/* AJUSTE PARA ROLAGEM MANUAL DOS STORIES */
+/* STORIES MELHORADO */
 .stories-wrapper { margin-top: 105px; background: white; padding: 15px 0; border-bottom: 1px solid #eee; overflow-x: auto; white-space: nowrap; position: relative; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .stories-wrapper::-webkit-scrollbar { display: none; }
 .stories-track { display: inline-flex; gap: 15px; padding: 0 15px; }
 .story-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid var(--primary); padding: 2px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
 
-/* CARRINHO FLUTUANTE (Premium App Style) */
 .floating-cart {
     position: fixed; bottom: 25px; right: 20px;
     background: linear-gradient(135deg, var(--primary) 0%, #ff6b81 100%);
@@ -38,10 +34,7 @@ header { background-color: var(--primary); padding: 5px 15px; position: fixed; t
 }
 .floating-cart:active { transform: scale(0.95); }
 .floating-cart.oculto { transform: scale(0) !important; opacity: 0 !important; pointer-events: none; }
-.floating-cart span {
-    background: white; color: #ff6b81; border-radius: 50px;
-    padding: 2px 8px; font-size: 0.85rem;
-}
+.floating-cart span { background: white; color: #ff6b81; border-radius: 50px; padding: 2px 8px; font-size: 0.85rem; }
 
 .info-banner { background: var(--secondary); color: white; padding: 10px 15px; font-weight: bold; font-size: 0.9rem; text-align: center; line-height: 1.5; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .online-counter { margin: 15px 15px 0 15px; background: #eef2f5; padding: 10px; border-radius: 12px; text-align: center; font-weight: bold; color: #444; font-size: 0.95rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -68,7 +61,7 @@ header { background-color: var(--primary); padding: 5px 15px; position: fixed; t
 .card { flex: 0 0 calc(50% - 5px); background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
 
 .slider-viewport { position: relative; width: 100%; height: 160px; overflow: hidden; background: #f0f0f0; }
-.prod-slider { display: flex; height: 100%; transition: transform 0.4s ease-in-out; }
+.prod-slider { display: flex; height: 100%; } /* Transição via JS agora */
 .prod-slider img { height: 100%; object-fit: cover; cursor: zoom-in; }
 
 .card-info { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
@@ -96,7 +89,6 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .toast.erro { border-left: 4px solid var(--error); }
 .toast.info { border-left: 4px solid var(--secondary); }
 
-/* BOTÃO DE SAIR MODERNO E LINDO NO PERFIL DO CLIENTE */
 .btn-sair { background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 2px 4px rgba(211, 47, 47, 0.1); margin-top: 20px; }
 .btn-sair:hover { background: #ffcdd2; }
 
@@ -107,7 +99,6 @@ input[type="file"] { padding: 10px; border: 2px dashed var(--primary); backgroun
 .admin-tab-btn.ativa { background: var(--primary); color: white; font-weight: bold; }
 .admin-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-/* Botões Modernos e Lindos do Admin */
 .btn-action-adm { width: 35px; height: 35px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .btn-edit { background: #e3f2fd; color: #1976d2; }
 .btn-delete { background: #ffebee; color: #d32f2f; }
