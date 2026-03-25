@@ -45,7 +45,7 @@ function mostrarCarrinhoFlutuante() {
 
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
-    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.2rem; color:#666;">&times;</span>` : '';
+    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.2rem; color:#666;">×</span>` : '';
     toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🎀":"✅"} ${msg}</span> ${fecharBtn}`; 
     toast.className = `toast show ${t}`; 
     if(!fechavel) setTimeout(window.fecharToast, 3500); 
@@ -154,7 +154,7 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
     if(arrayFotosStr && arrayFotosStr !== 'null') {
-        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
+        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/"/g, '"'));
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
         if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
         document.getElementById('lightbox-prev').classList.remove('hidden');
@@ -199,7 +199,6 @@ async function carregarConfiguracoes() {
     document.getElementById('texto-aviso-loja').innerText = configLoja.aviso || "Vendemos apenas grade fechada."; 
     document.getElementById('footer-instagram-link').href = configLoja.instagram || "#"; 
     
-    // Atualiza Links do Maps e Endereço multiline
     const endFormatado = (configLoja.endereco || "Nossa Loja").replace(/\n/g, '<br>');
     document.getElementById('footer-endereco-texto').innerHTML = '📍 ' + endFormatado; 
     document.getElementById('menu-endereco-info').innerHTML = '📍 ' + endFormatado;
@@ -222,7 +221,7 @@ window.salvarConfiguracoes = async (e) => {
         
         await setDoc(doc(db, "config", "loja"), configLoja); 
         
-        carregarConfiguracoes(); // Atualiza toda a tela automaticamente
+        carregarConfiguracoes(); 
         mostrarNotificacao("Salvo!", "sucesso"); 
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
@@ -282,7 +281,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '"');
             imgHtml = `<div class="slider-viewport" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')"><div class="prod-slider" data-idx="0" data-count="${p.imagens.length}">`;
             p.imagens.forEach(img => imgHtml += `<img src="${img}" style="width:100%; flex-shrink:0;">`);
             imgHtml += `</div></div><div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.length} Fotos</div>`;
@@ -437,7 +436,7 @@ function atualizarCarrinho() {
                 <button onclick="window.alterarQtdCarrinho(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">-</button>
                 <span>${qtd}</span>
                 <button onclick="window.alterarQtdCarrinho(${index}, 1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">+</button>
-                <button onclick="window.removerDoCarrinho(${index})" style="color:red;background:none;border:none;font-weight:bold;font-size:1.2rem;margin-left:5px;">&times;</button>
+                <button onclick="window.removerDoCarrinho(${index})" style="color:red;background:none;border:none;font-weight:bold;font-size:1.2rem;margin-left:5px;">×</button>
             </div>
         </div>`; 
     });
@@ -481,8 +480,17 @@ window.finalizarCheckout = async (e) => {
 
     try {
         let dadosC = { nome, telefone: tel, cidade, estado };
-        // Garante que o usuário não seja sobrescrito combinando o Nome com o Telefone
-        const idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${tel.replace(/\D/g, '')}`;
+        // Cadastro Inteligente: Identifica cliente pelo telefone e mantém o histórico
+        let telLimpo = tel.replace(/\D/g, '');
+        let idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${telLimpo}`;
+        
+        let clientesSnap = await getDocs(collection(db, "clientes"));
+        clientesSnap.forEach(d => {
+            let c = d.data();
+            if(c.telefone && c.telefone.replace(/\D/g, '') === telLimpo) {
+                idClienteStr = d.id; // Preserva o ID original e histórico do cliente
+            }
+        });
         await setDoc(doc(db, "clientes", idClienteStr), dadosC, { merge: true });
         
         let strItens = carrinho.map(i=> `${i.qtd||1}x ${i.nome} (${i.tamanhoSelecionado})`).join(", "); const dataH = new Date();
@@ -503,7 +511,14 @@ window.finalizarCheckout = async (e) => {
 
     let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado} (R$ ${parseFloat(i.preco).toFixed(2)})\n`); msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
     let linkZap = gerarLinkWhatsApp(configLoja.telefone, msg); window.open(linkZap, '_blank');
+    
+    // Zera carrinho e redireciona direto pro perfil
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); window.toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; window.carregarProdutosDoBanco();
+    
+    clienteLogadoDados = {nome: nome}; 
+    localStorage.setItem('maribella_auth_cliente', JSON.stringify({nome})); 
+    atualizarHeaderLogado(); 
+    abrirPainelCliente(clienteLogadoDados);
 };
 
 function prepararCheckoutLogado() { if(clienteLogadoDados) { document.getElementById('cliente-nome').value = clienteLogadoDados.nome; } }
@@ -611,22 +626,51 @@ window.filtrarPedidosAdmin = () => {
     let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
     if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
     res.forEach(p => { 
+        let corText = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12';
         let selectStatus = `<div style="display:inline-flex; align-items:center; gap:5px; background:#f0f0f0; padding:5px; border-radius:5px; margin-right: 5px;">
             <span>✏️</span>
-            <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:#333; cursor:pointer;">
-                <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-                <option value="Aprovado" ${p.status === 'Aprovado' ? 'selected' : ''}>Aprovado</option>
-                <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+            <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:${corText}; cursor:pointer;">
+                <option value="Pendente" style="color:#f39c12;" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Aprovado" style="color:var(--success);" ${p.status === 'Aprovado' ? 'selected' : ''}>Aprovado</option>
+                <option value="Cancelado" style="color:#e74c3c;" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
             </select>
         </div>`;
         let btnEtiqueta = p.status === 'Aprovado' ? `<button onclick="window.imprimirEtiqueta('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🖨️ Etiqueta</button>` : '';
         let btnExcluir = `<button onclick="window.excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🗑️ Excluir</button>`;
         
-        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold;">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
+        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold; color:${corText};">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
     });
 }
 window.mudarStatusPedido = async (id, novoStatus) => { const sim = await window.confirmarAcao("Mudar Status", `Alterar o pedido para ${novoStatus}?`); if (sim) { await updateDoc(doc(db, "pedidos", id), { status: novoStatus }); carregarListaAdminPedidos(); } else { carregarListaAdminPedidos(); } };
-window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
+
+window.excluirPedidoAdmin = async (id) => { 
+    const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido? (Pedidos de até 5 dias terão o estoque devolvido)"); 
+    if(sim) { 
+        const pedido = todosPedidosAdmin.find(p => p.id === id);
+        if(pedido) {
+            const dataPedido = new Date(pedido.timestamp);
+            const hoje = new Date();
+            const diffDays = Math.ceil(Math.abs(hoje - dataPedido) / (1000 * 60 * 60 * 24));
+            
+            if(diffDays <= 5 && pedido.detalhes_itens) {
+                for(let item of pedido.detalhes_itens) {
+                    let pDoc = await getDoc(doc(db, "produtos", item.id));
+                    if(pDoc.exists()) {
+                        let pd = pDoc.data();
+                        if(pd.variacoes && pd.variacoes[item.idxVariacao]) {
+                            pd.variacoes[item.idxVariacao].qtd += item.qtd; // Devolve ao estoque
+                            await updateDoc(doc(db, "produtos", item.id), { variacoes: pd.variacoes });
+                        }
+                    }
+                }
+                window.mostrarNotificacao("Estoque devolvido (Pedido dentro de 5 dias).", "info");
+            }
+        }
+        await deleteDoc(doc(db, "pedidos", id)); 
+        carregarListaAdminPedidos(); 
+        window.carregarProdutosDoBanco();
+    } 
+};
 
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco ? configLoja.endereco.replace(/\n/g, '<br>') : 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br><strong>Endereço:</strong> ${pedido.cidade || 'Não informado'} - ${pedido.estado || ''}<br><strong>Entrega:</strong> ${pedido.envio || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
@@ -744,7 +788,6 @@ window.salvarProdutoAdmin = async (e) => {
     try { 
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
-            // Upload Paralelo Muito mais Rápido
             let uploadPromises = Array.from(imgs).slice(0, 4).map(async (img) => {
                 const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); 
                 await uploadBytes(sRef, img); 
