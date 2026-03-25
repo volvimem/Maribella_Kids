@@ -23,7 +23,6 @@ let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
 let graficoVendasApp = null; 
 
-// Nova máscara formato: (XX) X XXXX-XXXX
 window.mascaraTelefone = (i) => { 
     let v = i.value.replace(/\D/g,""); 
     v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); 
@@ -32,7 +31,6 @@ window.mascaraTelefone = (i) => {
 };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
-// --- CONTROLE DO CARRINHO FLUTUANTE ---
 function esconderCarrinhoFlutuante() {
     const c = document.getElementById('cart-btn-floating');
     if(c) c.classList.add('oculto');
@@ -96,7 +94,6 @@ function gerarAvaliacoes() {
             foto: `https://randomuser.me/api/portraits/${generoFoto}/${(i % 99) + 1}.jpg`
         });
     }
-    
     avaliacoesGeradas = tempReviews.slice(0, totalPermitido).reverse();
 }
 
@@ -121,7 +118,6 @@ window.abrirModalAvaliacoes = () => {
 };
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
-// --- LUPA E SIDEBAR ---
 window.toggleBusca = () => { 
     let b = document.getElementById('busca-container'); 
     b.classList.toggle('hidden'); 
@@ -153,7 +149,6 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-img').src = src; 
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
-    // CORREÇÃO: Lê as fotos corretamente substituindo &quot; por aspas normais
     if(arrayFotosStr && arrayFotosStr !== 'null') {
         lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
@@ -240,14 +235,41 @@ window.carregarProdutosDoBanco = async () => {
     } catch (e) {}
 }
 
-// CORREÇÃO: Stories agora tem a lista normal para o cliente poder rolar livremente
+// SCROLL DOS STORIES (SOZINHO E MANUAL)
+let scrollStoriesInt = null;
+let storyPausado = false;
+
+window.iniciarScrollStories = () => {
+    const wrapper = document.querySelector('.stories-wrapper');
+    if(!wrapper) return;
+    
+    wrapper.addEventListener('touchstart', () => storyPausado = true);
+    wrapper.addEventListener('touchend', () => setTimeout(()=> storyPausado = false, 2000));
+    wrapper.addEventListener('mousedown', () => storyPausado = true);
+    wrapper.addEventListener('mouseup', () => setTimeout(()=> storyPausado = false, 2000));
+    wrapper.addEventListener('mouseenter', () => storyPausado = true);
+    wrapper.addEventListener('mouseleave', () => storyPausado = false);
+
+    clearInterval(scrollStoriesInt);
+    scrollStoriesInt = setInterval(() => {
+        if(!storyPausado) {
+            wrapper.scrollLeft += 1;
+            // Se chegou perto do fim, volta sutilmente para o meio (já que os itens estão duplicados 3x)
+            if(wrapper.scrollLeft >= (wrapper.scrollWidth - wrapper.clientWidth - 5)) {
+                wrapper.scrollLeft = wrapper.scrollWidth / 3; 
+            }
+        }
+    }, 30); // Velocidade suave
+};
+
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
-    let storyList = listaDeProdutos; // Lista padrão para scroll manual
+    let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
     storyList.forEach(p => { 
         let foto = p.imagens ? p.imagens[0] : p.imagem;
         track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}', null)" title="${p.nome}">`; 
     });
+    window.iniciarScrollStories();
 }
 
 function renderizarVitrinesCategorias(lista, tituloUnico = null) {
@@ -283,10 +305,13 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            // CORREÇÃO: Usando &quot; para o array ser repassado corretamente como string
             let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
-            imgHtml = `<div class="slider-viewport" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')"><div class="prod-slider" data-idx="0" data-count="${p.imagens.length}">`;
-            p.imagens.forEach(img => imgHtml += `<img src="${img}" style="width:100%; flex-shrink:0;">`);
+            imgHtml = `<div class="slider-viewport"><div class="prod-slider" data-count="${p.imagens.length}">`;
+            
+            // CORREÇÃO: O click agora é na imagem específica para abrir nela!
+            p.imagens.forEach(img => {
+                imgHtml += `<img src="${img}" onclick="event.stopPropagation(); window.abrirLightbox('${img}', '${p.id}', '${fotosStr}')" style="width:100%; flex-shrink:0;">`;
+            });
             imgHtml += `</div></div><div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.length} Fotos</div>`;
         } else {
             let ft = p.imagens ? p.imagens[0] : p.imagem;
@@ -318,14 +343,21 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
-// Slider das imagens do produto (Passando sozinhas)
+// SLIDER DE IMAGENS DO PRODUTO (CÍRCULO INFINITO)
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
-        let idx = parseInt(slider.getAttribute('data-idx'));
-        idx = (idx + 1) % count;
-        slider.style.transform = `translateX(-${idx * 100}%)`;
-        slider.setAttribute('data-idx', idx);
+        if (count <= 1) return;
+        
+        slider.style.transition = 'transform 0.4s ease-in-out';
+        slider.style.transform = `translateX(-100%)`;
+        
+        // Pega a primeira foto e joga pro final em um loop perfeito
+        setTimeout(() => {
+            slider.style.transition = 'none';
+            slider.appendChild(slider.firstElementChild);
+            slider.style.transform = `translateX(0)`;
+        }, 400);
     });
 }, 3000);
 
@@ -483,7 +515,6 @@ window.finalizarCheckout = async (e) => {
 
     try {
         let dadosC = { nome, telefone: tel, cidade, estado };
-        // Cadastro Inteligente: Identifica cliente pelo telefone e mantém o histórico
         let telLimpo = tel.replace(/\D/g, '');
         let idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${telLimpo}`;
         
@@ -491,7 +522,7 @@ window.finalizarCheckout = async (e) => {
         clientesSnap.forEach(d => {
             let c = d.data();
             if(c.telefone && c.telefone.replace(/\D/g, '') === telLimpo) {
-                idClienteStr = d.id; // Preserva o ID original e histórico do cliente
+                idClienteStr = d.id; 
             }
         });
         await setDoc(doc(db, "clientes", idClienteStr), dadosC, { merge: true });
@@ -515,7 +546,6 @@ window.finalizarCheckout = async (e) => {
     let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado} (R$ ${parseFloat(i.preco).toFixed(2)})\n`); msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
     let linkZap = gerarLinkWhatsApp(configLoja.telefone, msg); window.open(linkZap, '_blank');
     
-    // Zera carrinho e redireciona direto pro perfil
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); window.toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; window.carregarProdutosDoBanco();
     
     clienteLogadoDados = {nome: nome}; 
@@ -661,7 +691,7 @@ window.excluirPedidoAdmin = async (id) => {
                     if(pDoc.exists()) {
                         let pd = pDoc.data();
                         if(pd.variacoes && pd.variacoes[item.idxVariacao]) {
-                            pd.variacoes[item.idxVariacao].qtd += item.qtd; // Devolve ao estoque
+                            pd.variacoes[item.idxVariacao].qtd += item.qtd; 
                             await updateDoc(doc(db, "produtos", item.id), { variacoes: pd.variacoes });
                         }
                     }
@@ -677,7 +707,7 @@ window.excluirPedidoAdmin = async (id) => {
 
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco ? configLoja.endereco.replace(/\n/g, '<br>') : 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br><strong>Endereço:</strong> ${pedido.cidade || 'Não informado'} - ${pedido.estado || ''}<br><strong>Entrega:</strong> ${pedido.envio || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
-// --- RELATÓRIOS INTELIGENTES COM GRÁFICO ---
+// --- RELATÓRIOS INTELIGENTES (APENAS APROVADOS) ---
 window.gerarRelatoriosAdmin = () => {
     let mesFiltro = document.getElementById('filtro-mes-rel') ? document.getElementById('filtro-mes-rel').value : 'Todos';
     let anoFiltro = document.getElementById('filtro-ano-rel') ? document.getElementById('filtro-ano-rel').value : 'Todos';
@@ -686,7 +716,8 @@ window.gerarRelatoriosAdmin = () => {
     let vendasPorData = {}; 
 
     todosPedidosAdmin.forEach(p => {
-        if(p.status !== 'Cancelado') {
+        // CORREÇÃO: Pega SOMENTE os status Aprovados
+        if(p.status === 'Aprovado') {
             let mesPedido, anoPedido, dataAgrupamento;
             if(p.timestamp) {
                 anoPedido = p.timestamp.substring(0,4);
@@ -938,7 +969,6 @@ if(adminLogado === 'true') {
     window.mudarAbaAdmin(ultimaAba);
 }
 
-// --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
