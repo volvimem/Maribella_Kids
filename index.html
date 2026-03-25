@@ -31,10 +31,10 @@
     <div id="modal-escolher-tamanho" class="modal hidden" style="z-index: 3000;">
         <div class="modal-content" style="max-width: 350px;">
             <span class="close" onclick="window.fecharModalTamanho()">&times;</span>
-            <h2 style="color:var(--primary); margin-bottom: 10px; font-size:1.3rem;">Selecione o Tamanho</h2>
+            <h2 style="color:var(--primary); margin-bottom: 10px; font-size:1.3rem;">Adicionar ao Carrinho</h2>
             <div id="info-produto-tamanho" style="display:flex; gap:10px; margin-bottom:15px; align-items:center;"></div>
             <div id="lista-opcoes-tamanho" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px; max-height: 40vh; overflow-y:auto;"></div>
-            <button onclick="window.confirmarAdicaoCarrinho()" class="btn-whatsapp" style="width:100%;">🛒 Adicionar ao Carrinho</button>
+            <button onclick="window.confirmarAdicaoCarrinho()" class="btn-whatsapp" style="width:100%;">🛒 Adicionar Grade ao Carrinho</button>
         </div>
     </div>
 
@@ -47,11 +47,10 @@
         <ul class="menu-links">
             <li onclick="window.filtrarCategoria('Todas')">🎀 Todas as Peças</li>
             <li onclick="window.filtrarCategoria('Vestido')">👗 Vestidos</li>
-            <li onclick="window.filtrarCategoria('Blusa/Cropped/Body')">👚 Blusas / Cropped / Body</li>
+            <li onclick="window.filtrarCategoria('T-shirt')">👚 T-shirt</li>
             <li onclick="window.filtrarCategoria('Short/Saia')">🩳👗 Shorts e Saias</li>
             <li onclick="window.filtrarCategoria('Conjunto')">👯‍♀️ Conjuntos</li>
             <li onclick="window.filtrarCategoria('Macacão/Macaquito')">🩱 Macacões / Macaquitos</li>
-            <li onclick="window.filtrarCategoria('Acessório')">🎀 Acessórios</li>
         </ul>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <div class="store-info">
@@ -118,10 +117,6 @@
 
         <div class="info-banner" id="texto-aviso-loja">⏳ Carregando informações da loja...</div>
 
-        <div class="online-counter">
-            <span class="ponto-verde">🟢</span> <span id="online-count">⏳</span> pessoas visualizando a loja agora
-        </div>
-
         <div id="vitrine-estacoes" style="padding-bottom: 20px;">
             <p style="text-align: center; color: #aaa; margin-top: 50px;">⏳ Carregando coleção...</p>
         </div>
@@ -162,39 +157,13 @@
             <span class="close" onclick="window.fecharLoginCliente()">&times;</span>
             <h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2>
             <form id="form-login-cliente" onsubmit="window.realizarLoginCliente(event)">
-                <input type="text" id="login-cpf-cliente" placeholder="Seu CPF" maxlength="14" required oninput="window.mascaraCPF(this)">
-                <input type="password" id="login-senha-cliente" placeholder="Sua Senha" required>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; padding: 0 5px;">
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="lembrar-senha" style="width:auto; margin:0;">
-                        <label for="lembrar-senha" style="font-size:0.85rem; color:#555; cursor:pointer;">Lembrar-me</label>
-                    </div>
-                    <a href="#" onclick="window.abrirRecuperacaoSenha(); return false;" style="font-size:0.85rem; color:var(--secondary); font-weight:bold; text-decoration:none;">Esqueceu a senha?</a>
-                </div>
-                
-                <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Entrar na Minha Conta</button>
+                <input type="text" id="login-nome-cliente" placeholder="Seu Nome Completo" required>
+                <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Acessar Histórico</button>
             </form>
         </div>
     </div>
     
-    <!-- ALTERAÇÃO 2: Modal de recuperação alterado para usar Frase de Segurança -->
-    <div id="recuperacao-modal" class="modal hidden">
-        <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
-            <span class="close" onclick="window.fecharRecuperacao()">&times;</span>
-            <h2 style="color:var(--primary); margin-bottom:10px;">🔄 Recuperar Senha</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Informe seu CPF e sua frase de segurança para criar uma nova senha.</p>
-            <form id="form-recuperacao" onsubmit="window.recuperarSenhaCliente(event)">
-                <input type="text" id="rec-cpf" placeholder="Seu CPF cadastrado" maxlength="14" required oninput="window.mascaraCPF(this)">
-                <!-- ALTERADO: Campo de telefone trocado para frase de segurança -->
-                <input type="text" id="rec-frase" placeholder="Sua Frase de Segurança" required>
-                <input type="password" id="rec-senha" placeholder="Digite a nova senha" required>
-                <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Salvar Nova Senha</button>
-            </form>
-        </div>
-    </div>
-    
-    <div id="perfil-cliente-modal" class="modal hidden"><div class="modal-content" style="display:flex; flex-direction:column;"><span class="close" onclick="window.fecharPerfil()">&times;</span><h2 style="color:var(--secondary); margin-bottom:5px;" id="titulo-painel-cliente">👤 Meu Painel</h2><div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;"><button onclick="window.mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico</button><button onclick="window.mudarAbaCliente('aba-dados')" class="tab-btn" id="btn-aba-dados" style="flex:1; padding:10px; font-weight:bold; border:none; background:none; color:#aaa;">📝 Meus Dados</button></div><div id="aba-historico" style="margin-top:15px; max-height:50vh; overflow-y:auto;"><div id="lista-meus-pedidos"></div></div><div id="aba-dados" class="hidden" style="margin-top:15px;"><form id="form-atualizar-perfil" onsubmit="window.atualizarPerfilCliente(event)"><input type="hidden" id="perfil-cpf"><input type="text" id="perfil-nome" placeholder="Nome Completo" required><input type="tel" id="perfil-telefone" placeholder="WhatsApp" maxlength="15" required oninput="window.mascaraTelefone(this)"><div style="display:flex; gap:10px;"><input type="text" id="perfil-cep" placeholder="CEP" style="flex:1;" required onblur="window.buscarCep(this.value, 'perfil')"><input type="text" id="perfil-estado" placeholder="UF" style="width:80px;" required></div><input type="text" id="perfil-rua" placeholder="Rua / Avenida" required><div style="display:flex; gap:10px;"><input type="text" id="perfil-numero" placeholder="Nº" style="width:100px;" required><input type="text" id="perfil-bairro" placeholder="Bairro" style="flex:1;" required></div><input type="text" id="perfil-cidade" placeholder="Cidade" required><button type="submit" class="btn-whatsapp">💾 Salvar Alterações</button></form></div><button onclick="window.sairCliente()" class="btn-sair" style="margin-top:20px;">🚪 Sair da Conta</button></div></div>
+    <div id="perfil-cliente-modal" class="modal hidden"><div class="modal-content" style="display:flex; flex-direction:column;"><span class="close" onclick="window.fecharPerfil()">&times;</span><h2 style="color:var(--secondary); margin-bottom:5px;" id="titulo-painel-cliente">👤 Meu Painel</h2><div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;"><button onclick="window.mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico de Compras</button></div><div id="aba-historico" style="margin-top:15px; max-height:50vh; overflow-y:auto;"><div id="lista-meus-pedidos"></div></div><button onclick="window.sairCliente()" class="btn-sair" style="margin-top:20px;">🚪 Sair da Conta</button></div></div>
     
     <div id="modal-editar-pedido" class="modal hidden" style="z-index: 3000;"><div class="modal-content"><span class="close" onclick="window.fecharEdicaoPedido()">&times;</span><h2 style="color:var(--secondary);">✏️ Editar Carrinho</h2><div id="lista-editar-itens" style="margin-top:15px; max-height:40vh; overflow-y:auto;"></div><div class="cart-total">Novo Total: R$ <span id="novo-total-edicao">0.00</span></div><button onclick="window.salvarEdicaoPedido()" class="btn-whatsapp" style="width:100%; margin-top:15px;">💾 Salvar Alterações</button></div></div>
     
@@ -202,7 +171,7 @@
         <div class="modal-content">
             <span class="close" onclick="window.toggleCart()">&times;</span>
             <div id="etapa-carrinho">
-                <h2>🛒 Seu Carrinho</h2>
+                <h2>🛒 Seu Carrinho (Atacado)</h2>
                 <div id="cart-items"></div>
                 <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
                 <button class="btn-whatsapp" onclick="window.irParaCadastro()" style="width:100%; margin-top:20px;">Finalizar Compra</button>
@@ -210,45 +179,31 @@
             <div id="etapa-cadastro" class="hidden">
                 <h2>Dados de Envio</h2>
                 
-                <div id="checkout-login-box" style="background:#eef2f5; padding:15px; border-radius:10px; border:1px solid #ccc; margin-bottom:20px;">
-                    <h4 style="color:#333; margin-bottom:10px;">Já tem cadastro? Entre aqui:</h4>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="checkout-cpf-rapido" placeholder="Seu CPF" maxlength="14" oninput="window.mascaraCPF(this)" style="flex:1; padding:10px;">
-                        <input type="password" id="checkout-senha-rapida" placeholder="Senha" style="width:100px; padding:10px;">
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <a href="#" onclick="window.toggleCart(); window.abrirRecuperacaoSenha(); return false;" style="font-size:0.85rem; color:var(--secondary); font-weight:bold; text-decoration:none;">Esqueceu a senha?</a>
-                        <button type="button" onclick="window.loginRapidoCheckout()" style="background:var(--secondary); color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar</button>
-                    </div>
-                </div>
-
                 <form id="checkout-form" onsubmit="window.finalizarCheckout(event)">
                     <input type="text" id="cliente-nome" placeholder="Nome Completo" required oninput="window.salvarFormulario()">
-                    <input type="text" id="cliente-cpf" placeholder="CPF" maxlength="14" required oninput="window.mascaraCPF(this); window.salvarFormulario()">
-                    
-                    <!-- ALTERAÇÃO 1: Campo de Frase de Segurança adicionado -->
-                    <div id="area-senha-nova" style="background:#f0fff4; padding:10px; border-radius:8px; border:1px solid var(--success); margin:5px 0;">
-                        <label style="font-size:0.85rem; font-weight:bold; color:var(--success);">Crie uma senha para acessar seus pedidos:</label>
-                        <input type="password" id="cliente-senha" placeholder="Senha" required>
-                        
-                        <!-- NOVO CAMPO: Frase de Segurança -->
-                        <input type="text" id="cliente-frase" placeholder="Frase de Segurança (ex: nome do primeiro cachorro)" required style="margin-top:8px; border-color:#ffb6c1;">
-                        <small style="font-size:0.75rem; color:#666; display:block; margin-top:4px;">Guarde esta frase! Ela será necessária para recuperar sua senha.</small>
-                    </div>
-
-                    <input type="tel" id="cliente-telefone" placeholder="WhatsApp (Ex: 81 90000-0000)" maxlength="15" required oninput="window.mascaraTelefone(this); window.salvarFormulario()">
+                    <input type="tel" id="cliente-telefone" placeholder="Telefone: (**)* ****-****" maxlength="15" required oninput="window.mascaraTelefone(this); window.salvarFormulario()">
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="cliente-cep" placeholder="CEP" style="flex:1;" required onblur="window.buscarCep(this.value, 'cliente')" oninput="window.salvarFormulario()">
+                        <input type="text" id="cliente-cidade" placeholder="Cidade" style="flex:1;" required oninput="window.salvarFormulario()">
                         <input type="text" id="cliente-estado" placeholder="UF" style="width:80px;" required oninput="window.salvarFormulario()">
                     </div>
-                    <input type="text" id="cliente-rua" placeholder="Rua" required oninput="window.salvarFormulario()">
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="cliente-numero" placeholder="Nº" style="width:80px;" required oninput="window.salvarFormulario()">
-                        <input type="text" id="cliente-bairro" placeholder="Bairro" style="flex:1;" required oninput="window.salvarFormulario()">
+
+                    <label style="font-weight:bold; font-size: 0.9rem; margin-top: 10px; color: var(--primary);">Método de Entrega:</label>
+                    <select id="cliente-metodo-entrega" required onchange="window.mudarMetodoEntrega()" style="margin-top: 0;">
+                        <option value="">Selecione...</option>
+                        <option value="Retirada">Retirada na Loja</option>
+                        <option value="Excursão">Envio por Excursão</option>
+                    </select>
+
+                    <div id="bloco-excursao" class="hidden">
+                        <input type="text" id="cliente-excursao" placeholder="Nome da Excursão" style="width: 100%;" oninput="window.salvarFormulario()">
                     </div>
-                    <input type="text" id="cliente-cidade" placeholder="Cidade" required oninput="window.salvarFormulario()">
-                    <input type="text" id="cliente-ref" placeholder="Ponto de Referência" oninput="window.salvarFormulario()">
-                    <div class="pagamento-info">
+
+                    <div id="bloco-retirada" class="hidden" style="background:#f0fff4; padding:10px; border-radius:8px; border:1px solid var(--success); margin-top: 5px;">
+                        <span style="font-size:0.85rem; font-weight:bold; color:var(--success);">📍 Endereço de Retirada:</span>
+                        <p style="font-size: 0.85rem; color: #333; margin-top: 3px;">Loja Maribella Kids<br>Cidade: Santa Cruz<br>Box Setor Amarelo, Rua N, Box 1 e 3.</p>
+                    </div>
+
+                    <div class="pagamento-info" style="margin-top: 15px;">
                         <h4>Pagamento via PIX</h4>
                         <p>Chave: <strong id="pix-display">Carregando...</strong></p>
                         <button type="button" class="btn-pix" onclick="window.tentarCopiarPix()">📋 Copiar Chave PIX</button>
@@ -313,23 +268,23 @@
                 <form id="form-add-produto" class="admin-form" onsubmit="window.salvarProdutoAdmin(event)">
                     <input type="hidden" id="edit-produto-id">
                     <input type="text" id="add-nome" placeholder="Nome do Modelo" required style="width: 100%;">
-                    <input type="number" id="add-preco" placeholder="Preço (Ex: 89.90)" step="0.01" required style="width:100%;">
+                    <input type="number" id="add-preco" placeholder="Preço da Grade Fechada (Ex: 350.00)" step="0.01" required style="width:100%;">
                     
                     <div style="background: #eef2f5; padding: 15px; border-radius: 10px; margin-top:10px; border: 1px solid #ddd;">
-                        <label style="font-weight:bold; color:var(--primary);">📏 Estoque de Tamanhos e Cores:</label>
+                        <label style="font-weight:bold; color:var(--primary);">📏 Controle de Grades (10 Peças):</label>
+                        <p style="font-size: 0.8rem; color: #666;">Indique a Cor e a Quantidade de GRADES disponíveis.</p>
                         <div id="lista-variacoes-admin" style="display:flex; flex-direction:column; gap:8px; margin-top: 10px;"></div>
-                        <button type="button" onclick="window.adicionarVariacaoAdmin()" style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">➕ Adicionar Tamanho/Cor</button>
-                        <div style="margin-top:10px; font-weight:bold;">Total de Peças: <span id="total-pecas-admin" style="color:var(--primary);">0</span></div>
+                        <button type="button" onclick="window.adicionarVariacaoAdmin()" style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">➕ Adicionar Cor de Grade</button>
+                        <div style="margin-top:10px; font-weight:bold;">Total de Grades: <span id="total-pecas-admin" style="color:var(--primary);">0</span></div>
                     </div>
 
                     <div style="display:flex; gap:10px; width: 100%; align-items:center; margin-top:10px;">
                         <select id="add-categoria" required style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
                             <option value="Vestido">Vestido</option>
-                            <option value="Blusa/Cropped/Body">Blusa / Cropped / Body</option>
+                            <option value="T-shirt">T-shirt</option>
                             <option value="Short/Saia">Short / Saia</option>
                             <option value="Conjunto">Conjunto</option>
                             <option value="Macacão/Macaquito">Macacão / Macaquito</option>
-                            <option value="Acessório">Acessório</option>
                         </select>
                         <label style="flex:1; display:flex; align-items:center; gap:5px; font-weight:bold; font-size:0.9rem; color:var(--primary); background: #f9f9f9; padding: 10px; border-radius: 10px;">
                             <input type="checkbox" id="add-lancamento" style="width:20px; height:20px; margin:0;"> Lançamento 🌟
@@ -338,7 +293,6 @@
                     <input type="text" id="add-material" placeholder="Tipo do Material" required>
                     <label style="font-size: 0.9rem; margin-top: 10px;">Fotos Oficiais (Até 4 fotos):</label>
                     <input type="file" id="add-imagem-file" accept="image/*" multiple max="4" style="background: white;">
-                    <p style="font-size: 0.75rem; color: #888;">Segure a tela (ou CTRL no PC) para selecionar várias fotos de uma vez.</p>
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-produto">💾 Salvar Produto</button>
                     <button type="button" class="btn-icon" style="background:#ccc; margin-top:10px; width:100%;" onclick="window.limparFormProduto()">Limpar / Cancelar Edição</button>
                 </form>
@@ -349,11 +303,10 @@
                     <select id="admin-filtro-cat" onchange="window.filtrarProdutosAdmin()" style="padding:8px; border-radius:8px; border:1px solid #ddd; outline:none;">
                         <option value="Todos">Todas as Peças</option>
                         <option value="Vestido">Vestido</option>
-                        <option value="Blusa/Cropped/Body">Blusa / Cropped / Body</option>
+                        <option value="T-shirt">T-shirt</option>
                         <option value="Short/Saia">Short / Saia</option>
                         <option value="Conjunto">Conjunto</option>
                         <option value="Macacão/Macaquito">Macacão / Macaquito</option>
-                        <option value="Acessório">Acessório</option>
                     </select>
                 </div>
                 <input type="text" id="busca-produto-admin" placeholder="🔍 Buscar produto por nome..." oninput="window.filtrarProdutosAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
@@ -362,7 +315,7 @@
 
             <div id="admin-clientes" class="admin-aba hidden">
                 <h3>Clientes Cadastrados</h3>
-                <input type="text" id="busca-cliente-admin" placeholder="🔍 Buscar por nome, cpf ou cidade..." oninput="window.filtrarClientesAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
+                <input type="text" id="busca-cliente-admin" placeholder="🔍 Buscar por nome..." oninput="window.filtrarClientesAdmin()" style="width:100%; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #ddd;">
                 <div id="lista-admin-clientes"></div>
             </div>
 
@@ -370,7 +323,7 @@
                 <h3>🔧 Ajustes da Loja</h3>
                 <form id="form-config-loja" class="admin-form" onsubmit="window.salvarConfiguracoes(event)">
                     <label style="font-weight:bold;">Aviso no Topo do Site (Aperte Enter para pular linha):</label>
-                    <textarea id="config-aviso" placeholder="Ex: Apenas atacado. \nPedido mínimo 6 peças..." rows="3" required></textarea>
+                    <textarea id="config-aviso" placeholder="Ex: Apenas atacado. \nPedido mínimo..." rows="3" required></textarea>
                     <label style="font-weight:bold; margin-top:10px;">Chave PIX:</label>
                     <input type="text" id="config-pix" required>
                     <label style="font-weight:bold; margin-top:10px;">WhatsApp Vendas (Com DDD):</label>
@@ -381,8 +334,6 @@
                     <input type="text" id="config-endereco" placeholder="Sua cidade e estado" required>
                     <button type="submit" class="btn-whatsapp" id="btn-salvar-config">💾 Atualizar Dados</button>
                 </form>
-                <h4 style="margin-top:30px; color:var(--primary);">🪄 Mágica (Exemplos)</h4>
-                <button onclick="window.gerarDadosDeExemplo()" class="btn-add" style="background: #2ecc71; margin-top: 10px;">➕ Gerar Dados Falsos</button>
             </div>
         </div>
     </div>
