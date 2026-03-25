@@ -30,7 +30,7 @@
 
     <div id="modal-escolher-tamanho" class="modal hidden" style="z-index: 3000;">
         <div class="modal-content" style="max-width: 350px;">
-            <span class="close" onclick="window.fecharModalTamanho()">&times;</span>
+            <span class="close" onclick="window.fecharModalTamanho()">×</span>
             <h2 style="color:var(--primary); margin-bottom: 10px; font-size:1.3rem;">Adicionar ao Carrinho</h2>
             <div id="info-produto-tamanho" style="display:flex; gap:10px; margin-bottom:15px; align-items:center;"></div>
             <div id="lista-opcoes-tamanho" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px; max-height: 40vh; overflow-y:auto;"></div>
@@ -42,7 +42,7 @@
     <div id="sidebar-menu" class="sidebar hidden">
         <div class="sidebar-header">
             <h2>Categorias</h2>
-            <span class="close-sidebar" onclick="window.fecharMenuLateral()">&times;</span>
+            <span class="close-sidebar" onclick="window.fecharMenuLateral()">×</span>
         </div>
         <ul class="menu-links">
             <li onclick="window.filtrarCategoria('Todas')">🎀 Todas as Peças</li>
@@ -75,7 +75,7 @@
 
     <div id="admin-login-modal" class="modal hidden" style="z-index: 100000;">
         <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
-            <span class="close" onclick="window.fecharLoginAdmin()">&times;</span>
+            <span class="close" onclick="window.fecharLoginAdmin()">×</span>
             <h2 style="color:var(--primary); margin-bottom:10px;">🔐 Admin</h2>
             <form id="form-login-admin" onsubmit="window.realizarLoginAdmin(event)">
                 <input type="email" id="admin-email" placeholder="E-mail Administrativo" required>
@@ -87,7 +87,7 @@
 
     <div id="modal-avaliacoes" class="modal hidden" style="z-index: 9999999;">
         <div class="modal-content" style="padding: 20px;">
-            <span class="close" onclick="window.fecharModalAvaliacoes()">&times;</span>
+            <span class="close" onclick="window.fecharModalAvaliacoes()">×</span>
             <h2 style="color:var(--primary); margin-bottom: 15px; font-size: 1.5rem;">⭐ Avaliações (<span id="total-avaliacoes-count">0</span>)</h2>
             <div id="lista-avaliacoes-modal" style="max-height: 65vh; overflow-y: auto; padding-right: 5px;"></div>
         </div>
@@ -137,17 +137,17 @@
     </main>
 
     <div id="lightbox-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: fixed;">
-        <span class="close" onclick="window.fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed; z-index: 10002;">&times;</span>
-        <button id="lightbox-prev" class="lightbox-nav hidden" onclick="window.navegarLightbox(-1)">&#10094;</button>
+        <span class="close" onclick="window.fecharLightbox()" style="color:white; top:20px; right:20px; font-size:3rem; position: fixed; z-index: 10002;">×</span>
+        <button id="lightbox-prev" class="lightbox-nav hidden" onclick="window.navegarLightbox(-1)">❮</button>
         <img id="lightbox-img" src="" onclick="window.toggleZoom()" alt="Zoom" style="max-height: 70vh; width: auto; max-width: 95vw; object-fit: contain; border-radius: 10px; transition: 0.3s ease; position: relative; z-index: 10000;">
-        <button id="lightbox-next" class="lightbox-nav hidden" onclick="window.navegarLightbox(1)">&#10095;</button>
+        <button id="lightbox-next" class="lightbox-nav hidden" onclick="window.navegarLightbox(1)">❯</button>
         <div id="lightbox-controls" style="margin-top: 20px; text-align: center; display: none; z-index: 10001;">
             <button class="btn-whatsapp" onclick="window.abrirOpcoesLightbox()" style="padding: 15px 30px; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border-radius: 30px;">🛒 Adicionar ao Carrinho</button>
         </div>
     </div>
 
     <div id="install-app-banner" class="app-banner hidden">
-        <span class="close-banner" onclick="window.fecharBannerInstalacao()">&times;</span>
+        <span class="close-banner" onclick="window.fecharBannerInstalacao()">×</span>
         <img src="https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif" alt="App Icon" class="app-banner-icon">
         <div class="app-banner-text">
             <h4>Baixe o App! 🎀</h4>
@@ -158,22 +158,24 @@
     
     <div id="cliente-login-modal" class="modal hidden">
         <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
-            <span class="close" onclick="window.fecharLoginCliente()">&times;</span>
+            <span class="close" onclick="window.fecharLoginCliente()">×</span>
             <h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Acesse seu histórico de compras informando seus dados.</p>
             <form id="form-login-cliente" onsubmit="window.realizarLoginCliente(event)">
                 <input type="text" id="login-nome-cliente" placeholder="Seu Nome Completo" required>
+                <input type="tel" id="login-telefone-cliente" placeholder="Telefone: (**)* ****-****" maxlength="15" required oninput="window.mascaraTelefone(this)">
                 <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Acessar Histórico</button>
             </form>
         </div>
     </div>
     
-    <div id="perfil-cliente-modal" class="modal hidden"><div class="modal-content" style="display:flex; flex-direction:column;"><span class="close" onclick="window.fecharPerfil()">&times;</span><h2 style="color:var(--secondary); margin-bottom:5px;" id="titulo-painel-cliente">👤 Meu Painel</h2><div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;"><button onclick="window.mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico de Compras</button></div><div id="aba-historico" style="margin-top:15px; max-height:50vh; overflow-y:auto;"><div id="lista-meus-pedidos"></div></div><button onclick="window.sairCliente()" class="btn-sair" style="margin-top:20px;">🚪 Sair da Conta</button></div></div>
+    <div id="perfil-cliente-modal" class="modal hidden"><div class="modal-content" style="display:flex; flex-direction:column;"><span class="close" onclick="window.fecharPerfil()">×</span><h2 style="color:var(--secondary); margin-bottom:5px;" id="titulo-painel-cliente">👤 Meu Painel</h2><div class="tabs" style="display:flex; border-bottom:2px solid #eee; margin-top:10px;"><button onclick="window.mudarAbaCliente('aba-historico')" class="tab-btn ativa" id="btn-aba-historico" style="flex:1; padding:10px; font-weight:bold; border:none; background:none;">🛍️ Histórico de Compras</button></div><div id="aba-historico" style="margin-top:15px; max-height:50vh; overflow-y:auto;"><div id="lista-meus-pedidos"></div></div><button onclick="window.sairCliente()" class="btn-sair" style="margin-top:20px;">🚪 Sair da Conta</button></div></div>
     
-    <div id="modal-editar-pedido" class="modal hidden" style="z-index: 3000;"><div class="modal-content"><span class="close" onclick="window.fecharEdicaoPedido()">&times;</span><h2 style="color:var(--secondary);">✏️ Editar Carrinho</h2><div id="lista-editar-itens" style="margin-top:15px; max-height:40vh; overflow-y:auto;"></div><div class="cart-total">Novo Total: R$ <span id="novo-total-edicao">0.00</span></div><button onclick="window.salvarEdicaoPedido()" class="btn-whatsapp" style="width:100%; margin-top:15px;">💾 Salvar Alterações</button></div></div>
+    <div id="modal-editar-pedido" class="modal hidden" style="z-index: 3000;"><div class="modal-content"><span class="close" onclick="window.fecharEdicaoPedido()">×</span><h2 style="color:var(--secondary);">✏️ Editar Carrinho</h2><div id="lista-editar-itens" style="margin-top:15px; max-height:40vh; overflow-y:auto;"></div><div class="cart-total">Novo Total: R$ <span id="novo-total-edicao">0.00</span></div><button onclick="window.salvarEdicaoPedido()" class="btn-whatsapp" style="width:100%; margin-top:15px;">💾 Salvar Alterações</button></div></div>
     
     <div id="cart-modal" class="modal hidden">
         <div class="modal-content">
-            <span class="close" onclick="window.toggleCart()">&times;</span>
+            <span class="close" onclick="window.toggleCart()">×</span>
             <div id="etapa-carrinho">
                 <h2>🛒 Seu Carrinho (Atacado)</h2>
                 <div id="cart-items"></div>
@@ -222,7 +224,7 @@
         </div>
     </div>
 
-    <div id="admin-historico-cliente-modal" class="modal hidden" style="z-index:4000;"><div class="modal-content"><span class="close" onclick="window.fecharHistoricoClienteAdmin()">&times;</span><h2 style="color:var(--secondary);" id="nome-historico-admin">Histórico</h2><div id="lista-historico-cliente-admin" style="margin-top:15px; max-height:60vh; overflow-y:auto;"></div></div></div>
+    <div id="admin-historico-cliente-modal" class="modal hidden" style="z-index:4000;"><div class="modal-content"><span class="close" onclick="window.fecharHistoricoClienteAdmin()">×</span><h2 style="color:var(--secondary);" id="nome-historico-admin">Histórico</h2><div id="lista-historico-cliente-admin" style="margin-top:15px; max-height:60vh; overflow-y:auto;"></div></div></div>
 
     <div id="admin-dashboard" class="hidden">
         <div class="admin-sidebar">
