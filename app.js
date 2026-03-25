@@ -14,7 +14,7 @@ const db = getFirestore(app); const storage = getStorage(app); const auth = getA
 
 let carrinho = JSON.parse(localStorage.getItem('maribella_carrinho')) || [];
 let listaDeProdutos = []; let todosPedidosAdmin = []; let todosProdutosAdmin = []; let todosClientesAdmin = [];
-let configLoja = { pix: "", telefone: "5581999999999", aviso: "Vendemos apenas grade fechada (10 un). Frete via WhatsApp!", instagram: "https://instagram.com/maribellakids", endereco: "Sua Cidade, Estado" };
+let configLoja = { pix: "", pixNome: "", telefone: "5581999999999", aviso: "Vendemos apenas grade fechada (10 un). Frete via WhatsApp!", instagram: "https://instagram.com/maribellakids", endereco: "Sua Cidade, Estado", linkMaps: "#" };
 let clienteLogadoDados = null;
 let meusPedidosSalvos = []; let pedidoEmEdicao = null;
 let carouselIntervals = [];
@@ -23,10 +23,10 @@ let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
 let graficoVendasApp = null; 
 
-// Nova máscara formato: (XX)X XXXX-XXXX
+// Nova máscara formato: (XX) X XXXX-XXXX
 window.mascaraTelefone = (i) => { 
     let v = i.value.replace(/\D/g,""); 
-    v = v.replace(/^(\d{2})(\d)/g,"($1)$2 "); 
+    v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); 
     v = v.replace(/(\d{4})(\d{4})$/,"$1-$2"); 
     i.value = v; 
 };
@@ -65,31 +65,39 @@ function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-// --- AVALIAÇÕES CRESCENTES ---
+// --- AVALIAÇÕES CRESCENTES (1 a cada 2 dias) ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
+    const totalReviews = 160;
     const nomesF = ["Mariana", "Carla", "Ana", "Beatriz", "Juliana", "Camila", "Fernanda", "Amanda", "Letícia", "Vanessa", "Bruna", "Aline"];
+    const nomesM = ["Carlos", "Marcos", "João", "Pedro", "Lucas", "Mateus", "Rafael", "Felipe", "Bruno", "Thiago", "Eduardo"];
+    const sobrenomes = ["Silva", "Mendes", "Costa", "Souza", "Oliveira", "Pereira", "Lima", "Gomes", "Ribeiro", "Martins"];
+    const dddBR = ["81", "87", "81", "87", "81", "87", "11", "21", "31", "41"];
     const comentarios = ["Qualidade incrível, amei as grades!", "Chegou super rápido, recomendo.", "Perfeito, tamanho certinho para revenda.", "Comprei para revender e já acabou tudo!", "Lindas peças, ótimo acabamento.", "As cores são vivas, idêntico à foto.", "Minhas clientes adoraram.", "Superou minhas expectativas.", "Comprarei novamente.", "Tudo perfeito, recomendo para lojistas!"];
 
     const dataBase = new Date('2024-01-01').getTime();
     const hoje = new Date().getTime();
     const diasPassados = Math.floor((hoje - dataBase) / (1000 * 60 * 60 * 24));
-    
-    // Libera 1 avaliação nova a cada 2 dias contados da Data Base
-    const totalReviewsParaMostrar = Math.max(1, Math.floor(diasPassados / 2));
-    
-    for(let i=0; i < totalReviewsParaMostrar; i++) {
-        let nomeBase = nomesF[(i * 13) % nomesF.length];
-        let foto = `https://randomuser.me/api/portraits/women/${(i % 99) + 1}.jpg`;
-        
-        avaliacoesGeradas.push({
-            nome: `${nomeBase} 🇧🇷`,
-            telefone: `(XX) X XXXX-XXXX | ⭐⭐⭐⭐⭐`,
+    const totalPermitido = Math.max(1, Math.floor(diasPassados / 2));
+
+    let tempReviews = [];
+    for(let i=0; i < totalReviews; i++) {
+        let isMulher = Math.random() > 0.2;
+        let nomeBase = isMulher ? nomesF[(i * 13) % nomesF.length] : nomesM[(i * 11) % nomesM.length];
+        let nomeCompleto = `${nomeBase} ${sobrenomes[(i * 7) % sobrenomes.length]}`;
+        let ddd = dddBR[Math.floor(Math.random()*dddBR.length)];
+        let telefone = `(${ddd}) 9${Math.floor(Math.random()*9)}***-**${Math.floor(Math.random()*90)+10}`;
+        let generoFoto = isMulher ? "women" : "men";
+
+        tempReviews.push({
+            nome: `${nomeCompleto} 🇧🇷`,
+            telefone: `${telefone} | ⭐⭐⭐⭐⭐`,
             texto: comentarios[(i * 23) % comentarios.length],
-            foto: foto
+            foto: `https://randomuser.me/api/portraits/${generoFoto}/${(i % 99) + 1}.jpg`
         });
     }
-    avaliacoesGeradas.reverse(); // Mais recentes primeiro
+    
+    avaliacoesGeradas = tempReviews.slice(0, totalPermitido).reverse();
 }
 
 function renderizarReviewSidebar() {
@@ -178,18 +186,44 @@ async function carregarConfiguracoes() {
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
         configLoja = snap.data(); 
-        document.getElementById('pix-display').innerText = configLoja.pix; document.getElementById('config-pix').value = configLoja.pix; 
-        document.getElementById('config-telefone').value = configLoja.telefone; document.getElementById('config-aviso').value = configLoja.aviso || ""; document.getElementById('config-instagram').value = configLoja.instagram || ""; document.getElementById('config-endereco').value = configLoja.endereco || "";
+        document.getElementById('pix-display').innerText = configLoja.pix; 
+        document.getElementById('pix-nome-display').innerText = configLoja.pixNome || configLoja.pix; 
+        document.getElementById('config-pix').value = configLoja.pix; 
+        document.getElementById('config-pix-nome').value = configLoja.pixNome || ""; 
+        document.getElementById('config-telefone').value = configLoja.telefone; 
+        document.getElementById('config-aviso').value = configLoja.aviso || ""; 
+        document.getElementById('config-instagram').value = configLoja.instagram || ""; 
+        document.getElementById('config-endereco').value = configLoja.endereco || "";
+        document.getElementById('config-link-maps').value = configLoja.linkMaps || "";
     } 
-    document.getElementById('texto-aviso-loja').innerText = configLoja.aviso || "Vendemos apenas grade fechada."; document.getElementById('footer-instagram-link').href = configLoja.instagram || "#"; document.getElementById('footer-endereco-texto').innerText = configLoja.endereco || "Nossa Loja"; document.getElementById('menu-endereco-info').innerText = configLoja.endereco || "Nossa Loja";
+    document.getElementById('texto-aviso-loja').innerText = configLoja.aviso || "Vendemos apenas grade fechada."; 
+    document.getElementById('footer-instagram-link').href = configLoja.instagram || "#"; 
+    
+    // Atualiza Links do Maps e Endereço multiline
+    const endFormatado = (configLoja.endereco || "Nossa Loja").replace(/\n/g, '<br>');
+    document.getElementById('footer-endereco-texto').innerHTML = '📍 ' + endFormatado; 
+    document.getElementById('menu-endereco-info').innerHTML = '📍 ' + endFormatado;
+    
+    document.getElementById('footer-endereco-link').href = configLoja.linkMaps || "#";
+    document.getElementById('menu-endereco-link').href = configLoja.linkMaps || "#";
 }
+
 window.salvarConfiguracoes = async (e) => { 
     e.preventDefault(); const sim = await window.confirmarAcao("Ajustes", "Salvar novas informações da loja?"); if(!sim) return;
     const btn = document.getElementById('btn-salvar-config'); btn.innerText = "⏳..."; 
     try { 
-        configLoja.pix = document.getElementById('config-pix').value; configLoja.telefone = document.getElementById('config-telefone').value; configLoja.aviso = document.getElementById('config-aviso').value; configLoja.instagram = document.getElementById('config-instagram').value; configLoja.endereco = document.getElementById('config-endereco').value;
+        configLoja.pix = document.getElementById('config-pix').value; 
+        configLoja.pixNome = document.getElementById('config-pix-nome').value; 
+        configLoja.telefone = document.getElementById('config-telefone').value; 
+        configLoja.aviso = document.getElementById('config-aviso').value; 
+        configLoja.instagram = document.getElementById('config-instagram').value; 
+        configLoja.endereco = document.getElementById('config-endereco').value;
+        configLoja.linkMaps = document.getElementById('config-link-maps').value;
+        
         await setDoc(doc(db, "config", "loja"), configLoja); 
-        document.getElementById('pix-display').innerText = configLoja.pix; document.getElementById('texto-aviso-loja').innerText = configLoja.aviso; document.getElementById('footer-instagram-link').href = configLoja.instagram; document.getElementById('footer-endereco-texto').innerText = configLoja.endereco; mostrarNotificacao("Salvo!", "sucesso"); 
+        
+        carregarConfiguracoes(); // Atualiza toda a tela automaticamente
+        mostrarNotificacao("Salvo!", "sucesso"); 
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
@@ -324,10 +358,10 @@ window.abrirEscolherTamanho = (id) => {
         let corSpan = esgotado ? 'color:#ccc; text-decoration:line-through;' : 'color:#333;';
         let isDefault = (idx === firstAvailableIdx);
         
-        let nomeVar = v.nome.includes('Grade') ? v.nome : `Grade (${v.cor || '10 un'})`;
+        let nomeVar = "Grade Fechada (10 un)";
 
         htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; margin-bottom:5px; ${corSpan}">
-            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' grades disp.'}</span></div>
+            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' grades disponíveis'}</span></div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button onclick="window.mudarQtdModal(${idx}, -1, ${v.qtd})" style="border:none; background:#eee; width:30px; height:30px; border-radius:5px; font-weight:bold; cursor:pointer; color:#333;" ${esgotado ? 'disabled' : ''}>-</button>
                 <input type="number" id="qtd_var_${idx}" min="0" max="${v.qtd}" value="${esgotado ? 0 : (isDefault ? 1 : 0)}" readonly style="width:40px; padding:5px; border:1px solid #eee; border-radius:5px; font-weight:bold; text-align:center; background:#fff; color:#333;">
@@ -351,10 +385,10 @@ window.confirmarAdicaoCarrinho = () => {
             let cartId = produtoParaAdicionarTamanho.id + "_" + idx;
             let itemEx = carrinho.find(p => p.cartId === cartId);
             
-            let nomeVar = v.nome.includes('Grade') ? v.nome : `Grade (${v.cor || '10 un'})`;
+            let nomeVar = "Grade Fechada (10 un)";
 
             if(itemEx) {
-                if(itemEx.qtd + qtdPedida > v.qtd) return window.mostrarNotificacao(`Estoque max atingido em ${v.nome}!`, 'erro');
+                if(itemEx.qtd + qtdPedida > v.qtd) return window.mostrarNotificacao(`Estoque max atingido!`, 'erro');
                 itemEx.qtd += qtdPedida;
             } else {
                 let imgCart = produtoParaAdicionarTamanho.imagens ? produtoParaAdicionarTamanho.imagens[0] : produtoParaAdicionarTamanho.imagem;
@@ -447,8 +481,8 @@ window.finalizarCheckout = async (e) => {
 
     try {
         let dadosC = { nome, telefone: tel, cidade, estado };
-        // Salva apenas pelo nome formatado (ou usa addDoc se quiser IDs aleatórios, aqui salvaremos com ID slug)
-        const idClienteStr = nome.trim().toLowerCase().replace(/\s+/g, '_');
+        // Garante que o usuário não seja sobrescrito combinando o Nome com o Telefone
+        const idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${tel.replace(/\D/g, '')}`;
         await setDoc(doc(db, "clientes", idClienteStr), dadosC, { merge: true });
         
         let strItens = carrinho.map(i=> `${i.qtd||1}x ${i.nome} (${i.tamanhoSelecionado})`).join(", "); const dataH = new Date();
@@ -577,15 +611,24 @@ window.filtrarPedidosAdmin = () => {
     let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
     if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
     res.forEach(p => { 
-        let btnAprovar = p.status === 'Pendente' ? `<button onclick="window.aprovarPedido('${p.id}')" style="background:#2ecc71; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">✅ Aprovar</button>` : '';
-        let btnVoltar = p.status !== 'Pendente' ? `<button onclick="window.voltarPendentePedido('${p.id}')" style="background:#f39c12; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">↩️ Pendente</button>` : '';
+        let selectStatus = `<div style="display:inline-flex; align-items:center; gap:5px; background:#f0f0f0; padding:5px; border-radius:5px; margin-right: 5px;">
+            <span>✏️</span>
+            <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:#333; cursor:pointer;">
+                <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Aprovado" ${p.status === 'Aprovado' ? 'selected' : ''}>Aprovado</option>
+                <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+            </select>
+        </div>`;
+        let btnEtiqueta = p.status === 'Aprovado' ? `<button onclick="window.imprimirEtiqueta('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🖨️ Etiqueta</button>` : '';
         let btnExcluir = `<button onclick="window.excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🗑️ Excluir</button>`;
-        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><span style="font-weight:bold;">Status: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap;">${btnAprovar}${btnVoltar}${btnExcluir}</div></div>`; 
+        
+        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold;">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
     });
 }
-window.aprovarPedido = async (id) => { const sim = await window.confirmarAcao("Aprovar Pagamento", "O valor já caiu na conta?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Aprovado" }); carregarListaAdminPedidos(); } };
-window.voltarPendentePedido = async (id) => { const sim = await window.confirmarAcao("Reverter Status", "Voltar o pedido para Pendente?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Pendente" }); carregarListaAdminPedidos(); } };
+window.mudarStatusPedido = async (id, novoStatus) => { const sim = await window.confirmarAcao("Mudar Status", `Alterar o pedido para ${novoStatus}?`); if (sim) { await updateDoc(doc(db, "pedidos", id), { status: novoStatus }); carregarListaAdminPedidos(); } else { carregarListaAdminPedidos(); } };
 window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
+
+window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco ? configLoja.endereco.replace(/\n/g, '<br>') : 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br><strong>Endereço:</strong> ${pedido.cidade || 'Não informado'} - ${pedido.estado || ''}<br><strong>Entrega:</strong> ${pedido.envio || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
 // --- RELATÓRIOS INTELIGENTES COM GRÁFICO ---
 window.gerarRelatoriosAdmin = () => {
@@ -673,7 +716,7 @@ window.gerarRelatoriosAdmin = () => {
     }
 };
 
-window.adicionarVariacaoAdmin = (cor='', qtd=0) => { variacoesAdminTemp.push({tamanho: 'Grade', cor, qtd}); renderizarVariacoesAdmin(); };
+window.adicionarVariacaoAdmin = (qtd=0) => { variacoesAdminTemp.push({tamanho: 'Grade', qtd}); renderizarVariacoesAdmin(); };
 window.atualizarVariacaoAdmin = (idx, campo, valor) => { variacoesAdminTemp[idx][campo] = valor; renderizarVariacoesAdmin(); };
 window.removerVariacaoAdmin = (idx) => { variacoesAdminTemp.splice(idx, 1); renderizarVariacoesAdmin(); };
 function renderizarVariacoesAdmin() {
@@ -681,8 +724,8 @@ function renderizarVariacoesAdmin() {
     div.innerHTML = variacoesAdminTemp.map((v, i) => {
         total += parseInt(v.qtd||0);
         return `<div style="display:flex; gap:5px; align-items:center;">
-            <input type="text" placeholder="Cor (Ex: Azul)" value="${v.cor}" onchange="window.atualizarVariacaoAdmin(${i}, 'cor', this.value)" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;">
-            <input type="number" placeholder="Qtd Grades" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="width:100px; padding:10px; border:1px solid #ccc; border-radius:5px;">
+            <span style="flex:1; font-weight:bold; color:#555;">Quantidade em Estoque:</span>
+            <input type="number" placeholder="Qtd Grades" value="${v.qtd}" onchange="window.atualizarVariacaoAdmin(${i}, 'qtd', parseInt(this.value)||0)" style="width:120px; padding:10px; border:1px solid #ccc; border-radius:5px;">
             <button type="button" onclick="window.removerVariacaoAdmin(${i})" style="background:#e74c3c; color:white; border:none; padding:10px 12px; border-radius:5px;">X</button>
         </div>`;
     }).join('');
@@ -691,27 +734,29 @@ function renderizarVariacoesAdmin() {
 
 window.salvarProdutoAdmin = async (e) => { 
     e.preventDefault(); 
-    if(variacoesAdminTemp.length === 0) return window.mostrarNotificacao("Adicione pelo menos 1 Cor de Grade!", "erro");
-    let variacoesLimpas = variacoesAdminTemp.map(v => ({ nome: `Grade (${v.cor||'Cor Única'}) - 10 un`, tamanho: 'Grade', cor: v.cor, qtd: v.qtd }));
+    if(variacoesAdminTemp.length === 0) return window.mostrarNotificacao("Adicione pelo menos a quantidade do Estoque!", "erro");
+    let variacoesLimpas = variacoesAdminTemp.map(v => ({ nome: `Grade Fechada (10 un)`, tamanho: 'Grade', cor: '', qtd: v.qtd }));
 
     const sim = await window.confirmarAcao("Salvar Grade", "Salvar no sistema?"); if(!sim) return;
     const btn = document.getElementById('btn-salvar-produto'); const imgs = document.getElementById('add-imagem-file').files; const id = document.getElementById('edit-produto-id').value; 
-    btn.innerText = "⏳..."; btn.disabled = true; 
+    btn.innerText = "⏳ Enviando Imagens..."; btn.disabled = true; 
     
     try { 
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
-            for(let i=0; i<imgs.length; i++){
-                if(i > 3) break; 
-                const sRef = ref(storage, 'produtos/' + Date.now() + '_' + imgs[i].name); 
-                await uploadBytes(sRef, imgs[i]); 
-                urlsFotos.push(await getDownloadURL(sRef));
-            }
+            // Upload Paralelo Muito mais Rápido
+            let uploadPromises = Array.from(imgs).slice(0, 4).map(async (img) => {
+                const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); 
+                await uploadBytes(sRef, img); 
+                return await getDownloadURL(sRef);
+            });
+            urlsFotos = await Promise.all(uploadPromises);
         } 
 
         const pData = { nome: document.getElementById('add-nome').value, preco: parseFloat(document.getElementById('add-preco').value), variacoes: variacoesLimpas, categoria: document.getElementById('add-categoria').value, lancamento: document.getElementById('add-lancamento').checked, material: document.getElementById('add-material').value }; 
         if(urlsFotos.length > 0) { pData.imagens = urlsFotos; pData.imagem = urlsFotos[0]; } 
         
+        btn.innerText = "⏳ Salvando dados...";
         if (id) { await updateDoc(doc(db, "produtos", id), pData); } else { if(!pData.imagem) { btn.disabled = false; btn.innerText = "💾 Salvar Produto"; return window.mostrarNotificacao("Foto obrigatória!","erro"); } await addDoc(collection(db, "produtos"), pData); } 
         window.limparFormProduto(); carregarListaAdminProdutosEditar(); window.mostrarNotificacao("Sucesso!","sucesso"); 
     } catch(e) {} 
@@ -755,8 +800,7 @@ window.editarProdutoAdmin = (id) => {
     document.getElementById('edit-produto-id').value=p.id; document.getElementById('add-nome').value=p.nome; document.getElementById('add-preco').value=p.preco; document.getElementById('add-categoria').value=p.categoria||'Vestido'; document.getElementById('add-lancamento').checked=p.lancamento===true; document.getElementById('add-material').value=p.material; 
     
     variacoesAdminTemp = p.variacoes.map(v => {
-        let c = v.cor || (v.nome.split('-')[1] ? v.nome.split('-')[1].trim() : '');
-        return { tamanho: 'Grade', cor: c, qtd: v.qtd };
+        return { tamanho: 'Grade', cor: '', qtd: v.qtd };
     });
     renderizarVariacoesAdmin();
     document.querySelector('.admin-content').scrollTo(0,0); 
@@ -765,21 +809,22 @@ window.excluirProdutoAdmin = async (id) => { const sim = await window.confirmarA
 
 window.imprimirBalancoEstoque = () => {
     const janela = window.open('', '_blank'); let linhasHtml = ''; let totalPecasGeral = 0; let produtosOrdem = [...todosProdutosAdmin].sort((a,b) => a.nome.localeCompare(b.nome));
-    produtosOrdem.forEach(p => { let totalProd = p.variacoes.reduce((s,v) => s + parseInt(v.qtd||0), 0); totalPecasGeral += totalProd; let strVars = p.variacoes.map(v => `${v.cor || 'Cor Única'}: ${v.qtd} grades`).join('<br>'); linhasHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${p.nome}</td><td style="padding: 8px; border: 1px solid #ddd;">${p.categoria}</td><td style="padding: 8px; border: 1px solid #ddd;">${strVars}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center; font-weight:bold;">${totalProd}</td></tr>`; });
-    janela.document.write(`<html><head><title>Balanço de Estoque - Maribella Kids</title><style>body { font-family: sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; } th { background-color: #ffb6c1; color: #333; padding: 10px; border: 1px solid #ddd; text-align: left; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; } @media print { .btn-print { display: none; } }</style></head><body><div class="header"><h2>Balanço de Estoque (Grades) - Maribella Kids</h2><div><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir / Salvar PDF</button></div></div><p><strong>Data da geração:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p><p><strong>Total Geral de Grades:</strong> ${totalPecasGeral} grades</p><table><thead><tr><th>Produto</th><th>Categoria</th><th>Cores (Grades)</th><th style="text-align:center;">Total Grades do Produto</th></tr></thead><tbody>${linhasHtml}</tbody></table></body></html>`);
+    produtosOrdem.forEach(p => { let totalProd = p.variacoes.reduce((s,v) => s + parseInt(v.qtd||0), 0); totalPecasGeral += totalProd; let strVars = p.variacoes.map(v => `Grade Fechada: ${v.qtd} disp.`).join('<br>'); linhasHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${p.nome}</td><td style="padding: 8px; border: 1px solid #ddd;">${p.categoria}</td><td style="padding: 8px; border: 1px solid #ddd;">${strVars}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center; font-weight:bold;">${totalProd}</td></tr>`; });
+    janela.document.write(`<html><head><title>Balanço de Estoque - Maribella Kids</title><style>body { font-family: sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; } th { background-color: #ffb6c1; color: #333; padding: 10px; border: 1px solid #ddd; text-align: left; } .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; } @media print { .btn-print { display: none; } }</style></head><body><div class="header"><h2>Balanço de Estoque (Grades) - Maribella Kids</h2><div><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir / Salvar PDF</button></div></div><p><strong>Data da geração:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p><p><strong>Total Geral de Grades:</strong> ${totalPecasGeral} grades</p><table><thead><tr><th>Produto</th><th>Categoria</th><th>Estoque</th><th style="text-align:center;">Total Grades do Produto</th></tr></thead><tbody>${linhasHtml}</tbody></table></body></html>`);
     janela.document.close();
 };
 
-async function carregarListaAdminClientes() { const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "clientes")); todosClientesAdmin = []; snap.forEach(d => todosClientesAdmin.push(d.data())); window.filtrarClientesAdmin(); }
+async function carregarListaAdminClientes() { const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = "⏳..."; const snap = await getDocs(collection(db, "clientes")); todosClientesAdmin = []; snap.forEach(d => { let c = d.data(); c.id = d.id; todosClientesAdmin.push(c); }); window.filtrarClientesAdmin(); }
 window.filtrarClientesAdmin = () => { 
     const termo = removerAcentos(document.getElementById('busca-cliente-admin').value); const lista = document.getElementById('lista-admin-clientes'); lista.innerHTML = ""; 
     let res = todosClientesAdmin.filter(c => removerAcentos(c.nome).includes(termo) || c.telefone.includes(termo)); 
     if(res.length === 0) lista.innerHTML = "<p>Nenhum cliente.</p>"; 
     res.forEach(c => { 
         let linkZap = gerarLinkWhatsApp(c.telefone, "Olá, aqui é da Maribella Kids!"); 
-        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span style="font-size:0.85rem; color:#666;">📍 ${c.cidade||''}, ${c.estado||''}</span><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="window.verHistoricoClienteAdmin('${c.nome}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🛍️ Histórico</button><a href="${linkZap}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a></div></div>`; 
+        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span style="font-size:0.85rem; color:#666;">📍 ${c.cidade||''}, ${c.estado||''}</span><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="window.verHistoricoClienteAdmin('${c.nome}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🛍️ Histórico</button><a href="${linkZap}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a> <button onclick="window.excluirClienteAdmin('${c.id}')" style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🗑️</button></div></div>`; 
     }); 
 }
+window.excluirClienteAdmin = async (id) => { const sim = await window.confirmarAcao("Excluir Cliente", "Deseja realmente apagar o cadastro deste cliente?"); if (sim) { await deleteDoc(doc(db, "clientes", id)); window.mostrarNotificacao("Cliente apagado!", "info"); carregarListaAdminClientes(); } };
 window.fecharHistoricoClienteAdmin = () => document.getElementById('admin-historico-cliente-modal').classList.add('hidden');
 window.verHistoricoClienteAdmin = async (nome) => { document.getElementById('admin-historico-cliente-modal').classList.remove('hidden'); document.getElementById('nome-historico-admin').innerText = `🛍️ Histórico: ${nome.split(' ')[0]}`; const lista = document.getElementById('lista-historico-cliente-admin'); lista.innerHTML = "⏳ Buscando..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); lista.innerHTML = ""; let tem = false; snap.forEach(d => { const p = d.data(); if(p.cliente.toLowerCase() === nome.toLowerCase()) { tem = true; let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; lista.innerHTML += `<div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${cor};"><strong>Data: ${p.data}</strong><br><span style="font-size:0.85rem;">Itens: ${p.itens}</span><br><strong>R$ ${p.total}</strong> - <span style="font-weight:bold; color:${cor};">${p.status}</span></div>`; } }); if(!tem) lista.innerHTML = "<p>Sem compras.</p>"; };
 
