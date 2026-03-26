@@ -63,11 +63,9 @@ window.confirmarAcao = function(titulo, mensagem) {
 
 function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     let telLimpo = telefoneBruto.replace(/\D/g, ''); if(!telLimpo.startsWith('55')) telLimpo = '55' + telLimpo;
-    // API oficial para não dar erro de pop-up no iPhone
     return `https://api.whatsapp.com/send?phone=${telLimpo}&text=${encodeURIComponent(mensagem)}`;
 }
 
-// --- NOTIFICAÇÕES EM TEMPO REAL ---
 window.iniciarListenerAdmin = () => {
     if(listenerAdmin) listenerAdmin(); 
     let initialLoad = true;
@@ -114,7 +112,6 @@ window.iniciarListenerCliente = (telefoneString) => {
     });
 };
 
-// --- AVALIAÇÕES CRESCENTES ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
     const totalReviews = 160;
@@ -190,7 +187,6 @@ window.filtrarCategoria = (cat) => {
 };
 window.filtrarProdutos = () => { window.filtrarCategoria('Todas'); };
 
-// --- LIGHTBOX COM SETAS ---
 let lightboxCurrentProdId = null;
 let lightboxImgsArray = [];
 let lightboxCurrentIndex = 0;
@@ -201,7 +197,7 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
     if(arrayFotosStr && arrayFotosStr !== 'null') {
-        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
+        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/"/g, '"'));
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
         if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
         document.getElementById('lightbox-prev').classList.remove('hidden');
@@ -228,7 +224,6 @@ window.fecharLightbox = () => { document.getElementById('lightbox-modal').classL
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 window.abrirOpcoesLightbox = () => { if(lightboxCurrentProdId) { window.abrirEscolherTamanho(lightboxCurrentProdId); window.fecharLightbox(); } };
 
-// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -273,7 +268,6 @@ window.salvarConfiguracoes = async (e) => {
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
-// --- CARREGAMENTO E VITRINE (LOOP INFINITO) ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -354,7 +348,7 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '"');
             imgHtml = `<div class="slider-viewport"><div class="prod-slider" data-count="${p.imagens.length}">`;
             
             p.imagens.forEach(img => {
@@ -438,10 +432,11 @@ window.abrirEscolherTamanho = (id) => {
         let corSpan = esgotado ? 'color:#ccc; text-decoration:line-through;' : 'color:#333;';
         let isDefault = (idx === firstAvailableIdx);
         
-        let nomeVar = "Grade Fechada (10 un)";
+        let nomeVar = "Grade Fechada (10 peças)";
+        let descGrade = "2x(8), 2x(10), 2x(12), 2x(14), 2x(16)";
 
         htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; margin-bottom:5px; ${corSpan}">
-            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' grades disponíveis'}</span></div>
+            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem; color:#666;">${descGrade}</span><br><span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${esgotado ? 'Esgotado' : v.qtd + ' grades disponíveis'}</span></div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button onclick="window.mudarQtdModal(${idx}, -1, ${v.qtd})" style="border:none; background:#eee; width:30px; height:30px; border-radius:5px; font-weight:bold; cursor:pointer; color:#333;" ${esgotado ? 'disabled' : ''}>-</button>
                 <input type="number" id="qtd_var_${idx}" min="0" max="${v.qtd}" value="${esgotado ? 0 : (isDefault ? 1 : 0)}" readonly style="width:40px; padding:5px; border:1px solid #eee; border-radius:5px; font-weight:bold; text-align:center; background:#fff; color:#333;">
@@ -511,7 +506,7 @@ function atualizarCarrinho() {
             <div style="flex:1;">
                 <span style="font-weight:bold; color:#555;">${item.nome}</span><br>
                 <span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${item.tamanhoSelecionado}</span><br>
-                <span style="font-size:0.85rem; color:#888;">R$ ${parseFloat(item.preco).toFixed(2)}</span>
+                <span style="font-size:0.7rem; color:#888;">Tamanhos: 8, 10, 12, 14, 16 (2 un. cada)</span><br>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button onclick="window.alterarQtdCarrinho(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">-</button>
@@ -589,9 +584,10 @@ window.finalizarCheckout = async (e) => {
         }
     } catch (e) {}
 
-    let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado} (R$ ${parseFloat(i.preco).toFixed(2)})\n`); msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
+    let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; 
+    carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado}\n  ↳ Tamanhos: 8 ao 16 (2 un. cada)\n  ↳ Valor: R$ ${parseFloat(i.preco).toFixed(2)}\n\n`); 
+    msg += `💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
     
-    // Mudança importante para o iPhone (Evitar que o bloqueador de popup barre)
     let linkZap = gerarLinkWhatsApp(configLoja.telefone, msg); 
     
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); window.toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; window.carregarProdutosDoBanco();
@@ -601,7 +597,6 @@ window.finalizarCheckout = async (e) => {
     atualizarHeaderLogado(); 
     window.iniciarListenerCliente(tel);
     
-    // Redirecionamento direto, sem usar o window.open
     window.location.href = linkZap; 
 };
 
@@ -654,7 +649,7 @@ window.realizarLoginCliente = async (e) => {
     btn.disabled = true;
 
     let telLimpo = telInput.replace(/\D/g, '');
-    let nomeFinal = "Cliente"; // Nome padrão caso não ache no banco
+    let nomeFinal = "Cliente";
 
     try {
         let encontrou = false;
@@ -667,7 +662,6 @@ window.realizarLoginCliente = async (e) => {
             }
         });
 
-        // Se não achou na lista de clientes, tenta pescar em algum pedido antigo
         if(!encontrou) {
             const pedidosSnap = await getDocs(query(collection(db, "pedidos")));
             pedidosSnap.forEach(d => {
