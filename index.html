@@ -31,7 +31,10 @@
     <div id="modal-escolher-tamanho" class="modal hidden" style="z-index: 3000;">
         <div class="modal-content" style="max-width: 350px;">
             <span class="close" onclick="window.fecharModalTamanho()">×</span>
-            <h2 style="color:var(--primary); margin-bottom: 10px; font-size:1.3rem;">Adicionar ao Carrinho</h2>
+            <h2 style="color:var(--primary); margin-bottom: 5px; font-size:1.3rem;">Comprar Grade</h2>
+            <p style="font-size: 0.8rem; color: #555; margin-bottom: 15px; line-height: 1.4; background: #fff5f7; padding: 8px; border-radius: 8px; border: 1px solid #ffe4e8;">
+                ⚠️ <strong>Atenção:</strong> Cada grade contém <strong>10 peças</strong>, sendo 2 unidades de cada tamanho: <strong>8, 10, 12, 14 e 16</strong>.
+            </p>
             <div id="info-produto-tamanho" style="display:flex; gap:10px; margin-bottom:15px; align-items:center;"></div>
             <div id="lista-opcoes-tamanho" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px; max-height: 40vh; overflow-y:auto;"></div>
             <button onclick="window.confirmarAdicaoCarrinho()" class="btn-whatsapp" style="width:100%;">🛒 Adicionar Grade ao Carrinho</button>
@@ -177,6 +180,7 @@
             <span class="close" onclick="window.toggleCart()">×</span>
             <div id="etapa-carrinho">
                 <h2>🛒 Seu Carrinho (Atacado)</h2>
+                <p style="font-size: 0.8rem; color: #e74c3c; margin-bottom: 15px; text-align: center; font-weight: bold; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">Lembrando: Cada Grade contém 10 Peças (Tamanhos 8 ao 16)</p>
                 <div id="cart-items"></div>
                 <div class="cart-total">Total: R$ <span id="total-price">0.00</span></div>
                 <button class="btn-whatsapp" onclick="window.irParaCadastro()" style="width:100%; margin-top:20px;">Finalizar Compra</button>
