@@ -478,7 +478,6 @@ window.confirmarAdicaoCarrinho = () => {
     window.mostrarNotificacao("Adicionado com sucesso!", 'sucesso'); 
 };
 
-
 window.alterarQtdCarrinho = (index, delta) => { let novoQtd = (carrinho[index].qtd || 1) + delta; if(novoQtd > carrinho[index].estoqueDisponivel) return window.mostrarNotificacao("Estoque máximo atingido para esta grade!", 'erro'); carrinho[index].qtd = novoQtd; if(carrinho[index].qtd <= 0) carrinho.splice(index, 1); salvarCarrinhoNoLocal(); };
 window.removerDoCarrinho = async (index) => { const sim = await window.confirmarAcao("Remover item", "Tirar do carrinho?"); if(sim) { carrinho.splice(index, 1); salvarCarrinhoNoLocal(); } };
 function salvarCarrinhoNoLocal() { localStorage.setItem('maribella_carrinho', JSON.stringify(carrinho)); atualizarCarrinho(); }
@@ -1033,7 +1032,6 @@ window.verHistoricoClienteAdmin = async (nome, telefone) => {
     if(!tem) lista.innerHTML = "<p>Sem compras.</p>"; 
 };
 
-// --- BACKUP E RESTAURAÇÃO ---
 window.gerarBackup = async (event) => {
     const btn = event.currentTarget || event.target;
     const originalText = btn.innerHTML;
@@ -1068,6 +1066,39 @@ window.gerarBackup = async (event) => {
         window.mostrarNotificacao("Erro ao gerar backup.", "erro");
     }
     btn.innerHTML = originalText; btn.disabled = false;
+};
+
+window.verificarEGerarAutoBackup = async () => {
+    const hoje = new Date().toISOString().split('T')[0];
+    const ultimoBackup = localStorage.getItem('maribella_ultimo_autobackup');
+
+    if (ultimoBackup !== hoje) {
+        console.log("Iniciando backup automático diário...");
+        try {
+            const backup = { produtos: [], clientes: [], pedidos: [], config: {} };
+            const [snapProd, snapCli, snapPed, snapConf] = await Promise.all([
+                getDocs(collection(db, "produtos")),
+                getDocs(collection(db, "clientes")),
+                getDocs(collection(db, "pedidos")),
+                getDoc(doc(db, "config", "loja"))
+            ]);
+            snapProd.forEach(d => backup.produtos.push({ id: d.id, ...d.data() }));
+            snapCli.forEach(d => backup.clientes.push({ id: d.id, ...d.data() }));
+            snapPed.forEach(d => backup.pedidos.push({ id: d.id, ...d.data() }));
+            if(snapConf.exists()) backup.config = snapConf.data();
+
+            const jsonString = JSON.stringify(backup, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+
+            const backupRef = ref(storage, `backups/backup_auto_${hoje}.json`);
+            await uploadBytes(backupRef, blob);
+
+            localStorage.setItem('maribella_ultimo_autobackup', hoje);
+            window.mostrarNotificacao("Backup diário salvo na nuvem automaticamente! ☁️", "info");
+        } catch(e) {
+            console.error("Erro no auto-backup:", e);
+        }
+    }
 };
 
 window.restaurarBackup = async (e) => {
@@ -1175,6 +1206,7 @@ if(adminLogado === 'true') {
     document.getElementById('admin-dashboard').classList.remove('hidden');
     esconderCarrinhoFlutuante();
     window.iniciarListenerAdmin();
+    window.verificarEGerarAutoBackup(); // <-- Verifica o Backup ao carregar o painel
     const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
     window.mudarAbaAdmin(ultimaAba);
 }
