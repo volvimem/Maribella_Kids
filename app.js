@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, setDoc, doc, getDoc, updateDoc, deleteDoc, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, setDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -23,9 +23,7 @@ let variacoesAdminTemp = [];
 let produtoParaAdicionarTamanho = null;
 let graficoVendasApp = null; 
 
-let listenerAdmin = null;
-let listenerCliente = null;
-
+// Nova máscara formato: (XX) X XXXX-XXXX
 window.mascaraTelefone = (i) => { 
     let v = i.value.replace(/\D/g,""); 
     v = v.replace(/^(\d{2})(\d)/g,"($1) $2"); 
@@ -34,6 +32,7 @@ window.mascaraTelefone = (i) => {
 };
 window.removerAcentos = (str) => { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; };
 
+// --- CONTROLE DO CARRINHO FLUTUANTE ---
 function esconderCarrinhoFlutuante() {
     const c = document.getElementById('cart-btn-floating');
     if(c) c.classList.add('oculto');
@@ -46,7 +45,7 @@ function mostrarCarrinhoFlutuante() {
 
 window.mostrarNotificacao = (msg, t = 'sucesso', fechavel = false) => { 
     const toast = document.getElementById('toast-notificacao'); 
-    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.2rem; color:#666;">×</span>` : '';
+    let fecharBtn = fechavel ? `<span onclick="window.fecharToast()" style="margin-left:10px; cursor:pointer; font-size:1.2rem; color:#666;">&times;</span>` : '';
     toast.innerHTML = `<span style="flex:1;">${t==='erro'?"❌":t==='info'?"🎀":"✅"} ${msg}</span> ${fecharBtn}`; 
     toast.className = `toast show ${t}`; 
     if(!fechavel) setTimeout(window.fecharToast, 3500); 
@@ -63,55 +62,10 @@ window.confirmarAcao = function(titulo, mensagem) {
 
 function gerarLinkWhatsApp(telefoneBruto, mensagem) {
     let telLimpo = telefoneBruto.replace(/\D/g, ''); if(!telLimpo.startsWith('55')) telLimpo = '55' + telLimpo;
-    return `https://api.whatsapp.com/send?phone=${telLimpo}&text=${encodeURIComponent(mensagem)}`;
+    return `https://wa.me/${telLimpo}?text=${encodeURIComponent(mensagem)}`;
 }
 
-window.iniciarListenerAdmin = () => {
-    if(listenerAdmin) listenerAdmin(); 
-    let initialLoad = true;
-    listenerAdmin = onSnapshot(collection(db, "pedidos"), (snapshot) => {
-        if (initialLoad) { initialLoad = false; return; } 
-        
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                const p = change.doc.data();
-                window.mostrarNotificacao(`🛍️ NOVO PEDIDO: ${p.cliente} (R$ ${p.total})`, 'sucesso', true);
-                
-                if (!document.getElementById('admin-dashboard').classList.contains('hidden') && !document.getElementById('admin-pedidos').classList.contains('hidden')) {
-                    carregarListaAdminPedidos();
-                }
-            }
-        });
-    });
-};
-
-window.iniciarListenerCliente = (telefoneString) => {
-    if(listenerCliente) listenerCliente();
-    let initialLoad = true;
-    
-    listenerCliente = onSnapshot(collection(db, "pedidos"), (snapshot) => {
-        if (initialLoad) { initialLoad = false; return; } 
-        
-        let telLimpoOriginal = telefoneString.replace(/\D/g, '');
-        
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "modified") {
-                const p = change.doc.data();
-                let pTelLimpo = p.telefone ? p.telefone.replace(/\D/g, '') : '';
-                
-                if(pTelLimpo === telLimpoOriginal) {
-                    let cor = p.status === 'Aprovado' ? 'sucesso' : (p.status === 'Cancelado' ? 'erro' : 'info');
-                    window.mostrarNotificacao(`🔔 Seu pedido de R$ ${p.total} agora está: ${p.status.toUpperCase()}!`, cor, true);
-                    
-                    if (!document.getElementById('perfil-cliente-modal').classList.contains('hidden')) {
-                        window.carregarMeusPedidosPainel(telefoneString);
-                    }
-                }
-            }
-        });
-    });
-};
-
+// --- AVALIAÇÕES CRESCENTES (1 a cada 2 dias) ---
 let avaliacoesGeradas = []; let indexAvaliacaoAtual = 0;
 function gerarAvaliacoes() {
     const totalReviews = 160;
@@ -142,6 +96,7 @@ function gerarAvaliacoes() {
             foto: `https://randomuser.me/api/portraits/${generoFoto}/${(i % 99) + 1}.jpg`
         });
     }
+    
     avaliacoesGeradas = tempReviews.slice(0, totalPermitido).reverse();
 }
 
@@ -166,6 +121,7 @@ window.abrirModalAvaliacoes = () => {
 };
 window.fecharModalAvaliacoes = () => { document.getElementById('modal-avaliacoes').classList.add('hidden'); };
 
+// --- LUPA E SIDEBAR ---
 window.toggleBusca = () => { 
     let b = document.getElementById('busca-container'); 
     b.classList.toggle('hidden'); 
@@ -187,6 +143,7 @@ window.filtrarCategoria = (cat) => {
 };
 window.filtrarProdutos = () => { window.filtrarCategoria('Todas'); };
 
+// --- LIGHTBOX COM SETAS ---
 let lightboxCurrentProdId = null;
 let lightboxImgsArray = [];
 let lightboxCurrentIndex = 0;
@@ -197,7 +154,7 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
     if(arrayFotosStr && arrayFotosStr !== 'null') {
-        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/"/g, '"'));
+        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/&quot;/g, '"'));
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
         if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
         document.getElementById('lightbox-prev').classList.remove('hidden');
@@ -224,6 +181,7 @@ window.fecharLightbox = () => { document.getElementById('lightbox-modal').classL
 window.toggleZoom = () => { document.getElementById('lightbox-img').classList.toggle('zoomed'); };
 window.abrirOpcoesLightbox = () => { if(lightboxCurrentProdId) { window.abrirEscolherTamanho(lightboxCurrentProdId); window.fecharLightbox(); } };
 
+// --- CONFIGURAÇÕES DA LOJA ---
 async function carregarConfiguracoes() { 
     const snap = await getDoc(doc(db, "config", "loja")); 
     if(snap.exists()) { 
@@ -241,6 +199,7 @@ async function carregarConfiguracoes() {
     document.getElementById('texto-aviso-loja').innerText = configLoja.aviso || "Vendemos apenas grade fechada."; 
     document.getElementById('footer-instagram-link').href = configLoja.instagram || "#"; 
     
+    // Atualiza Links do Maps e Endereço multiline
     const endFormatado = (configLoja.endereco || "Nossa Loja").replace(/\n/g, '<br>');
     document.getElementById('footer-endereco-texto').innerHTML = '📍 ' + endFormatado; 
     document.getElementById('menu-endereco-info').innerHTML = '📍 ' + endFormatado;
@@ -263,11 +222,12 @@ window.salvarConfiguracoes = async (e) => {
         
         await setDoc(doc(db, "config", "loja"), configLoja); 
         
-        carregarConfiguracoes(); 
+        carregarConfiguracoes(); // Atualiza toda a tela automaticamente
         mostrarNotificacao("Salvo!", "sucesso"); 
     } catch(err) {} btn.innerText = "💾 Atualizar Dados"; 
 };
 
+// --- CARREGAMENTO E VITRINE (LOOP INFINITO) ---
 window.carregarProdutosDoBanco = async () => {
     try {
         const snap = await getDocs(collection(db, "produtos")); listaDeProdutos = [];
@@ -280,31 +240,6 @@ window.carregarProdutosDoBanco = async () => {
     } catch (e) {}
 }
 
-let scrollStoriesInt = null;
-let storyPausado = false;
-
-window.iniciarScrollStories = () => {
-    const wrapper = document.querySelector('.stories-wrapper');
-    if(!wrapper) return;
-    
-    wrapper.addEventListener('touchstart', () => storyPausado = true);
-    wrapper.addEventListener('touchend', () => setTimeout(()=> storyPausado = false, 2000));
-    wrapper.addEventListener('mousedown', () => storyPausado = true);
-    wrapper.addEventListener('mouseup', () => setTimeout(()=> storyPausado = false, 2000));
-    wrapper.addEventListener('mouseenter', () => storyPausado = true);
-    wrapper.addEventListener('mouseleave', () => storyPausado = false);
-
-    clearInterval(scrollStoriesInt);
-    scrollStoriesInt = setInterval(() => {
-        if(!storyPausado) {
-            wrapper.scrollLeft += 1;
-            if(wrapper.scrollLeft >= (wrapper.scrollWidth - wrapper.clientWidth - 5)) {
-                wrapper.scrollLeft = wrapper.scrollWidth / 3; 
-            }
-        }
-    }, 30);
-};
-
 function renderizarStories() {
     const track = document.getElementById('stories-track'); track.innerHTML = '';
     let storyList = [...listaDeProdutos, ...listaDeProdutos, ...listaDeProdutos]; 
@@ -312,7 +247,6 @@ function renderizarStories() {
         let foto = p.imagens ? p.imagens[0] : p.imagem;
         track.innerHTML += `<img src="${foto}" class="story-circle" onclick="window.abrirLightbox('${foto}', '${p.id}', null)" title="${p.nome}">`; 
     });
-    window.iniciarScrollStories();
 }
 
 function renderizarVitrinesCategorias(lista, tituloUnico = null) {
@@ -348,12 +282,9 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '"');
-            imgHtml = `<div class="slider-viewport"><div class="prod-slider" data-count="${p.imagens.length}">`;
-            
-            p.imagens.forEach(img => {
-                imgHtml += `<img src="${img}" onclick="event.stopPropagation(); window.abrirLightbox('${img}', '${p.id}', '${fotosStr}')" style="width:100%; flex-shrink:0;">`;
-            });
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
+            imgHtml = `<div class="slider-viewport" onclick="window.abrirLightbox('${p.imagens[0]}', '${p.id}', '${fotosStr}')"><div class="prod-slider" data-idx="0" data-count="${p.imagens.length}">`;
+            p.imagens.forEach(img => imgHtml += `<img src="${img}" style="width:100%; flex-shrink:0;">`);
             imgHtml += `</div></div><div style="text-align:center; font-size:0.75rem; color:#888; font-weight:bold; padding: 4px 0;">📸 ${p.imagens.length} Fotos</div>`;
         } else {
             let ft = p.imagens ? p.imagens[0] : p.imagem;
@@ -385,19 +316,14 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
     carouselIntervals.push(autoScroll);
 }
 
+// Slider das imagens do produto (Passando sozinhas)
 setInterval(() => {
     document.querySelectorAll('.prod-slider').forEach(slider => {
         let count = parseInt(slider.getAttribute('data-count'));
-        if (count <= 1) return;
-        
-        slider.style.transition = 'transform 0.4s ease-in-out';
-        slider.style.transform = `translateX(-100%)`;
-        
-        setTimeout(() => {
-            slider.style.transition = 'none';
-            slider.appendChild(slider.firstElementChild);
-            slider.style.transform = `translateX(0)`;
-        }, 400);
+        let idx = parseInt(slider.getAttribute('data-idx'));
+        idx = (idx + 1) % count;
+        slider.style.transform = `translateX(-${idx * 100}%)`;
+        slider.setAttribute('data-idx', idx);
     });
 }, 3000);
 
@@ -432,11 +358,10 @@ window.abrirEscolherTamanho = (id) => {
         let corSpan = esgotado ? 'color:#ccc; text-decoration:line-through;' : 'color:#333;';
         let isDefault = (idx === firstAvailableIdx);
         
-        let nomeVar = "Grade Fechada (10 peças)";
-        let descGrade = "2x(8), 2x(10), 2x(12), 2x(14), 2x(16)";
+        let nomeVar = "Grade Fechada (10 un)";
 
         htmlOpcoes += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; margin-bottom:5px; ${corSpan}">
-            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem; color:#666;">${descGrade}</span><br><span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${esgotado ? 'Esgotado' : v.qtd + ' grades disponíveis'}</span></div>
+            <div><strong>${nomeVar}</strong><br><span style="font-size:0.75rem;">${esgotado ? 'Esgotado' : v.qtd + ' grades disponíveis'}</span></div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button onclick="window.mudarQtdModal(${idx}, -1, ${v.qtd})" style="border:none; background:#eee; width:30px; height:30px; border-radius:5px; font-weight:bold; cursor:pointer; color:#333;" ${esgotado ? 'disabled' : ''}>-</button>
                 <input type="number" id="qtd_var_${idx}" min="0" max="${v.qtd}" value="${esgotado ? 0 : (isDefault ? 1 : 0)}" readonly style="width:40px; padding:5px; border:1px solid #eee; border-radius:5px; font-weight:bold; text-align:center; background:#fff; color:#333;">
@@ -506,13 +431,13 @@ function atualizarCarrinho() {
             <div style="flex:1;">
                 <span style="font-weight:bold; color:#555;">${item.nome}</span><br>
                 <span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${item.tamanhoSelecionado}</span><br>
-                <span style="font-size:0.7rem; color:#888;">Tamanhos: 8, 10, 12, 14, 16 (2 un. cada)</span><br>
+                <span style="font-size:0.85rem; color:#888;">R$ ${parseFloat(item.preco).toFixed(2)}</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button onclick="window.alterarQtdCarrinho(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">-</button>
                 <span>${qtd}</span>
                 <button onclick="window.alterarQtdCarrinho(${index}, 1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px;">+</button>
-                <button onclick="window.removerDoCarrinho(${index})" style="color:red;background:none;border:none;font-weight:bold;font-size:1.2rem;margin-left:5px;">×</button>
+                <button onclick="window.removerDoCarrinho(${index})" style="color:red;background:none;border:none;font-weight:bold;font-size:1.2rem;margin-left:5px;">&times;</button>
             </div>
         </div>`; 
     });
@@ -556,16 +481,8 @@ window.finalizarCheckout = async (e) => {
 
     try {
         let dadosC = { nome, telefone: tel, cidade, estado };
-        let telLimpo = tel.replace(/\D/g, '');
-        let idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${telLimpo}`;
-        
-        let clientesSnap = await getDocs(collection(db, "clientes"));
-        clientesSnap.forEach(d => {
-            let c = d.data();
-            if(c.telefone && c.telefone.replace(/\D/g, '') === telLimpo) {
-                idClienteStr = d.id; 
-            }
-        });
+        // Garante que o usuário não seja sobrescrito combinando o Nome com o Telefone
+        const idClienteStr = `${nome.trim().toLowerCase().replace(/\s+/g, '_')}_${tel.replace(/\D/g, '')}`;
         await setDoc(doc(db, "clientes", idClienteStr), dadosC, { merge: true });
         
         let strItens = carrinho.map(i=> `${i.qtd||1}x ${i.nome} (${i.tamanhoSelecionado})`).join(", "); const dataH = new Date();
@@ -584,37 +501,21 @@ window.finalizarCheckout = async (e) => {
         }
     } catch (e) {}
 
-    let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; 
-    carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado}\n  ↳ Tamanhos: 8 ao 16 (2 un. cada)\n  ↳ Valor: R$ ${parseFloat(i.preco).toFixed(2)}\n\n`); 
-    msg += `💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
-    
-    let linkZap = gerarLinkWhatsApp(configLoja.telefone, msg); 
-    
+    let msg = `Olá! Sou ${nome} e vim finalizar meu pedido (Atacado):\n\n🛍️ *PRODUTOS:*\n`; carrinho.forEach(i => msg += `- ${i.qtd||1}x ${i.nome} - ${i.tamanhoSelecionado} (R$ ${parseFloat(i.preco).toFixed(2)})\n`); msg += `\n💰 *TOTAL:* R$ ${total}\n📦 *ENTREGA:* ${envioInfo}\n📍 *CIDADE:* ${cidade} - ${estado}`;
+    let linkZap = gerarLinkWhatsApp(configLoja.telefone, msg); window.open(linkZap, '_blank');
     carrinho = []; localStorage.removeItem('maribella_carrinho'); localStorage.removeItem('maribella_form'); window.toggleCart(); btn.disabled=false; btn.innerText="💾 Enviar Pedido"; window.carregarProdutosDoBanco();
-    
-    clienteLogadoDados = {nome: nome, telefone: tel}; 
-    localStorage.setItem('maribella_auth_cliente', JSON.stringify(clienteLogadoDados)); 
-    atualizarHeaderLogado(); 
-    window.iniciarListenerCliente(tel);
-    
-    window.location.href = linkZap; 
 };
 
-function prepararCheckoutLogado() { 
-    if(clienteLogadoDados) { 
-        document.getElementById('cliente-nome').value = clienteLogadoDados.nome; 
-        document.getElementById('cliente-telefone').value = clienteLogadoDados.telefone || ''; 
-    } 
-}
+function prepararCheckoutLogado() { if(clienteLogadoDados) { document.getElementById('cliente-nome').value = clienteLogadoDados.nome; } }
 
-// --- LOGIN APENAS COM TELEFONE ---
+// --- LOGIN APENAS COM NOME ---
 window.verificarLoginCliente = () => { 
     esconderCarrinhoFlutuante();
     if (clienteLogadoDados) {
         abrirPainelCliente(clienteLogadoDados);
     } else {
         const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); 
-        if(logado && logado.telefone) autoLogin(logado, true); 
+        if(logado) autoLogin(logado.nome, true); 
         else document.getElementById('cliente-login-modal').classList.remove('hidden'); 
     }
 }
@@ -625,11 +526,9 @@ window.fecharPerfil = () => {
     mostrarCarrinhoFlutuante();
 };
 
-async function autoLogin(dados, forcarAbertura = false) { 
-    if(dados && dados.telefone) { 
-        clienteLogadoDados = dados; 
-        atualizarHeaderLogado(); 
-        window.iniciarListenerCliente(dados.telefone);
+async function autoLogin(nome, forcarAbertura = false) { 
+    if(nome) { 
+        clienteLogadoDados = {nome: nome}; atualizarHeaderLogado(); 
         if(forcarAbertura || localStorage.getItem('maribella_tela_perfil_aberta')) abrirPainelCliente(clienteLogadoDados); 
     } else { 
         localStorage.removeItem('maribella_auth_cliente'); document.getElementById('cliente-login-modal').classList.remove('hidden'); 
@@ -640,51 +539,15 @@ function atualizarHeaderLogado() { document.getElementById('btn-header-pedidos')
 
 window.realizarLoginCliente = async (e) => { 
     e.preventDefault(); 
-    const telInput = document.getElementById('login-telefone-cliente').value.trim(); 
-    if(!telInput) return;
+    const nome = document.getElementById('login-nome-cliente').value.trim(); 
+    if(!nome) return;
     
-    let btn = e.target.querySelector('button');
-    let txtOriginal = btn.innerText;
-    btn.innerText = "⏳ Buscando...";
-    btn.disabled = true;
-
-    let telLimpo = telInput.replace(/\D/g, '');
-    let nomeFinal = "Cliente";
-
-    try {
-        let encontrou = false;
-        const clientesSnap = await getDocs(collection(db, "clientes"));
-        clientesSnap.forEach(d => {
-            let c = d.data();
-            if(c.telefone && c.telefone.replace(/\D/g, '') === telLimpo) {
-                nomeFinal = c.nome;
-                encontrou = true;
-            }
-        });
-
-        if(!encontrou) {
-            const pedidosSnap = await getDocs(query(collection(db, "pedidos")));
-            pedidosSnap.forEach(d => {
-                let p = d.data();
-                if(p.telefone && p.telefone.replace(/\D/g, '') === telLimpo) {
-                    if(p.cliente) nomeFinal = p.cliente;
-                }
-            });
-        }
-
-        clienteLogadoDados = {nome: nomeFinal, telefone: telInput}; 
-        localStorage.setItem('maribella_auth_cliente', JSON.stringify(clienteLogadoDados)); 
-        atualizarHeaderLogado(); 
-        window.iniciarListenerCliente(telInput);
-        document.getElementById('cliente-login-modal').classList.add('hidden'); 
-        abrirPainelCliente(clienteLogadoDados); 
-        e.target.reset(); 
-    } catch(err) {
-        window.mostrarNotificacao("Erro ao buscar histórico.", "erro");
-    }
-    
-    btn.innerText = txtOriginal;
-    btn.disabled = false;
+    clienteLogadoDados = {nome: nome}; 
+    localStorage.setItem('maribella_auth_cliente', JSON.stringify({nome})); 
+    atualizarHeaderLogado(); 
+    document.getElementById('cliente-login-modal').classList.add('hidden'); 
+    abrirPainelCliente(clienteLogadoDados); 
+    e.target.reset(); 
 };
 
 window.mudarAbaCliente = (idAba) => { document.getElementById('aba-historico').classList.add('hidden'); document.getElementById('btn-aba-historico').classList.remove('ativa'); document.getElementById('btn-aba-historico').style.color='#aaa'; document.getElementById(idAba).classList.remove('hidden'); document.getElementById('btn-'+idAba).classList.add('ativa'); document.getElementById('btn-'+idAba).style.color='var(--primary)'; }
@@ -692,41 +555,18 @@ window.mudarAbaCliente = (idAba) => { document.getElementById('aba-historico').c
 async function abrirPainelCliente(dados) { 
     esconderCarrinhoFlutuante();
     localStorage.setItem('maribella_tela_perfil_aberta', 'true'); 
-    document.getElementById('perfil-cliente-modal').classList.remove('hidden'); document.getElementById('titulo-painel-cliente').innerText = `👤 Oi, ${dados.nome.split(' ')[0]}`; window.carregarMeusPedidosPainel(dados.telefone); 
+    document.getElementById('perfil-cliente-modal').classList.remove('hidden'); document.getElementById('titulo-painel-cliente').innerText = `👤 Oi, ${dados.nome.split(' ')[0]}`; window.carregarMeusPedidosPainel(dados.nome); 
 }
 
-window.carregarMeusPedidosPainel = async (telefone) => { 
-    const lista = document.getElementById('lista-meus-pedidos'); 
-    lista.innerHTML = "⏳ Carregando..."; 
-    const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); 
-    meusPedidosSalvos = []; 
-    lista.innerHTML = ""; 
-    let tem = false; 
-    
-    let telLimpoBusca = telefone.replace(/\D/g, '');
-    
-    snap.forEach(d => { 
-        let p = d.data(); p.id = d.id; 
-        let pTelLimpo = p.telefone ? p.telefone.replace(/\D/g, '') : '';
-        
-        if(pTelLimpo === telLimpoBusca) { 
-            tem = true; 
-            meusPedidosSalvos.push(p); 
-            let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; 
-            let botoesAcao = p.status === 'Pendente' ? `<div style="display:flex; gap:10px; margin-top:10px;"><button onclick="window.abrirEdicaoPedido('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:5px 10px; border-radius:5px;">✏️ Editar Pedido</button> <button onclick="window.cancelarMeuPedido('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:5px;">🗑️ Cancelar</button></div>` : ''; 
-            lista.innerHTML += `<div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid ${cor};"><strong style="font-size:1.1rem;">📅 ${p.data} às ${p.hora}</strong><br><div style="margin:5px 0; color:#555; font-size:0.9rem;"><strong>Itens:</strong> ${p.itens}</div><strong style="color:var(--primary); font-size:1.1rem;">💰 R$ ${p.total}</strong><br><span style="font-size:0.9rem; font-weight:bold; color:${cor};">● Status: ${p.status}</span>${botoesAcao}</div>`; 
-        } 
-    }); 
-    if(!tem) lista.innerHTML = "<p>Nenhuma compra.</p>"; 
-}
+window.carregarMeusPedidosPainel = async (nome) => { const lista = document.getElementById('lista-meus-pedidos'); lista.innerHTML = "⏳ Carregando..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); meusPedidosSalvos = []; lista.innerHTML = ""; let tem = false; snap.forEach(d => { let p = d.data(); p.id = d.id; if(p.cliente && p.cliente.toLowerCase() === nome.toLowerCase()) { tem = true; meusPedidosSalvos.push(p); let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; let botoesAcao = p.status === 'Pendente' ? `<div style="display:flex; gap:10px; margin-top:10px;"><button onclick="window.abrirEdicaoPedido('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:5px 10px; border-radius:5px;">✏️ Editar Pedido</button> <button onclick="window.cancelarMeuPedido('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:5px;">🗑️ Cancelar</button></div>` : ''; lista.innerHTML += `<div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:10px; border-left: 5px solid ${cor};"><strong style="font-size:1.1rem;">📅 ${p.data} às ${p.hora}</strong><br><div style="margin:5px 0; color:#555; font-size:0.9rem;"><strong>Itens:</strong> ${p.itens}</div><strong style="color:var(--primary); font-size:1.1rem;">💰 R$ ${p.total}</strong><br><span style="font-size:0.9rem; font-weight:bold; color:${cor};">● Status: ${p.status}</span>${botoesAcao}</div>`; } }); if(!tem) lista.innerHTML = "<p>Nenhuma compra.</p>"; }
 
-window.cancelarMeuPedido = async (id) => { const sim = await window.confirmarAcao("Cancelar Pedido", "Tem certeza que não deseja mais essas grades?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Cancelado" }); window.carregarMeusPedidosPainel(clienteLogadoDados.telefone); } };
+window.cancelarMeuPedido = async (id) => { const sim = await window.confirmarAcao("Cancelar Pedido", "Tem certeza que não deseja mais essas grades?"); if(sim) { await updateDoc(doc(db, "pedidos", id), { status: "Cancelado" }); window.carregarMeusPedidosPainel(clienteLogadoDados.nome); } };
 window.abrirEdicaoPedido = (id) => { pedidoEmEdicao = JSON.parse(JSON.stringify(meusPedidosSalvos.find(p => p.id === id))); pedidoEmEdicao.detalhes_itens.forEach(i => i.qtd = i.qtd || 1); renderizarEdicaoPedido(); document.getElementById('modal-editar-pedido').classList.remove('hidden'); };
 window.fecharEdicaoPedido = () => document.getElementById('modal-editar-pedido').classList.add('hidden');
 function renderizarEdicaoPedido() { const lista = document.getElementById('lista-editar-itens'); lista.innerHTML = ""; let total = 0; if(pedidoEmEdicao.detalhes_itens.length === 0) lista.innerHTML = "<p style='color:red;'>O pedido será cancelado ao salvar.</p>"; pedidoEmEdicao.detalhes_itens.forEach((item, index) => { total += parseFloat(item.preco) * item.qtd; lista.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1;"><strong>${item.nome}</strong><br><span style="color:#888;">R$ ${parseFloat(item.preco).toFixed(2)}</span></div><div style="display:flex; align-items:center; gap:8px;"><button onclick="window.alterarQtdEdicao(${index}, -1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px; font-weight:bold;">-</button><span>${item.qtd}</span><button onclick="window.alterarQtdEdicao(${index}, 1)" style="border:none; background:#eee; padding:5px 10px; border-radius:5px; font-weight:bold;">+</button></div></div>`; }); document.getElementById('novo-total-edicao').innerText = total.toFixed(2); }
 window.alterarQtdEdicao = (index, delta) => { pedidoEmEdicao.detalhes_itens[index].qtd += delta; if(pedidoEmEdicao.detalhes_itens[index].qtd <= 0) pedidoEmEdicao.detalhes_itens.splice(index, 1); renderizarEdicaoPedido(); };
-window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.length === 0) { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { status: "Cancelado" }); window.fecharEdicaoPedido(); return window.carregarMeusPedidosPainel(clienteLogadoDados.telefone); } let total = 0; pedidoEmEdicao.detalhes_itens.forEach(i => total += parseFloat(i.preco) * i.qtd); let strItens = pedidoEmEdicao.detalhes_itens.map(i => `${i.qtd}x ${i.nome}`).join(", "); try { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { detalhes_itens: pedidoEmEdicao.detalhes_itens, itens: strItens, total: total.toFixed(2) }); window.mostrarNotificacao("Atualizado!", "sucesso"); window.fecharEdicaoPedido(); window.carregarMeusPedidosPainel(clienteLogadoDados.telefone); } catch(e) {} };
-window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoDados = null; if(listenerCliente) { listenerCliente(); listenerCliente = null; } atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
+window.salvarEdicaoPedido = async () => { if(pedidoEmEdicao.detalhes_itens.length === 0) { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { status: "Cancelado" }); window.fecharEdicaoPedido(); return window.carregarMeusPedidosPainel(clienteLogadoDados.nome); } let total = 0; pedidoEmEdicao.detalhes_itens.forEach(i => total += parseFloat(i.preco) * i.qtd); let strItens = pedidoEmEdicao.detalhes_itens.map(i => `${i.qtd}x ${i.nome}`).join(", "); try { await updateDoc(doc(db, "pedidos", pedidoEmEdicao.id), { detalhes_itens: pedidoEmEdicao.detalhes_itens, itens: strItens, total: total.toFixed(2) }); window.mostrarNotificacao("Atualizado!", "sucesso"); window.fecharEdicaoPedido(); window.carregarMeusPedidosPainel(clienteLogadoDados.nome); } catch(e) {} };
+window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair", "Deseja sair da conta?"); if(sim){ localStorage.removeItem('maribella_auth_cliente'); clienteLogadoDados = null; atualizarHeaderLogado(); window.fecharPerfil(); window.mostrarNotificacao("Sessão encerrada.", "info"); } };
 
 // --- ADMINISTRAÇÃO E CONTROLE ---
 window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); esconderCarrinhoFlutuante(); }
@@ -740,7 +580,6 @@ window.realizarLoginAdmin = async (e) => {
         document.getElementById('admin-login-modal').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden'); 
         esconderCarrinhoFlutuante();
-        window.iniciarListenerAdmin();
         carregarListaAdminPedidos(); 
         e.target.reset(); 
     } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } 
@@ -749,7 +588,6 @@ window.sairDoAdmin = async () => {
     await signOut(auth); 
     localStorage.removeItem('maribella_admin_auth');
     localStorage.removeItem('maribella_admin_tab');
-    if(listenerAdmin) { listenerAdmin(); listenerAdmin = null; }
     document.getElementById('admin-dashboard').classList.add('hidden'); 
     window.carregarProdutosDoBanco(); 
     mostrarCarrinhoFlutuante();
@@ -773,54 +611,26 @@ window.filtrarPedidosAdmin = () => {
     let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
     if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
     res.forEach(p => { 
-        let corText = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12';
         let selectStatus = `<div style="display:inline-flex; align-items:center; gap:5px; background:#f0f0f0; padding:5px; border-radius:5px; margin-right: 5px;">
             <span>✏️</span>
-            <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:${corText}; cursor:pointer;">
-                <option value="Pendente" style="color:#f39c12;" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-                <option value="Aprovado" style="color:var(--success);" ${p.status === 'Aprovado' ? 'selected' : ''}>Aprovado</option>
-                <option value="Cancelado" style="color:#e74c3c;" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+            <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:#333; cursor:pointer;">
+                <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Aprovado" ${p.status === 'Aprovado' ? 'selected' : ''}>Aprovado</option>
+                <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
             </select>
         </div>`;
         let btnEtiqueta = p.status === 'Aprovado' ? `<button onclick="window.imprimirEtiqueta('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🖨️ Etiqueta</button>` : '';
         let btnExcluir = `<button onclick="window.excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🗑️ Excluir</button>`;
         
-        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold; color:${corText};">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
+        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold;">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
     });
 }
 window.mudarStatusPedido = async (id, novoStatus) => { const sim = await window.confirmarAcao("Mudar Status", `Alterar o pedido para ${novoStatus}?`); if (sim) { await updateDoc(doc(db, "pedidos", id), { status: novoStatus }); carregarListaAdminPedidos(); } else { carregarListaAdminPedidos(); } };
-
-window.excluirPedidoAdmin = async (id) => { 
-    const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido? (Pedidos de até 5 dias terão o estoque devolvido)"); 
-    if(sim) { 
-        const pedido = todosPedidosAdmin.find(p => p.id === id);
-        if(pedido) {
-            const dataPedido = new Date(pedido.timestamp);
-            const hoje = new Date();
-            const diffDays = Math.ceil(Math.abs(hoje - dataPedido) / (1000 * 60 * 60 * 24));
-            
-            if(diffDays <= 5 && pedido.detalhes_itens) {
-                for(let item of pedido.detalhes_itens) {
-                    let pDoc = await getDoc(doc(db, "produtos", item.id));
-                    if(pDoc.exists()) {
-                        let pd = pDoc.data();
-                        if(pd.variacoes && pd.variacoes[item.idxVariacao]) {
-                            pd.variacoes[item.idxVariacao].qtd += item.qtd; 
-                            await updateDoc(doc(db, "produtos", item.id), { variacoes: pd.variacoes });
-                        }
-                    }
-                }
-                window.mostrarNotificacao("Estoque devolvido (Pedido dentro de 5 dias).", "info");
-            }
-        }
-        await deleteDoc(doc(db, "pedidos", id)); 
-        carregarListaAdminPedidos(); 
-        window.carregarProdutosDoBanco();
-    } 
-};
+window.excluirPedidoAdmin = async (id) => { const sim = await window.confirmarAcao("Apagar Registro", "Deseja APAGAR este pedido definitivamente?"); if(sim) { await deleteDoc(doc(db, "pedidos", id)); carregarListaAdminPedidos(); } };
 
 window.imprimirEtiqueta = (id) => { const pedido = todosPedidosAdmin.find(p => p.id === id); if(!pedido) return; const janela = window.open('', '_blank', 'width=600,height=600'); janela.document.write(`<html><head><title>Etiqueta - ${pedido.cliente}</title><style>body { font-family: sans-serif; padding: 20px; } .etiqueta { border: 2px dashed #333; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; } .remetente { font-size: 0.9rem; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; } .destinatario { font-size: 1.1rem; line-height: 1.5; } @media print { .btn-print { display: none; } }</style></head><body><div style="text-align:center; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 5px;">🖨️ Imprimir Etiqueta</button></div><div class="etiqueta"><div class="remetente"><strong>REMETENTE:</strong><br>Maribella Kids<br>${configLoja.endereco ? configLoja.endereco.replace(/\n/g, '<br>') : 'Seu Endereço Aqui'}<br>Cel: ${configLoja.telefone || ''}</div><div class="destinatario"><strong>DESTINATÁRIO:</strong><br>${pedido.cliente}<br><strong>Endereço:</strong> ${pedido.cidade || 'Não informado'} - ${pedido.estado || ''}<br><strong>Entrega:</strong> ${pedido.envio || 'Não informado'}<br><strong>Tel:</strong> ${pedido.telefone}</div></div></body></html>`); janela.document.close(); };
 
+// --- RELATÓRIOS INTELIGENTES COM GRÁFICO ---
 window.gerarRelatoriosAdmin = () => {
     let mesFiltro = document.getElementById('filtro-mes-rel') ? document.getElementById('filtro-mes-rel').value : 'Todos';
     let anoFiltro = document.getElementById('filtro-ano-rel') ? document.getElementById('filtro-ano-rel').value : 'Todos';
@@ -829,7 +639,7 @@ window.gerarRelatoriosAdmin = () => {
     let vendasPorData = {}; 
 
     todosPedidosAdmin.forEach(p => {
-        if(p.status === 'Aprovado') {
+        if(p.status !== 'Cancelado') {
             let mesPedido, anoPedido, dataAgrupamento;
             if(p.timestamp) {
                 anoPedido = p.timestamp.substring(0,4);
@@ -934,6 +744,7 @@ window.salvarProdutoAdmin = async (e) => {
     try { 
         let urlsFotos = [];
         if (imgs && imgs.length > 0) {
+            // Upload Paralelo Muito mais Rápido
             let uploadPromises = Array.from(imgs).slice(0, 4).map(async (img) => {
                 const sRef = ref(storage, 'produtos/' + Date.now() + '_' + img.name); 
                 await uploadBytes(sRef, img); 
@@ -1010,34 +821,14 @@ window.filtrarClientesAdmin = () => {
     if(res.length === 0) lista.innerHTML = "<p>Nenhum cliente.</p>"; 
     res.forEach(c => { 
         let linkZap = gerarLinkWhatsApp(c.telefone, "Olá, aqui é da Maribella Kids!"); 
-        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span style="font-size:0.85rem; color:#666;">📍 ${c.cidade||''}, ${c.estado||''}</span><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="window.verHistoricoClienteAdmin('${c.nome}', '${c.telefone}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🛍️ Histórico</button><a href="${linkZap}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a> <button onclick="window.excluirClienteAdmin('${c.id}')" style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🗑️</button></div></div>`; 
+        lista.innerHTML += `<div class="admin-card" style="border-left-color: #2ecc71; display:flex; justify-content:space-between; align-items:center;"><div><strong>${c.nome}</strong><br><span style="font-size:0.85rem; color:#666;">📍 ${c.cidade||''}, ${c.estado||''}</span><br><span>${c.telefone}</span></div><div style="display:flex; gap:10px;"><button onclick="window.verHistoricoClienteAdmin('${c.nome}')" style="background:var(--secondary); color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🛍️ Histórico</button><a href="${linkZap}" target="_blank" style="background:#25D366; color:white; padding:8px 10px; border-radius:8px; text-decoration:none;">💬</a> <button onclick="window.excluirClienteAdmin('${c.id}')" style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:8px; font-weight:bold; cursor:pointer;">🗑️</button></div></div>`; 
     }); 
 }
 window.excluirClienteAdmin = async (id) => { const sim = await window.confirmarAcao("Excluir Cliente", "Deseja realmente apagar o cadastro deste cliente?"); if (sim) { await deleteDoc(doc(db, "clientes", id)); window.mostrarNotificacao("Cliente apagado!", "info"); carregarListaAdminClientes(); } };
 window.fecharHistoricoClienteAdmin = () => document.getElementById('admin-historico-cliente-modal').classList.add('hidden');
-window.verHistoricoClienteAdmin = async (nome, telefone) => { 
-    document.getElementById('admin-historico-cliente-modal').classList.remove('hidden'); 
-    document.getElementById('nome-historico-admin').innerText = `🛍️ Histórico: ${nome.split(' ')[0]}`; 
-    const lista = document.getElementById('lista-historico-cliente-admin'); 
-    lista.innerHTML = "⏳ Buscando..."; 
-    const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); 
-    lista.innerHTML = ""; 
-    let tem = false; 
-    let telLimpoBusca = telefone.replace(/\D/g, '');
-    
-    snap.forEach(d => { 
-        const p = d.data(); 
-        let pTelLimpo = p.telefone ? p.telefone.replace(/\D/g, '') : '';
-        
-        if(pTelLimpo === telLimpoBusca) { 
-            tem = true; 
-            let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; 
-            lista.innerHTML += `<div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${cor};"><strong>Data: ${p.data}</strong><br><span style="font-size:0.85rem;">Itens: ${p.itens}</span><br><strong>R$ ${p.total}</strong> - <span style="font-weight:bold; color:${cor};">${p.status}</span></div>`; 
-        } 
-    }); 
-    if(!tem) lista.innerHTML = "<p>Sem compras.</p>"; 
-};
+window.verHistoricoClienteAdmin = async (nome) => { document.getElementById('admin-historico-cliente-modal').classList.remove('hidden'); document.getElementById('nome-historico-admin').innerText = `🛍️ Histórico: ${nome.split(' ')[0]}`; const lista = document.getElementById('lista-historico-cliente-admin'); lista.innerHTML = "⏳ Buscando..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); lista.innerHTML = ""; let tem = false; snap.forEach(d => { const p = d.data(); if(p.cliente.toLowerCase() === nome.toLowerCase()) { tem = true; let cor = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12'; lista.innerHTML += `<div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${cor};"><strong>Data: ${p.data}</strong><br><span style="font-size:0.85rem;">Itens: ${p.itens}</span><br><strong>R$ ${p.total}</strong> - <span style="font-weight:bold; color:${cor};">${p.status}</span></div>`; } }); if(!tem) lista.innerHTML = "<p>Sem compras.</p>"; };
 
+// --- LÓGICA DO INSTALADOR DO APP FORÇADO E PERSISTENTE ---
 let deferredPrompt;
 
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -1084,26 +875,24 @@ window.addEventListener('appinstalled', () => {
     window.mostrarNotificacao("App instalado com sucesso! 🎀", "sucesso");
 });
 
-const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); 
-if(logado) {
-    if(logado.telefone) autoLogin(logado);
-    else localStorage.removeItem('maribella_auth_cliente'); 
-}
+// Inicialização de Dados Básicos
+const logado = JSON.parse(localStorage.getItem('maribella_auth_cliente')); if(logado) autoLogin(logado.nome);
 carregarConfiguracoes(); carregarForm(); atualizarCarrinho(); window.carregarProdutosDoBanco();
 
 gerarAvaliacoes(); 
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
 
+// --- VERIFICAÇÃO ADMIN LOGADO AO ATUALIZAR (Persistência) ---
 const adminLogado = localStorage.getItem('maribella_admin_auth');
 if(adminLogado === 'true') {
     document.getElementById('admin-dashboard').classList.remove('hidden');
     esconderCarrinhoFlutuante();
-    window.iniciarListenerAdmin();
     const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
     window.mudarAbaAdmin(ultimaAba);
 }
 
+// --- LIGANDO O MOTOR DO APP (SERVICE WORKER) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
