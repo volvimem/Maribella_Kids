@@ -1,7 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, setDoc, doc, getDoc, updateDoc, deleteDoc, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+// IMPORTANTE: Adicionado o onAuthStateChanged aqui na importação do Auth
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBSSDixkWzEaP3pbncJ5NhTf_0ZDNgzUtA", authDomain: "maribella-kids.firebaseapp.com",
@@ -725,28 +726,22 @@ window.sairCliente = async () => { const sim = await window.confirmarAcao("Sair"
 
 window.abrirLoginAdmin = () => { window.fecharMenuLateral(); document.getElementById('admin-login-modal').classList.remove('hidden'); esconderCarrinhoFlutuante(); }
 window.fecharLoginAdmin = () => { document.getElementById('admin-login-modal').classList.add('hidden'); mostrarCarrinhoFlutuante(); }
+
+// FUNÇÃO DE LOGIN DO ADMIN CORRIGIDA (Sem uso do LocalStorage como verificação)
 window.realizarLoginAdmin = async (e) => { 
     e.preventDefault(); 
     try { 
         await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value); 
-        localStorage.setItem('maribella_admin_auth', 'true');
         window.mostrarNotificacao("Liberado!", "sucesso"); 
         document.getElementById('admin-login-modal').classList.add('hidden');
-        document.getElementById('admin-dashboard').classList.remove('hidden'); 
-        esconderCarrinhoFlutuante();
-        window.iniciarListenerAdmin();
-        carregarListaAdminPedidos(); 
         e.target.reset(); 
     } catch(e) { window.mostrarNotificacao("Erro!", "erro"); } 
 };
+
+// FUNÇÃO DE SAIR DO ADMIN CORRIGIDA
 window.sairDoAdmin = async () => { 
     await signOut(auth); 
-    localStorage.removeItem('maribella_admin_auth');
     localStorage.removeItem('maribella_admin_tab');
-    if(listenerAdmin) { listenerAdmin(); listenerAdmin = null; }
-    document.getElementById('admin-dashboard').classList.add('hidden'); 
-    window.carregarProdutosDoBanco(); 
-    mostrarCarrinhoFlutuante();
 };
 
 window.mudarAbaAdmin = (abaId) => { 
@@ -1252,15 +1247,23 @@ gerarAvaliacoes();
 renderizarReviewSidebar(); 
 setInterval(renderizarReviewSidebar, 30000);
 
-const adminLogado = localStorage.getItem('maribella_admin_auth');
-if(adminLogado === 'true') {
-    document.getElementById('admin-dashboard').classList.remove('hidden');
-    esconderCarrinhoFlutuante();
-    window.iniciarListenerAdmin();
-    window.verificarEGerarAutoBackup(); // <-- Verifica o Backup ao carregar o painel
-    const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
-    window.mudarAbaAdmin(ultimaAba);
-}
+// OBSERVAÇÃO DO ESTADO DE AUTENTICAÇÃO OFICIAL DO FIREBASE (NOVO E SEGURO)
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // Se houver um usuário autenticado, abre o painel admin
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        esconderCarrinhoFlutuante();
+        window.iniciarListenerAdmin();
+        window.verificarEGerarAutoBackup(); 
+        const ultimaAba = localStorage.getItem('maribella_admin_tab') || 'admin-pedidos';
+        window.mudarAbaAdmin(ultimaAba);
+    } else {
+        // Se ninguém estiver logado, garante que o painel seja ocultado
+        document.getElementById('admin-dashboard').classList.add('hidden');
+        mostrarCarrinhoFlutuante();
+        if(listenerAdmin) { listenerAdmin(); listenerAdmin = null; }
+    }
+});
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
