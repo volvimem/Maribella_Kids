@@ -762,12 +762,41 @@ window.mudarAbaAdmin = (abaId) => {
 };
 
 async function carregarListaAdminPedidos() { const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "⏳ Puxando vendas..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); todosPedidosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosPedidosAdmin.push(p); }); window.filtrarPedidosAdmin(); }
+
+window.setFiltroStatus = (status) => {
+    document.getElementById('filtro-status').value = status;
+    window.filtrarPedidosAdmin();
+};
+
+window.toggleDetalhesPedido = (id) => {
+    const el = document.getElementById(`detalhes-pedido-${id}`);
+    if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+};
+
 window.filtrarPedidosAdmin = () => {
-    const termo = removerAcentos(document.getElementById('busca-pedido').value); const filtro = document.getElementById('filtro-status').value; const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "";
-    let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
-    if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
+    const termo = removerAcentos(document.getElementById('busca-pedido').value); 
+    const filtro = document.getElementById('filtro-status').value; 
+    const lista = document.getElementById('lista-admin-pedidos'); 
+    lista.innerHTML = "";
+    
+    let res = todosPedidosAdmin.filter(p => { 
+        let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); 
+        let matchStatus = filtro === 'Todos' || p.status === filtro; 
+        return matchTermo && matchStatus; 
+    });
+    
+    if(res.length === 0) {
+        lista.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+        return;
+    }
+    
     res.forEach(p => { 
         let corText = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12';
+        
         let selectStatus = `<div style="display:inline-flex; align-items:center; gap:5px; background:#f0f0f0; padding:5px; border-radius:5px; margin-right: 5px;">
             <span>✏️</span>
             <select onchange="window.mudarStatusPedido('${p.id}', this.value)" style="border:none; background:transparent; outline:none; font-weight:bold; color:${corText}; cursor:pointer;">
@@ -776,12 +805,34 @@ window.filtrarPedidosAdmin = () => {
                 <option value="Cancelado" style="color:#e74c3c;" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
             </select>
         </div>`;
+        
         let btnEtiqueta = p.status === 'Aprovado' ? `<button onclick="window.imprimirEtiqueta('${p.id}')" style="background:var(--secondary); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🖨️ Etiqueta</button>` : '';
         let btnExcluir = `<button onclick="window.excluirPedidoAdmin('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🗑️ Excluir</button>`;
         
-        lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold; color:${corText};">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
+        lista.innerHTML += `
+        <div class="admin-card" style="border-left: 5px solid ${corText}; transition: 0.3s;">
+            <div style="cursor:pointer;" onclick="window.toggleDetalhesPedido('${p.id}')">
+                <strong style="color:var(--primary); font-size: 1.1rem;">👤 ${p.cliente}</strong><br>
+                <span style="color:#666; font-size: 0.9rem;">📍 ${p.cidade||'Não info'} - ${p.estado||''} | 🚚 ${p.envio||'Não informado'}</span><br>
+                <span style="font-weight:bold; color:${corText};">Status: ${p.status}</span>
+                <div style="text-align: right; font-size: 0.8rem; color: #888; margin-top: 5px;">🔽 Clicar para ver detalhes e itens</div>
+            </div>
+            
+            <div id="detalhes-pedido-${p.id}" class="hidden" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                <strong style="color:var(--primary);">📅 Data: ${p.data} às ${p.hora}</strong><br>
+                <strong>💰 Total:</strong> R$ ${p.total} <br>
+                <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.85rem; color: #555;">
+                    <strong>📦 Itens:</strong><br>${p.itens}
+                </div>
+                
+                <div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">
+                    ${selectStatus} ${btnEtiqueta} ${btnExcluir}
+                </div>
+            </div>
+        </div>`; 
     });
 }
+
 window.mudarStatusPedido = async (id, novoStatus) => { const sim = await window.confirmarAcao("Mudar Status", `Alterar o pedido para ${novoStatus}?`); if (sim) { await updateDoc(doc(db, "pedidos", id), { status: novoStatus }); carregarListaAdminPedidos(); } else { carregarListaAdminPedidos(); } };
 
 window.excluirPedidoAdmin = async (id) => { 
