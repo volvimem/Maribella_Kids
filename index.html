@@ -242,11 +242,14 @@
         <div class="admin-content">
             <div id="admin-pedidos" class="admin-aba">
                 <h3>Gerenciar Vendas</h3>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
-                    <select id="filtro-status" onchange="window.filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
-                        <option value="Todos">Todos</option><option value="Pendente">Pendentes</option><option value="Aprovado">Aprovados</option><option value="Cancelado">Cancelados</option>
-                    </select>
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
+                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:1; min-width: 200px; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    
+                    <button onclick="window.setFiltroStatus('Pendente')" class="btn-whatsapp" style="margin:0; background:#f39c12; padding: 10px 15px; border-radius: 10px;">Pendentes</button>
+                    <button onclick="window.setFiltroStatus('Aprovado')" class="btn-whatsapp" style="margin:0; background:var(--success); padding: 10px 15px; border-radius: 10px;">Aprovados</button>
+                    <button onclick="window.setFiltroStatus('Todos')" class="btn-whatsapp" style="margin:0; background:#666; padding: 10px 15px; border-radius: 10px;">Todos</button>
+                    
+                    <input type="hidden" id="filtro-status" value="Todos">
                 </div>
                 <div id="lista-admin-pedidos"></div>
             </div>
