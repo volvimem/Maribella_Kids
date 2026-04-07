@@ -163,26 +163,11 @@
         <div class="modal-content" style="max-width:350px; text-align:center; margin:auto; border-radius:20px;">
             <span class="close" onclick="window.fecharLoginCliente()">×</span>
             <h2 style="color:var(--secondary); margin-bottom:10px;">📦 Meus Pedidos</h2>
-            
-            <div id="etapa-login-telefone">
-                <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Para sua segurança, enviaremos um código por SMS.</p>
-                <form id="form-enviar-sms" onsubmit="window.enviarCodigoSMS(event)">
-                    <input type="tel" id="login-telefone-cliente" placeholder="Telefone: (**)* ****-****" maxlength="15" required oninput="window.mascaraTelefone(this)">
-                    
-                    <div id="recaptcha-container" style="margin-top: 15px; display: flex; justify-content: center;"></div>
-                    
-                    <button type="submit" class="btn-whatsapp" id="btn-enviar-sms" style="width:100%; margin-top:15px;">📲 Enviar Código SMS</button>
-                </form>
-            </div>
-
-            <div id="etapa-login-codigo" class="hidden">
-                <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Digite o código de 6 dígitos que enviamos para o seu celular.</p>
-                <form id="form-verificar-sms" onsubmit="window.verificarCodigoSMS(event)">
-                    <input type="text" id="login-codigo-sms" placeholder="Código SMS (Ex: 123456)" maxlength="6" required style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
-                    <button type="submit" class="btn-whatsapp" id="btn-verificar-sms" style="width:100%; margin-top:15px;">✅ Confirmar e Acessar</button>
-                    <button type="button" onclick="window.voltarParaTelefone()" style="background: none; border: none; color: #888; margin-top: 15px; text-decoration: underline; font-size: 0.8rem; cursor: pointer;">Voltar e corrigir número</button>
-                </form>
-            </div>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Acesse seu histórico informando seu número de WhatsApp.</p>
+            <form id="form-login-cliente" onsubmit="window.realizarLoginCliente(event)">
+                <input type="tel" id="login-telefone-cliente" placeholder="Telefone: (**)* ****-****" maxlength="15" required oninput="window.mascaraTelefone(this)">
+                <button type="submit" class="btn-whatsapp" style="width:100%; margin-top:15px;">Acessar Histórico</button>
+            </form>
         </div>
     </div>
     
@@ -257,14 +242,11 @@
         <div class="admin-content">
             <div id="admin-pedidos" class="admin-aba">
                 <h3>Gerenciar Vendas</h3>
-                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
-                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:1; min-width: 200px; padding:10px; border-radius:10px; border:1px solid #ddd;">
-                    
-                    <button onclick="window.setFiltroStatus('Pendente')" class="btn-whatsapp" style="margin:0; background:#f39c12; padding: 10px 15px; border-radius: 10px;">Pendentes</button>
-                    <button onclick="window.setFiltroStatus('Aprovado')" class="btn-whatsapp" style="margin:0; background:var(--success); padding: 10px 15px; border-radius: 10px;">Aprovados</button>
-                    <button onclick="window.setFiltroStatus('Todos')" class="btn-whatsapp" style="margin:0; background:#666; padding: 10px 15px; border-radius: 10px;">Todos</button>
-                    
-                    <input type="hidden" id="filtro-status" value="Todos">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <select id="filtro-status" onchange="window.filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
+                        <option value="Todos">Todos</option><option value="Pendente">Pendentes</option><option value="Aprovado">Aprovados</option><option value="Cancelado">Cancelados</option>
+                    </select>
                 </div>
                 <div id="lista-admin-pedidos"></div>
             </div>
