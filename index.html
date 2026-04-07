@@ -242,11 +242,14 @@
         <div class="admin-content">
             <div id="admin-pedidos" class="admin-aba">
                 <h3>Gerenciar Vendas</h3>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ddd;">
-                    <select id="filtro-status" onchange="window.filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px;">
-                        <option value="Todos">Todos</option><option value="Pendente">Pendentes</option><option value="Aprovado">Aprovados</option><option value="Cancelado">Cancelados</option>
-                    </select>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input type="text" id="busca-pedido" placeholder="🔍 Buscar Cliente..." oninput="window.filtrarPedidosAdmin()" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                </div>
+                <div style="display:flex; gap:5px; margin-bottom:15px; overflow-x: auto; padding-bottom: 5px;">
+                    <button onclick="window.filtrarPorStatusAdmin('Todos')" class="btn-filtro-pedido" id="btn-filtro-Todos" style="padding:8px 15px; border-radius:20px; border:none; background:var(--primary); color:white; font-weight:bold; cursor:pointer; flex-shrink: 0;">Todos</button>
+                    <button onclick="window.filtrarPorStatusAdmin('Pendente')" class="btn-filtro-pedido" id="btn-filtro-Pendente" style="padding:8px 15px; border-radius:20px; border:1px solid #ddd; background:#f9f9f9; color:#333; cursor:pointer; flex-shrink: 0;">⏳ Pendentes</button>
+                    <button onclick="window.filtrarPorStatusAdmin('Aprovado')" class="btn-filtro-pedido" id="btn-filtro-Aprovado" style="padding:8px 15px; border-radius:20px; border:1px solid #ddd; background:#f9f9f9; color:#333; cursor:pointer; flex-shrink: 0;">✅ Aprovados</button>
+                    <button onclick="window.filtrarPorStatusAdmin('Cancelado')" class="btn-filtro-pedido" id="btn-filtro-Cancelado" style="padding:8px 15px; border-radius:20px; border:1px solid #ddd; background:#f9f9f9; color:#333; cursor:pointer; flex-shrink: 0;">❌ Cancelados</button>
                 </div>
                 <div id="lista-admin-pedidos"></div>
             </div>
