@@ -762,10 +762,44 @@ window.mudarAbaAdmin = (abaId) => {
 };
 
 async function carregarListaAdminPedidos() { const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "⏳ Puxando vendas..."; const snap = await getDocs(query(collection(db, "pedidos"), orderBy("timestamp", "desc"))); todosPedidosAdmin = []; snap.forEach(d => { let p = d.data(); p.id = d.id; todosPedidosAdmin.push(p); }); window.filtrarPedidosAdmin(); }
+
+let filtroStatusAtual = 'Todos';
+
+window.filtrarPorStatusAdmin = (status) => {
+    filtroStatusAtual = status;
+    
+    // Atualiza o visual dos botões
+    document.querySelectorAll('.btn-filtro-pedido').forEach(btn => {
+        btn.style.background = '#f9f9f9';
+        btn.style.color = '#333';
+        btn.style.border = '1px solid #ddd';
+        btn.style.fontWeight = 'normal';
+    });
+    
+    const btnAtivo = document.getElementById(`btn-filtro-${status}`);
+    if(btnAtivo) {
+        btnAtivo.style.background = 'var(--primary)';
+        btnAtivo.style.color = 'white';
+        btnAtivo.style.border = 'none';
+        btnAtivo.style.fontWeight = 'bold';
+    }
+    
+    window.filtrarPedidosAdmin();
+};
+
 window.filtrarPedidosAdmin = () => {
-    const termo = removerAcentos(document.getElementById('busca-pedido').value); const filtro = document.getElementById('filtro-status').value; const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "";
-    let res = todosPedidosAdmin.filter(p => { let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); let matchStatus = filtro === 'Todos' || p.status === filtro; return matchTermo && matchStatus; });
+    const termo = removerAcentos(document.getElementById('busca-pedido').value); 
+    const filtro = filtroStatusAtual; 
+    const lista = document.getElementById('lista-admin-pedidos'); lista.innerHTML = "";
+    
+    let res = todosPedidosAdmin.filter(p => { 
+        let matchTermo = removerAcentos(p.cliente).includes(termo) || (p.cidade && removerAcentos(p.cidade).includes(termo)); 
+        let matchStatus = filtro === 'Todos' || p.status === filtro; 
+        return matchTermo && matchStatus; 
+    });
+    
     if(res.length === 0) lista.innerHTML = "<p>Nenhum pedido.</p>";
+    
     res.forEach(p => { 
         let corText = p.status === 'Aprovado' ? 'var(--success)' : p.status === 'Cancelado' ? '#e74c3c' : '#f39c12';
         let selectStatus = `<div style="display:inline-flex; align-items:center; gap:5px; background:#f0f0f0; padding:5px; border-radius:5px; margin-right: 5px;">
@@ -782,6 +816,7 @@ window.filtrarPedidosAdmin = () => {
         lista.innerHTML += `<div class="admin-card"><strong style="color:var(--primary);">Data: ${p.data} às ${p.hora}</strong><br><strong>Cliente:</strong> ${p.cliente}<br><strong>Local:</strong> ${p.cidade||'Não info'} - ${p.estado||''}<br><strong>Entrega:</strong> ${p.envio||'Não informado'}<br><strong>Total:</strong> R$ ${p.total} <br><span style="font-size:0.85rem;color:#666;">(${p.itens})</span><br><br><span style="font-weight:bold; color:${corText};">Status Atual: ${p.status}</span><div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; align-items:center;">${selectStatus}${btnEtiqueta}${btnExcluir}</div></div>`; 
     });
 }
+
 window.mudarStatusPedido = async (id, novoStatus) => { const sim = await window.confirmarAcao("Mudar Status", `Alterar o pedido para ${novoStatus}?`); if (sim) { await updateDoc(doc(db, "pedidos", id), { status: novoStatus }); carregarListaAdminPedidos(); } else { carregarListaAdminPedidos(); } };
 
 window.excluirPedidoAdmin = async (id) => { 
@@ -1073,7 +1108,7 @@ window.verificarEGerarAutoBackup = async () => {
     const ultimoBackup = localStorage.getItem('maribella_ultimo_autobackup');
 
     if (ultimoBackup !== hoje) {
-        console.log("Iniciando backup automático diário...");
+        console.log("Iniciando download do backup automático diário...");
         try {
             const backup = { produtos: [], clientes: [], pedidos: [], config: {} };
             const [snapProd, snapCli, snapPed, snapConf] = await Promise.all([
@@ -1089,12 +1124,18 @@ window.verificarEGerarAutoBackup = async () => {
 
             const jsonString = JSON.stringify(backup, null, 2);
             const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
 
-            const backupRef = ref(storage, `backups/backup_auto_${hoje}.json`);
-            await uploadBytes(backupRef, blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_auto_maribella_${hoje}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
             localStorage.setItem('maribella_ultimo_autobackup', hoje);
-            window.mostrarNotificacao("Backup diário salvo na nuvem automaticamente! ☁️", "info");
+            window.mostrarNotificacao("Backup diário baixado no seu celular! 💾", "info");
         } catch(e) {
             console.error("Erro no auto-backup:", e);
         }
