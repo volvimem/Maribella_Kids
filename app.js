@@ -197,7 +197,8 @@ window.abrirLightbox = (src, id = null, arrayFotosStr = null) => {
     document.getElementById('lightbox-modal').classList.remove('hidden'); 
     
     if(arrayFotosStr && arrayFotosStr !== 'null') {
-        lightboxImgsArray = JSON.parse(arrayFotosStr.replace(/"/g, '"'));
+        // Agora basta fazer o parse direto
+        lightboxImgsArray = JSON.parse(arrayFotosStr);
         lightboxCurrentIndex = lightboxImgsArray.indexOf(src);
         if(lightboxCurrentIndex === -1) lightboxCurrentIndex = 0;
         document.getElementById('lightbox-prev').classList.remove('hidden');
@@ -348,7 +349,8 @@ function criarSecaoCarrossel(titulo, produtos, containerMaster, indexFila) {
 
         let imgHtml = '';
         if(p.imagens && p.imagens.length > 1) {
-            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '"');
+            // Trocamos para &quot; para não quebrar o HTML do onclick
+            let fotosStr = JSON.stringify(p.imagens).replace(/"/g, '&quot;');
             imgHtml = `<div class="slider-viewport"><div class="prod-slider" data-count="${p.imagens.length}">`;
             
             p.imagens.forEach(img => {
